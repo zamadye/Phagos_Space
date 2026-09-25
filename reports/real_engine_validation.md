@@ -8,10 +8,10 @@
 
 | Check | Result |
 | --- | --- |
-| Source import / strict script parse | **PASS** in Web Preview run `36200828842` using `godot --headless --path . --editor --quit` |
+| Source import / strict script parse | **PASS** in Web Preview run `36201465915` using `godot --headless --path . --editor --quit` |
 | Exporter | Godot `4.3.stable.official.77dcf97d8` with matching Web templates |
 | Export mode | Web Release, Compatibility / WebGL 2, threads disabled, Keep-canvas policy |
-| Published generated commit | `5a41701` (`chore(web): refresh generated Godot preview [skip ci]`) |
+| Published generated commit | `be9ccd3` (`chore(web): refresh generated Godot preview [skip ci]`) |
 | Runtime payloads | `index.html`, `phagos.js`, `phagos.wasm`, `phagos.pck`, `index.icon.png`, `index.apple-touch-icon.png`, and Brotli sidecars |
 | Loader | Custom immune-core loading screen is included in the generated `index.html` |
 
@@ -35,7 +35,7 @@ This is an official Godot 4.3 Web runtime and matching PCK pair, not the earlier
 
 ## 3. Browser matrix and performance boundary
 
-Web Preview run `36200828842` also exercised the exact exported build in Chrome, Firefox, and Edge under headed Xvfb:
+Web Preview run `36201465915` also exercised the exact exported build in Chrome, Firefox, and Edge under headed Xvfb:
 
 - **All three:** WASM loaded with `application/wasm`; WebGL started; console and request checks were clean.
 - **All three:** their raw rAF readings were about 4.9–5.2 FPS under the intentionally software-only Xvfb surface, so the old strict 55 FPS gate failed even though engine startup and rendering passed.
@@ -45,7 +45,7 @@ The browser QA now separates these two concerns: the default command still enfor
 
 The CI screenshot stage completed successfully for Heart, Lung, Brain, and Bone Marrow at 1920 × 1080. `web-preview.zip` and the quality-report artifact are uploaded before the browser gate so an official runnable build is retained.
 
-GitHub Pages remains an administrator configuration step: set **Settings → Pages → Source: GitHub Actions**. The workflow has the required deployment permissions but cannot change the repository-level setting itself.
+The **Export, visual QA, and browser QA** job in run `36201465915` passed. Its separate GitHub Pages deployment job still fails because Pages is not enabled/configured for this repository. An administrator must set **Settings → Pages → Source: GitHub Actions**; the workflow has the required deployment permissions but cannot change that repository-level setting itself.
 
 ## 4. Asset and debug notes
 
