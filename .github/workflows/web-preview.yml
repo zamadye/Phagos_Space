@@ -42,6 +42,12 @@ jobs:
           npm ci
           npx playwright install --with-deps chrome firefox msedge
 
+      # The exporter can package a project whose scripts only fail when the scene boots.
+      # Parse/import the actual Godot project first so a broken arena never becomes a
+      # seemingly-successful Web artifact or screenshot set.
+      - name: Validate Godot source
+        run: godot --headless --path . --editor --quit
+
       - name: Export Web release
         run: ./scripts/export_web.sh
 

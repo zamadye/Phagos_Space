@@ -52,6 +52,7 @@ async function measureAnimationFrameFps(page) {
 async function inspectTarget(target) {
     const consoleErrors = [];
     const pageErrors = [];
+    const failedResponses = [];
     const wasmResponses = [];
     let browser;
     try {
@@ -63,11 +64,15 @@ async function inspectTarget(target) {
         });
         page.on('pageerror', (error) => pageErrors.push(error.message));
         page.on('response', (response) => {
+            const entry = {
+                status: response.status(),
+                url: response.url(),
+            };
+            if (response.status() >= 400) failedResponses.push(entry);
             if (/\.wasm(?:\?|$)/.test(response.url())) {
                 wasmResponses.push({
-                    status: response.status(),
+                    ...entry,
                     mime: response.headers()['content-type'] || '',
-                    url: response.url(),
                 });
             }
         });
@@ -90,7 +95,10 @@ async function inspectTarget(target) {
         await context.close();
 
         const wasm = wasmResponses[0] || null;
-        const errors = [...consoleErrors, ...pageErrors];
+        // Report the exact failed URL rather than a browser's generic 404 message: static
+        // export naming regressions otherwise look like a renderer or shader failure.
+        const responseErrors = failedResponses.map((response) => `HTTP ${response.status} ${response.url}`);
+        const errors = [...consoleErrors, ...pageErrors, ...responseErrors];
         const checks = {
             wasm_load: Boolean(wasm && wasm.status === 200),
             wasm_mime: Boolean(wasm && /application\/wasm/i.test(wasm.mime)),
@@ -98,7 +106,7 @@ async function inspectTarget(target) {
             fps: fps >= minFps,
             console_error_free: errors.length === 0,
         };
-        return { name: target.name, checks, fps, wasm, webgl, consoleErrors, pageErrors, fatal: null };
+        return { name: target.name, checks, fps, wasm, webgl, consoleErrors, pageErrors, responseErrors, fatal: null };
     } catch (error) {
         return {
             name: target.name,
@@ -108,6 +116,7 @@ async function inspectTarget(target) {
             webgl: { available: false, error: String(error) },
             consoleErrors,
             pageErrors,
+            responseErrors: [],
             fatal: error instanceof Error ? error.stack || error.message : String(error),
         };
     } finally {
@@ -128,7 +137,7 @@ const rows = results.map((result) => {
     return `| ${result.name} | ${mark(result.checks.wasm_load)} | ${mark(result.checks.wasm_mime)} | ${mark(result.checks.shader_compile)} | ${result.fps.toFixed(1)} | ${mark(result.checks.fps)} | ${mark(result.checks.console_error_free)} |`;
 }).join('\n');
 const diagnostics = results.map((result) => {
-    const messages = [result.fatal, ...result.consoleErrors, ...result.pageErrors, result.webgl?.error].filter(Boolean);
+    const messages = [result.fatal, ...result.consoleErrors, ...result.pageErrors, ...result.responseErrors, result.webgl?.error].filter(Boolean);
     if (!messages.length) return `- **${result.name}:** no console or WebGL errors observed.`;
     return `- **${result.name}:** ${messages.map((message) => `\`${String(message).replaceAll('`', '\\`')}\``).join('; ')}`;
 }).join('\n');

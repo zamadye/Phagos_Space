@@ -263,18 +263,19 @@ func _draw() -> void:
 
 func _draw_room_identity() -> void:
     var size: Vector2 = room_data["size"]
-    var radius := minf(size.x, size.y)
+    var radius: float = minf(size.x, size.y)
     match String(room_data["type"]):
         "spawn":
             # Calm luminous lumen: environmental orientation without adding a HUD or player.
-            var sanctuary_color := biome.emissive
+            var sanctuary_color: Color = biome.emissive
             sanctuary_color.a = 0.16
             draw_circle(Vector2.ZERO, radius * 0.17, sanctuary_color, true, -1.0, true)
             for ring in range(3):
-                var start := -0.62 + ring * 2.04
-                var ring_color := biome.particle
-                ring_color.a = 0.38 - ring * 0.07
-                draw_arc(Vector2.ZERO, radius * (0.18 + ring * 0.043), start, start + 1.34, 22, ring_color, 2.4 - ring * 0.36, true)
+                var ring_index: float = float(ring)
+                var start: float = -0.62 + ring_index * 2.04
+                var ring_color: Color = biome.particle
+                ring_color.a = 0.38 - ring_index * 0.07
+                draw_arc(Vector2.ZERO, radius * (0.18 + ring_index * 0.043), start, start + 1.34, 22, ring_color, 2.4 - ring_index * 0.36, true)
             draw_circle(Vector2.ZERO, radius * 0.030, biome.emissive.lightened(0.18), true, -1.0, true)
         "combat":
             # These are passive tissue pressure bands, not gameplay telegraphs or combat UI.

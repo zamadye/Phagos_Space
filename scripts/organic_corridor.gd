@@ -174,19 +174,22 @@ func _draw_cortical_fringe(points: PackedVector2Array, widths: PackedFloat32Arra
     var rng := RandomNumberGenerator.new()
     rng.seed = int(corridor_data["seed"]) ^ int(points.size() * 0x41A7)
     for index in range(1, points.size() - 1, 2):
-        var tangent := (points[index + 1] - points[index - 1]).normalized()
-        var normal := tangent.orthogonal()
-        for side in [-1.0, 1.0]:
-            var rim := points[index] + normal * widths[index] * side * 0.48
-            var toward_lumen := -normal * side
-            var tuft_count := 2 if index % 4 == 1 else 1
+        var tangent: Vector2 = (points[index + 1] - points[index - 1]).normalized()
+        var normal: Vector2 = tangent.orthogonal()
+        # Array literals are Variant collections in GDScript, so cast this value before
+        # using it in vector math. This preserves strict Web-export script compilation.
+        for side_value in [-1.0, 1.0]:
+            var side: float = float(side_value)
+            var rim: Vector2 = points[index] + normal * widths[index] * side * 0.48
+            var toward_lumen: Vector2 = -normal * side
+            var tuft_count: int = 2 if index % 4 == 1 else 1
             for tuft in range(tuft_count):
-                var start := rim + tangent * rng.randf_range(-8.0, 8.0)
-                var end := start + toward_lumen * rng.randf_range(7.0, 18.0) + tangent * rng.randf_range(-3.0, 3.0)
-                var cilium := biome.membrane.lightened(rng.randf_range(0.03, 0.17))
+                var start: Vector2 = rim + tangent * rng.randf_range(-8.0, 8.0)
+                var end: Vector2 = start + toward_lumen * rng.randf_range(7.0, 18.0) + tangent * rng.randf_range(-3.0, 3.0)
+                var cilium: Color = biome.membrane.lightened(rng.randf_range(0.03, 0.17))
                 cilium.a = rng.randf_range(0.28, 0.56)
                 draw_line(start, end, cilium, rng.randf_range(1.1, 2.4), true)
-                var tip := biome.floor_secondary.lightened(0.14)
+                var tip: Color = biome.floor_secondary.lightened(0.14)
                 tip.a = cilium.a * 0.82
                 draw_circle(end, rng.randf_range(1.2, 2.8), tip, true, -1.0, true)
 
@@ -196,18 +199,18 @@ func _draw_rim_organelle_clusters(points: PackedVector2Array, widths: PackedFloa
     var rng := RandomNumberGenerator.new()
     rng.seed = int(corridor_data["seed"]) ^ 0x0A71C
     for index in range(3, points.size() - 2, 5):
-        var tangent := (points[index + 1] - points[index - 1]).normalized()
-        var normal := tangent.orthogonal()
-        var side := 1.0 if rng.randf() > 0.5 else -1.0
-        var anchor := points[index] + normal * widths[index] * side * rng.randf_range(0.32, 0.43)
+        var tangent: Vector2 = (points[index + 1] - points[index - 1]).normalized()
+        var normal: Vector2 = tangent.orthogonal()
+        var side: float = 1.0 if rng.randf() > 0.5 else -1.0
+        var anchor: Vector2 = points[index] + normal * widths[index] * side * rng.randf_range(0.32, 0.43)
         for pod in range(rng.randi_range(2, 4)):
-            var offset := tangent * rng.randf_range(-11.0, 11.0) + normal * side * rng.randf_range(-5.0, 8.0)
-            var radius := rng.randf_range(2.5, 6.5)
-            var pod_color := biome.floor_secondary.lightened(rng.randf_range(0.02, 0.19))
+            var offset: Vector2 = tangent * rng.randf_range(-11.0, 11.0) + normal * side * rng.randf_range(-5.0, 8.0)
+            var radius: float = rng.randf_range(2.5, 6.5)
+            var pod_color: Color = biome.floor_secondary.lightened(rng.randf_range(0.02, 0.19))
             pod_color.a = rng.randf_range(0.20, 0.48)
             draw_circle(anchor + offset, radius, pod_color, true, -1.0, true)
             if pod % 2 == 0:
-                var core_color := biome.emissive
+                var core_color: Color = biome.emissive
                 core_color.a = pod_color.a * 0.56
                 draw_circle(anchor + offset, radius * 0.33, core_color, true, -1.0, true)
 
