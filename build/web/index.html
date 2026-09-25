@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, viewport-fit=cover, initial-scale=1.0">
     <meta name="theme-color" content="#08030e">
     <meta name="color-scheme" content="dark">
+    <!-- Godot exports this generated PNG beside the runtime. Avoid a noisy /favicon.ico 404
+         during browser QA while retaining the standalone static-host layout. -->
+    <link rel="icon" type="image/png" href="phagos.icon.png">
     <title>Phagos | Organic Arena Kit — Arena Preview</title>
     <style>
         :root {
@@ -238,7 +241,7 @@
 
     <script src="phagos.js"></script>
     <script>
-        const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"ensureCrossOriginIsolationHeaders":false,"executable":"phagos","experimentalVK":false,"fileSizes":{"phagos.pck":400112,"phagos.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
+        const GODOT_CONFIG = {"args":[],"canvasResizePolicy":0,"ensureCrossOriginIsolationHeaders":false,"executable":"phagos","experimentalVK":false,"fileSizes":{"phagos.pck":404480,"phagos.wasm":35376909},"focusCanvas":true,"gdextensionLibs":[]};
         const GODOT_THREADS_ENABLED = false;
         const canvas = document.getElementById('canvas');
         const loader = document.getElementById('phagos-loader');
