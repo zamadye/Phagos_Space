@@ -38,7 +38,7 @@ float fbm(vec2 p) {
 }
 
 void fragment() {
-    mat2 rotation = mat2(cos(uv_rotation), -sin(uv_rotation), sin(uv_rotation), cos(uv_rotation));
+    mat2 rotation = mat2(vec2(cos(uv_rotation), -sin(uv_rotation)), vec2(sin(uv_rotation), cos(uv_rotation)));
     vec2 transformed_uv = rotation * (UV - vec2(0.5)) + vec2(0.5) + uv_offset;
     vec2 slow_drift = vec2(TIME * flow_speed * 0.13, -TIME * flow_speed * 0.08);
     vec2 flow_a = transformed_uv * scale + vec2(TIME * flow_speed, -TIME * flow_speed * 0.43) + seed;

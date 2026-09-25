@@ -238,8 +238,24 @@
     <script>
         const GODOT_CONFIG = $GODOT_CONFIG;
         const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+        const canvas = document.getElementById('canvas');
         const loader = document.getElementById('phagos-loader');
         const status = document.getElementById('load-status');
+
+        // The Web preset intentionally keeps Godot's automatic canvas policy disabled.
+        // Size the backing store ourselves so a CSS-fullscreen canvas is never left at
+        // the browser's 300×150 default and remains crisp on high-density displays.
+        function resizeCanvas() {
+            const density = Math.min(window.devicePixelRatio || 1, 2);
+            const width = Math.max(1, Math.round(document.documentElement.clientWidth * density));
+            const height = Math.max(1, Math.round(document.documentElement.clientHeight * density));
+            if (canvas.width !== width || canvas.height !== height) {
+                canvas.width = width;
+                canvas.height = height;
+            }
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas, { passive: true });
         const progressValue = document.getElementById('progress-value');
         const progressLabel = document.getElementById('progress-label');
         const progressTrack = document.querySelector('.progress-track');

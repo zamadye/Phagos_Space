@@ -35,7 +35,7 @@ static func wall_piece(biome_id: StringName, topology: String, seed_value: int) 
     return resolve_texture("wall", biome_id, "wall_%s" % topology, seed_value)
 
 static func prop_sprite(prop_kind: String, seed_value: int) -> Texture2D:
-    var manifest_kind := {
+    var manifest_kind: String = String({
         "protein_vesicle": "protein",
         "moving_vesicle": "protein",
         "protein_pod": "protein",
@@ -44,7 +44,7 @@ static func prop_sprite(prop_kind: String, seed_value: int) -> Texture2D:
         "membrane_sac": "membrane_sac",
         "calcified_chunk": "calcified_chunk",
         "atp_pool": "atp_pool",
-    }.get(prop_kind, "")
+    }.get(prop_kind, ""))
     if String(manifest_kind).is_empty():
         return null
     return resolve_texture("prop", &"", String(manifest_kind), seed_value)

@@ -71,7 +71,7 @@ func generate(seed_value: int, biome: PhagosBiomeDefinition, world_scale: float 
 
     var edges: Array[Dictionary] = []
     for edge_template in EDGE_TEMPLATE:
-        var edge := edge_template.duplicate(true)
+        var edge: Dictionary = edge_template.duplicate(true)
         edge["width"] = float(edge["width"]) * world_scale
         edge["seed"] = rng.randi()
         edge["curve_bias"] = rng.randf_range(-1.0, 1.0) * biome.corridor_curvature
@@ -91,8 +91,10 @@ func _register_entrances(rooms: Array[Dictionary], index_by_id: Dictionary, edge
     var to_index: int = index_by_id[edge["to"]]
     var from_room: Dictionary = rooms[from_index]
     var to_room: Dictionary = rooms[to_index]
-    var direction := (to_room["position"] - from_room["position"]).normalized()
-    var reverse_direction := -direction
+    var from_position: Vector2 = from_room["position"]
+    var to_position: Vector2 = to_room["position"]
+    var direction: Vector2 = (to_position - from_position).normalized()
+    var reverse_direction: Vector2 = -direction
 
     var from_entrances: Array = from_room["entrances"]
     from_entrances.append({

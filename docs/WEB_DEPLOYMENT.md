@@ -15,7 +15,7 @@ Phagos exports to **Godot 4 Web / WebGL 2 Compatibility**. The runtime is intent
 | Browser entry | `build/web/index.html` |
 | Payload naming | `phagos.js`, `phagos.wasm`, `phagos.pck` |
 
-The `build/` directory is generated output. Do not hand-edit `build/web/index.html`; edit [`web/phagos_loader.html`](../web/phagos_loader.html), then re-export.
+The `build/` directory is generated output. Do not hand-edit `build/web/index.html`; edit [`web/phagos_loader.html`](../web/phagos_loader.html), then re-export. The exporter stages its output under `build/` and replaces `build/web` only after its payload checks pass, so a missing template or failed CLI export does not erase the last working local preview.
 
 ## Local build and preview
 

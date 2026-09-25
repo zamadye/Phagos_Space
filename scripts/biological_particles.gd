@@ -58,8 +58,9 @@ func _should_use_gpu(allow_gpu_particles: bool) -> bool:
         return false
     if bool(ProjectSettings.get_setting("phagos/particles/force_cpu", false)):
         return false
-    # The dummy renderer is used by some CI/headless environments and cannot present GPU particles.
-    return RenderingServer.get_current_rendering_method() != "dummy"
+    # Headless does not have a display backend. On native and WebGL displays, GPUParticles2D
+    # remains the preferred path; the exported force_cpu flag retains a deterministic fallback.
+    return DisplayServer.get_name().to_lower() != "headless"
 
 func _clear_gpu_layers() -> void:
     for child in get_children():

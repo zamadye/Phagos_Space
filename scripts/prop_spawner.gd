@@ -5,10 +5,10 @@ extends RefCounted
 
 const BreakablePropNode = preload("res://scripts/breakable_prop.gd")
 
-const STATIC_KINDS := PackedStringArray(["collagen_fiber", "membrane_ridge", "tissue_chunk"])
-const SEMI_ANIMATED_KINDS := PackedStringArray(["protein_vesicle", "plasma_bubble", "cytokine_crystal"])
-const ANIMATED_KINDS := PackedStringArray(["moving_vesicle", "oxygen_particle", "immune_signal_light"])
-const BREAKABLE_KINDS := PackedStringArray(["membrane_sac", "calcified_chunk", "protein_pod", "atp_pool"])
+const STATIC_KINDS: Array[String] = ["collagen_fiber", "membrane_ridge", "tissue_chunk"]
+const SEMI_ANIMATED_KINDS: Array[String] = ["protein_vesicle", "plasma_bubble", "cytokine_crystal"]
+const ANIMATED_KINDS: Array[String] = ["moving_vesicle", "oxygen_particle", "immune_signal_light"]
+const BREAKABLE_KINDS: Array[String] = ["membrane_sac", "calcified_chunk", "protein_pod", "atp_pool"]
 
 func populate(parent: Node2D, graph: Dictionary, biome: PhagosBiomeDefinition, seed_value: int) -> Dictionary:
     var rng := RandomNumberGenerator.new()
@@ -61,11 +61,16 @@ func _populate_corridor_edges(parent: Node2D, edges: Array, biome: PhagosBiomeDe
         counters["static"] += 1
 
 func _spawn_prop(parent: Node2D, kind: String, location: Vector2, biome: PhagosBiomeDefinition, seed_value: int, is_breakable: bool, is_animated: bool) -> void:
+    # Some WebGL drivers are fragile with many translucent flattened pools. Preserve the
+    # breakable category while substituting the stable protein-pod silhouette on Web builds.
+    var effective_kind := kind
+    if OS.has_feature("web") and effective_kind == "atp_pool":
+        effective_kind = "protein_pod"
     var prop := BreakablePropNode.new()
-    prop.name = "Prop_%s" % kind
+    prop.name = "Prop_%s" % effective_kind
     prop.position = location
     prop.z_index = 6
-    prop.configure(kind, biome, seed_value, is_breakable, is_animated)
+    prop.configure(effective_kind, biome, seed_value, is_breakable, is_animated)
     if is_breakable:
         prop.add_to_group("phagos_breakable_props")
     parent.add_child(prop)
@@ -76,7 +81,7 @@ func _room_point(room: Dictionary, rng: RandomNumberGenerator, min_radial: float
     var size: Vector2 = room["size"]
     return room["position"] + Vector2(cos(angle) * size.x * 0.5 * radial, sin(angle) * size.y * 0.5 * radial)
 
-func _pick_kind(kinds: PackedStringArray, biome: PhagosBiomeDefinition, rng: RandomNumberGenerator) -> String:
+func _pick_kind(kinds: Array[String], biome: PhagosBiomeDefinition, rng: RandomNumberGenerator) -> String:
     # Biome-weighted nudges retain a shared kit while making each organ legible.
     if biome.id == &"lung" and kinds.has("plasma_bubble") and rng.randf() < 0.45:
         return "plasma_bubble"
