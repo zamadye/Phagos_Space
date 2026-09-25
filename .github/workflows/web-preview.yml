@@ -8,7 +8,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  # The generated Web payload is committed back to the active preview branch so a
+  # plain `python3 -m http.server` from this repository can open the actual Godot game.
+  contents: write
   pages: write
   id-token: write
 
@@ -42,6 +44,23 @@ jobs:
 
       - name: Export Web release
         run: ./scripts/export_web.sh
+
+      # Keep an immediately runnable preview beside the source. This is intentionally
+      # force-added because build/ is normally ignored; the files are produced only by
+      # the real Godot release exporter above, never hand-authored.
+      - name: Publish generated Web preview to this branch
+        env:
+          PREVIEW_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --force build/web
+          if git diff --cached --quiet; then
+            echo "Generated preview is already current."
+            exit 0
+          fi
+          git commit -m "chore(web): refresh generated Godot preview [skip ci]"
+          git push origin "HEAD:${PREVIEW_BRANCH}"
 
       # The game archive is deliberately published immediately after a successful engine
       # export. This keeps a runnable Godot build available even when a later QA gate fails.
