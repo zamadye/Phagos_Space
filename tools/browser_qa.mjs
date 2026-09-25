@@ -17,6 +17,11 @@ const valueAfter = (flag, fallback) => {
 const url = valueAfter('--url', 'http://127.0.0.1:8080');
 const reportPath = resolve(valueAfter('--report', 'reports/browser_validation.md'));
 const minFps = Number(valueAfter('--min-fps', '55'));
+const softwareSmokeMinFps = Number(valueAfter('--software-min-fps', '1'));
+// Xvfb + LIBGL_ALWAYS_SOFTWARE has no desktop GPU. This explicit opt-in keeps the
+// browser boot smoke gate meaningful there without falsely treating its rAF timing as
+// a desktop 60 FPS measurement. The default remains the strict desktop FPS gate.
+const allowSoftwareFps = args.includes('--allow-software-fps');
 // CI runs this under Xvfb with --headed so all three engines receive a visible
 // compositor surface. Local automation remains headless by default.
 const headed = args.includes('--headed');
@@ -88,9 +93,16 @@ async function inspectTarget(target) {
         const webgl = await page.evaluate(() => {
             const canvas = document.querySelector('#canvas');
             const gl = canvas?.getContext('webgl2') || canvas?.getContext('webgl');
-            if (!gl) return { available: false, error: 'WebGL context unavailable' };
+            if (!gl) return { available: false, error: 'WebGL context unavailable', renderer: null, vendor: null };
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            const renderer = debugInfo
+                ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL)
+                : gl.getParameter(gl.RENDERER);
+            const vendor = debugInfo
+                ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL)
+                : gl.getParameter(gl.VENDOR);
             const error = gl.getError();
-            return { available: true, error: error === gl.NO_ERROR ? null : `WebGL error ${error}` };
+            return { available: true, error: error === gl.NO_ERROR ? null : `WebGL error ${error}`, renderer, vendor };
         });
         await context.close();
 
@@ -99,19 +111,35 @@ async function inspectTarget(target) {
         // export naming regressions otherwise look like a renderer or shader failure.
         const responseErrors = failedResponses.map((response) => `HTTP ${response.status} ${response.url}`);
         const errors = [...consoleErrors, ...pageErrors, ...responseErrors];
+        const desktopFps = fps >= minFps;
+        const softwareFpsExempt = !desktopFps && allowSoftwareFps && fps >= softwareSmokeMinFps;
         const checks = {
             wasm_load: Boolean(wasm && wasm.status === 200),
             wasm_mime: Boolean(wasm && /application\/wasm/i.test(wasm.mime)),
             shader_compile: webgl.available && webgl.error === null && errors.length === 0,
-            fps: fps >= minFps,
+            fps: desktopFps || softwareFpsExempt,
             console_error_free: errors.length === 0,
         };
-        return { name: target.name, checks, fps, wasm, webgl, consoleErrors, pageErrors, responseErrors, fatal: null };
+        return {
+            name: target.name,
+            checks,
+            fps,
+            desktopFps,
+            softwareFpsExempt,
+            wasm,
+            webgl,
+            consoleErrors,
+            pageErrors,
+            responseErrors,
+            fatal: null,
+        };
     } catch (error) {
         return {
             name: target.name,
             checks: { wasm_load: false, wasm_mime: false, shader_compile: false, fps: false, console_error_free: false },
             fps: 0,
+            desktopFps: false,
+            softwareFpsExempt: false,
             wasm: null,
             webgl: { available: false, error: String(error) },
             consoleErrors,
@@ -131,10 +159,12 @@ for (const target of targets) {
 }
 
 const allPassed = results.every((result) => Object.values(result.checks).every(Boolean));
+const hasSoftwareFpsExemption = results.some((result) => result.softwareFpsExempt);
 const now = new Date().toISOString();
 const rows = results.map((result) => {
     const mark = (value) => value ? 'PASS' : 'FAIL';
-    return `| ${result.name} | ${mark(result.checks.wasm_load)} | ${mark(result.checks.wasm_mime)} | ${mark(result.checks.shader_compile)} | ${result.fps.toFixed(1)} | ${mark(result.checks.fps)} | ${mark(result.checks.console_error_free)} |`;
+    const fpsPolicy = result.desktopFps ? 'PASS' : result.softwareFpsExempt ? 'SMOKE' : 'FAIL';
+    return `| ${result.name} | ${mark(result.checks.wasm_load)} | ${mark(result.checks.wasm_mime)} | ${mark(result.checks.shader_compile)} | ${result.fps.toFixed(1)} | ${fpsPolicy} | ${mark(result.checks.console_error_free)} |`;
 }).join('\n');
 const diagnostics = results.map((result) => {
     const messages = [result.fatal, ...result.consoleErrors, ...result.pageErrors, ...result.responseErrors, result.webgl?.error].filter(Boolean);
@@ -142,8 +172,25 @@ const diagnostics = results.map((result) => {
     return `- **${result.name}:** ${messages.map((message) => `\`${String(message).replaceAll('`', '\\`')}\``).join('; ')}`;
 }).join('\n');
 const wasmDetails = results.map((result) => `- **${result.name}:** ${result.wasm ? `${result.wasm.status} · ${result.wasm.mime || 'missing MIME'} · ${result.wasm.url}` : 'WASM response not observed'}`).join('\n');
+const frameTiming = results.map((result) => {
+    const renderer = [result.webgl?.vendor, result.webgl?.renderer].filter(Boolean).join(' · ') || 'renderer unavailable';
+    const policy = result.desktopFps
+        ? `desktop gate PASS (≥ ${minFps} FPS)`
+        : result.softwareFpsExempt
+            ? `software smoke PASS (≥ ${softwareSmokeMinFps} FPS); desktop ≥ ${minFps} FPS remains unverified`
+            : `FAIL (requires ≥ ${minFps} FPS${allowSoftwareFps ? ` or ≥ ${softwareSmokeMinFps} FPS on the configured software smoke surface` : ''})`;
+    return `- **${result.name}:** ${result.fps.toFixed(1)} FPS · ${renderer} · ${policy}`;
+}).join('\n');
 const surfaceMode = headed ? 'headed via Xvfb' : 'headless';
-const report = `# Phagos browser validation\n\nGenerated: ${now}\n\nTarget URL: ${url}\n\nBrowser surface: **${surfaceMode}**. rAF gate: **≥ ${minFps} FPS** (desktop browser target remains 60 FPS).\n\n| Browser | WASM load | WASM MIME | Shader / WebGL | Measured FPS | FPS gate | Console errors |\n|---|---:|---:|---:|---:|---:|---:|\n${rows}\n\n## WASM delivery\n${wasmDetails}\n\n## Diagnostics\n${diagnostics}\n\n## Result\n\n**${allPassed ? 'PASS' : 'FAIL'}** — Chrome, Firefox, and Edge must all pass before the Web preview is promoted.\n`;
+const resultSummary = allPassed
+    ? hasSoftwareFpsExemption
+        ? `**PASS (software smoke)** — Chrome, Firefox, and Edge loaded the official Web build with valid WASM, WebGL, and clean consoles. The configured software surface cannot certify desktop 60 FPS; run this command without \`--allow-software-fps\` on accelerated desktop hardware for that gate.`
+        : '**PASS** — Chrome, Firefox, and Edge passed all Web delivery, WebGL, console, and desktop FPS gates.'
+    : '**FAIL** — Chrome, Firefox, and Edge must all pass the configured Web delivery, WebGL, console, and frame-timing gates before promotion.';
+const softwarePolicy = allowSoftwareFps
+    ? ` A software smoke floor of **≥ ${softwareSmokeMinFps} FPS** is active; it does not replace the desktop gate.`
+    : '';
+const report = `# Phagos browser validation\n\nGenerated: ${now}\n\nTarget URL: ${url}\n\nBrowser surface: **${surfaceMode}**. Desktop rAF gate: **≥ ${minFps} FPS** (desktop target remains 60 FPS).${softwarePolicy}\n\n| Browser | WASM load | WASM MIME | Shader / WebGL | Measured FPS | FPS policy | Console errors |\n|---|---:|---:|---:|---:|---:|---:|\n${rows}\n\n## WASM delivery\n${wasmDetails}\n\n## Frame timing\n${frameTiming}\n\n## Diagnostics\n${diagnostics}\n\n## Result\n\n${resultSummary}\n`;
 await mkdir(dirname(reportPath), { recursive: true });
 await writeFile(reportPath, report, 'utf8');
 console.log(`Browser QA ${allPassed ? 'passed' : 'failed'}: ${reportPath}`);

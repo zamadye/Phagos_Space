@@ -50,6 +50,8 @@ Expected files after a successful build:
 ```text
 build/web/
 ├── index.html
+├── index.icon.png
+├── index.apple-touch-icon.png
 ├── phagos.js
 ├── phagos.wasm
 ├── phagos.pck
@@ -69,12 +71,13 @@ The shell keeps an accessible progress bar and removes itself only after Godot's
 
 1. checks out source;
 2. installs Godot 4.3 plus export templates;
-3. exports the Web release;
-4. captures the four biome screenshots at 1920×1080;
-5. validates source-art manifest status;
-6. serves the release and runs Chrome, Firefox, and Edge QA;
-7. uploads `web-preview.zip`, quality reports, and `build/web` as a Pages artifact;
-8. deploys the exact `build/web` directory through GitHub Pages.
+3. imports/parses the Godot source before export so runtime-only script failures cannot publish a false-success build;
+4. exports the Web release;
+5. captures the four biome screenshots at 1920×1080;
+6. validates source-art manifest status;
+7. serves the release and runs Chrome, Firefox, and Edge QA;
+8. uploads `web-preview.zip`, quality reports, and `build/web` as a Pages artifact;
+9. deploys the exact `build/web` directory through GitHub Pages.
 
 Repository administrators must set **Settings → Pages → Source → GitHub Actions** once. The workflow uses the official Pages deployment action and needs the `pages: write` / `id-token: write` permissions already declared in the workflow.
 
@@ -153,7 +156,9 @@ python3 -m http.server 8080 --directory build/web
 node tools/browser_qa.mjs --url http://127.0.0.1:8080 --report reports/browser_validation.md
 ```
 
-The report gates each browser on WASM download, correct `application/wasm` MIME, absence of console/WebGL shader errors, and a 60 FPS-oriented two-second animation-frame measurement (55 FPS CI tolerance for headless browser timing).
+The default report gates each browser on WASM download, correct `application/wasm` MIME, absence of console/WebGL shader errors, and a 60 FPS-oriented two-second animation-frame measurement (55 FPS threshold). Run that default command on accelerated desktop hardware to certify the performance target.
+
+GitHub Actions intentionally uses `Xvfb` with `LIBGL_ALWAYS_SOFTWARE=1` so Chrome, Firefox, and Edge can all create WebGL contexts on the hosted runner. Its workflow passes `--allow-software-fps --software-min-fps 1`: this preserves a responsiveness smoke floor while marking the report **software smoke** rather than claiming a desktop 60 FPS result. WASM, WebGL, console, and request-failure checks remain strict in both modes.
 
 ### Art integration
 
