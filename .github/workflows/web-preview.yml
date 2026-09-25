@@ -46,7 +46,11 @@ jobs:
       - name: Generate arena screenshots
         env:
           LIBGL_ALWAYS_SOFTWARE: "1"
-        run: godot --headless --path . --rendering-driver opengl3 --script res://tools/capture_screenshots.gd
+        run: |
+          # Screenshot capture needs an actual Compatibility/OpenGL surface. `--headless`
+          # has no renderer on Ubuntu runners and can wait forever for frame_post_draw.
+          timeout 150 xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
+            godot --path . --rendering-driver opengl3 --script res://tools/capture_screenshots.gd
 
       - name: Generate asset validation report
         run: python3 tools/validate_assets.py --report reports/asset_validation.json

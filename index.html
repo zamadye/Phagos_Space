@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Opening Phagos Arena…</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 40%, #203149 0%, #0b1020 45%, #05070f 100%);
+      color: #eaf7ff;
+      font: 500 16px/1.5 system-ui, sans-serif;
+    }
+    main { max-width: 40rem; padding: 2rem; text-align: center; }
+    .core {
+      width: 4rem; height: 4rem; margin: 0 auto 1.25rem; border-radius: 50%;
+      background: #70eaff; box-shadow: 0 0 1rem #52d6ff, 0 0 3rem #277db9;
+      animation: pulse 1.3s ease-in-out infinite alternate;
+    }
+    code { color: #a9e9ff; }
+    .hidden { display: none; }
+    @keyframes pulse { to { transform: scale(1.14); opacity: .7; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="core" aria-hidden="true"></div>
+    <h1>Opening Phagos Arena</h1>
+    <p id="status">Loading the Godot Web build…</p>
+    <p id="fallback" class="hidden">
+      The generated Web build is not present yet. Run<br>
+      <code>PORT=8008 ./scripts/preview_web.sh</code><br>
+      or serve <code>build/web</code> directly.
+    </p>
+  </main>
+  <script>
+    fetch('./build/web/index.html', { method: 'HEAD', cache: 'no-store' })
+      .then((response) => {
+        if (!response.ok) throw new Error('Web build is unavailable');
+        window.location.replace('./build/web/');
+      })
+      .catch(() => {
+        document.getElementById('status').textContent = 'Godot Web build not generated locally.';
+        document.getElementById('fallback').classList.remove('hidden');
+      });
+  </script>
+</body>
+</html>

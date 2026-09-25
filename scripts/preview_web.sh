@@ -4,7 +4,8 @@ set -euo pipefail
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WEB_DIR="$PROJECT_ROOT/build/web"
-URL="http://localhost:8080"
+PORT="${PORT:-8080}"
+URL="http://localhost:${PORT}"
 
 if [[ ! -s "$WEB_DIR/index.html" || ! -s "$WEB_DIR/phagos.js" || ! -s "$WEB_DIR/phagos.wasm" || ! -s "$WEB_DIR/phagos.pck" ]]; then
     echo "Web build is missing; exporting a release first..."
@@ -22,5 +23,4 @@ elif command -v open >/dev/null 2>&1; then
     (sleep 0.6 && open "$URL" >/dev/null 2>&1) &
 fi
 
-cd "$WEB_DIR"
-exec python3 -m http.server 8080
+exec python3 -m http.server "$PORT" --directory "$WEB_DIR"

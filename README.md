@@ -26,7 +26,7 @@ chmod +x scripts/export_web.sh scripts/preview_web.sh scripts/deploy_web_vps.sh
 ./scripts/preview_web.sh
 ```
 
-Preview melayani `build/web` di `http://localhost:8080`. Export menghasilkan `index.html`, `phagos.js`, `phagos.wasm`, dan `phagos.pck`; custom browser loader memiliki immune core animasi, progress, serta transisi fade 320–460 ms. Detail CI, GitHub Pages, nginx/Brotli, screenshot QA, dan VPS tersedia di [`docs/WEB_DEPLOYMENT.md`](docs/WEB_DEPLOYMENT.md).
+Preview melayani `build/web` di `http://localhost:8080`. Untuk port lain, gunakan `PORT=8008 ./scripts/preview_web.sh`, atau jalankan `python3 -m http.server 8008 --directory build/web` — menjalankan HTTP server pada root repository hanya akan menampilkan source tree, bukan Godot runtime. Root `index.html` otomatis meneruskan ke `build/web/` jika build sudah tersedia. Export menghasilkan `index.html`, `phagos.js`, `phagos.wasm`, dan `phagos.pck`; custom browser loader memiliki immune core animasi, progress, serta transisi fade 320–460 ms. Detail CI, GitHub Pages, nginx/Brotli, screenshot QA, dan VPS tersedia di [`docs/WEB_DEPLOYMENT.md`](docs/WEB_DEPLOYMENT.md).
 
 ## Yang sudah diimplementasikan
 
