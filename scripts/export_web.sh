@@ -45,12 +45,17 @@ for extension in js wasm pck; do
     mv "$source_file" "$target_file"
 done
 
-# Godot may generate optional loader sidecars. Keep names consistent when present.
+# Godot may generate optional loader sidecars. Keep runtime sidecar names consistent
+# when present, but preserve the two icon paths injected by Godot into the HTML shell.
+# The engine refers to those paths as index.icon.png and index.apple-touch-icon.png.
 while IFS= read -r -d '' sidecar; do
     renamed="${sidecar##*/}"
     renamed="${renamed/index./phagos.}"
     mv "$sidecar" "$STAGING_DIR/$renamed"
-done < <(find "$STAGING_DIR" -maxdepth 1 -type f -name 'index.*' ! -name 'index.html' -print0)
+done < <(find "$STAGING_DIR" -maxdepth 1 -type f -name 'index.*' \
+    ! -name 'index.html' \
+    ! -name 'index.icon.png' \
+    ! -name 'index.apple-touch-icon.png' -print0)
 
 python3 - "$STAGING_DIR/index.html" <<'PY'
 from pathlib import Path
@@ -80,7 +85,7 @@ else
     echo "warning: brotli is not installed; canonical Web payloads were built without .br sidecars." >&2
 fi
 
-for required in index.html phagos.js phagos.wasm phagos.pck; do
+for required in index.html phagos.js phagos.wasm phagos.pck index.icon.png index.apple-touch-icon.png; do
     if [[ ! -s "$STAGING_DIR/$required" ]]; then
         echo "error: expected build/web/$required after export." >&2
         exit 1
