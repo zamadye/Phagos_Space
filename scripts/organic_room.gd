@@ -237,14 +237,25 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
     if not _configured:
         return
-    # Layer 1: living tissue mass. Layer 2+ draw only stochastic details; the shader
-    # children supply the moving cytoplasm and membranes above this safe fallback floor.
+    # The silhouette is intentionally deep and weighty: the reference pass favors a
+    # readable cellular lumen framed by a dark, layered cortical wall rather than a
+    # flat dungeon outline. All detail remains original procedural anatomy.
     draw_colored_polygon(_outer_contour, biome.tissue_shadow)
     draw_colored_polygon(_wall_contour, biome.tissue_base)
     draw_colored_polygon(_inner_contour, biome.floor.darkened(0.14))
-    draw_polyline(_closed(_outer_contour), biome.tissue_shadow.lightened(0.18), 18.0, true)
-    draw_polyline(_closed(_wall_contour), biome.membrane.darkened(0.36), 8.0, true)
+
+    var outer_rim := biome.tissue_shadow.lightened(0.18)
+    outer_rim.a = 0.94
+    draw_polyline(_closed(_outer_contour), outer_rim, 18.0, true)
+    draw_polyline(_closed(_wall_contour), biome.tissue_shadow.darkened(0.12), 14.0, true)
+    draw_polyline(_closed(_wall_contour), biome.membrane.darkened(0.36), 7.0, true)
+    var lumen_rim := biome.membrane.darkened(0.46)
+    lumen_rim.a = 0.82
+    draw_polyline(_closed(_inner_contour), lumen_rim, 4.0, true)
+
     _draw_membrane_folds()
+    _draw_cortical_fringe()
+    _draw_organelle_rim_clusters()
     _draw_micro_cracks()
     _draw_static_tissue_decoration()
     _draw_room_identity()
@@ -252,33 +263,66 @@ func _draw() -> void:
 
 func _draw_room_identity() -> void:
     var size: Vector2 = room_data["size"]
+    var radius := minf(size.x, size.y)
     match String(room_data["type"]):
         "spawn":
+            # Calm luminous lumen: environmental orientation without adding a HUD or player.
             var sanctuary_color := biome.emissive
-            sanctuary_color.a = 0.14
-            draw_circle(Vector2.ZERO, minf(size.x, size.y) * 0.17, sanctuary_color, true, -1.0, true)
-            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.23, -0.45, TAU - 0.45, 36, biome.particle, 2.0, true)
+            sanctuary_color.a = 0.16
+            draw_circle(Vector2.ZERO, radius * 0.17, sanctuary_color, true, -1.0, true)
+            for ring in range(3):
+                var start := -0.62 + ring * 2.04
+                var ring_color := biome.particle
+                ring_color.a = 0.38 - ring * 0.07
+                draw_arc(Vector2.ZERO, radius * (0.18 + ring * 0.043), start, start + 1.34, 22, ring_color, 2.4 - ring * 0.36, true)
+            draw_circle(Vector2.ZERO, radius * 0.030, biome.emissive.lightened(0.18), true, -1.0, true)
         "combat":
-            # Balanced low-contrast visibility rails: readable but never a visual hotspot.
-            var combat_color := biome.membrane.darkened(0.26)
-            combat_color.a = 0.42
-            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.34, 0.45, 2.45, 18, combat_color, 2.0, true)
-            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.34, 3.55, 5.60, 18, combat_color, 2.0, true)
+            # These are passive tissue pressure bands, not gameplay telegraphs or combat UI.
+            var pressure_color := biome.membrane.lightened(0.04)
+            pressure_color.a = 0.26
+            for segment in range(4):
+                var start := float(segment) * TAU / 4.0 + 0.18
+                draw_arc(Vector2.ZERO, radius * (0.265 + float(segment % 2) * 0.052), start, start + 0.91, 16, pressure_color, 2.2, true)
         "elite":
-            for index in range(5):
-                var angle := float(index) * TAU / 5.0 + 0.28
-                var point := Vector2(cos(angle), sin(angle)) * minf(size.x, size.y) * 0.27
-                draw_circle(point, 5.0, biome.emissive, true, -1.0, true)
+            var focus_color := biome.emissive
+            focus_color.a = 0.44
+            for index in range(6):
+                var angle := float(index) * TAU / 6.0 + 0.28
+                var point := Vector2(cos(angle), sin(angle)) * radius * 0.25
+                draw_circle(point, 6.4, focus_color, true, -1.0, true)
+                draw_line(point * 0.78, point, biome.vein, 1.5, true)
+            var elite_halo := biome.emissive
+            elite_halo.a = 0.17
+            draw_arc(Vector2.ZERO, radius * 0.31, -0.20, 2.37, 28, elite_halo, 3.0, true)
         "shop":
+            # Nutrient reservoir: lower contrast and round clustered forms create a rest beat.
             var calm_color := biome.particle
-            calm_color.a = 0.24
-            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.31, 0.40, 2.74, 24, calm_color, 3.0, true)
-            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.22, 3.48, 5.86, 24, calm_color, 2.0, true)
+            calm_color.a = 0.18
+            for index in range(4):
+                var angle := float(index) * TAU / 4.0 + 0.34
+                var point := Vector2(cos(angle), sin(angle)) * radius * 0.14
+                draw_circle(point, radius * 0.062, calm_color, true, -1.0, true)
+            draw_arc(Vector2.ZERO, radius * 0.31, 0.40, 2.74, 24, calm_color, 3.0, true)
+            draw_arc(Vector2.ZERO, radius * 0.22, 3.48, 5.86, 24, calm_color, 2.0, true)
         "boss":
+            # A large cellular organelle field makes the oversized chamber feel anatomical,
+            # not like a rectangular boss arena. Only the environmental glow animates.
             var boss_color := biome.emissive
             boss_color.a = 0.18 + sin(Time.get_ticks_msec() * 0.001 * biome.pulse_speed) * 0.05
-            for ring in range(3):
-                draw_arc(Vector2.ZERO, minf(size.x, size.y) * (0.18 + ring * 0.105), 0.0, TAU, 48, boss_color, 3.0 - ring * 0.55, true)
+            draw_circle(Vector2.ZERO, radius * 0.12, boss_color, true, -1.0, true)
+            for ring in range(4):
+                draw_arc(Vector2.ZERO, radius * (0.16 + ring * 0.092), 0.0, TAU, 48, boss_color, 3.4 - ring * 0.52, true)
+            for spoke in range(8):
+                var angle := float(spoke) * TAU / 8.0 + 0.18
+                var start := Vector2(cos(angle), sin(angle)) * radius * 0.14
+                var end := Vector2(cos(angle + 0.12), sin(angle + 0.12)) * radius * 0.43
+                var spoke_color := biome.vein
+                spoke_color.a = 0.24
+                draw_line(start, end, spoke_color, 2.0, true)
+        "secret":
+            var secret_color := biome.particle
+            secret_color.a = 0.22
+            draw_arc(Vector2.ZERO, radius * 0.24, -1.18, 1.52, 24, secret_color, 1.8, true)
 
 func _draw_membrane_folds() -> void:
     var rng := RandomNumberGenerator.new()
@@ -290,6 +334,53 @@ func _draw_membrane_folds() -> void:
         var center := Vector2(cos(angle) * room_data["size"].x * 0.5 * radial, sin(angle) * room_data["size"].y * 0.5 * radial)
         var half_length := rng.randf_range(15.0, 42.0)
         draw_line(center - tangent * half_length, center + tangent * half_length, biome.membrane.darkened(rng.randf_range(0.18, 0.42)), rng.randf_range(2.0, 5.0), true)
+
+func _draw_cortical_fringe() -> void:
+    # Inward microvilli make the chamber boundary read as living tissue at game scale.
+    # Lines and discs stay Compatibility/WebGL-safe and are drawn once per generated room.
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(room_data["seed"]) ^ 0xC011A
+    for index in range(_inner_contour.size()):
+        var inner_anchor: Vector2 = _inner_contour[index]
+        var wall_anchor: Vector2 = _wall_contour[index]
+        var inward := (Vector2.ZERO - inner_anchor).normalized()
+        var tangent := inward.orthogonal()
+        var tuft_count := 2 if index % 2 == 0 else 1
+        for tuft in range(tuft_count):
+            var start := inner_anchor.lerp(wall_anchor, rng.randf_range(0.02, 0.12))
+            start += tangent * rng.randf_range(-9.0, 9.0)
+            var length := rng.randf_range(8.0, 22.0) * (1.0 + biome.decoration_density * 0.22)
+            var end := start + inward * length + tangent * rng.randf_range(-4.0, 4.0)
+            var cilium := biome.membrane.lightened(rng.randf_range(0.02, 0.19))
+            cilium.a = rng.randf_range(0.30, 0.64)
+            draw_line(start, end, cilium, rng.randf_range(1.2, 2.8), true)
+            var tip_color := biome.floor_secondary.lightened(0.16)
+            tip_color.a = cilium.a * 0.86
+            draw_circle(end, rng.randf_range(1.4, 3.2), tip_color, true, -1.0, true)
+
+func _draw_organelle_rim_clusters() -> void:
+    # Dense clustered vesicles borrow the *visual language* of microscopic shooters
+    # while remaining environment-only: they are not actors, pickups, or UI markers.
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(room_data["seed"]) ^ 0x0B6A11
+    var cluster_count := 9 if room_data["type"] == "boss" else 6
+    for cluster in range(cluster_count):
+        var contour_index := rng.randi_range(0, _inner_contour.size() - 1)
+        var inner_anchor: Vector2 = _inner_contour[contour_index]
+        var wall_anchor: Vector2 = _wall_contour[contour_index]
+        var anchor := inner_anchor.lerp(wall_anchor, rng.randf_range(0.30, 0.64))
+        var toward_lumen := (Vector2.ZERO - anchor).normalized()
+        var tangent := toward_lumen.orthogonal()
+        var pod_count := rng.randi_range(3, 6)
+        for pod in range(pod_count):
+            var spread := tangent * rng.randf_range(-18.0, 18.0) + toward_lumen * rng.randf_range(-10.0, 13.0)
+            var radius := rng.randf_range(3.0, 8.5)
+            var pod_color := biome.floor_secondary.lightened(rng.randf_range(0.02, 0.22))
+            pod_color.a = rng.randf_range(0.28, 0.58)
+            draw_circle(anchor + spread, radius, pod_color, true, -1.0, true)
+            var nucleus := biome.emissive
+            nucleus.a = pod_color.a * rng.randf_range(0.35, 0.62)
+            draw_circle(anchor + spread - toward_lumen * radius * 0.14, radius * 0.34, nucleus, true, -1.0, true)
 
 func _draw_micro_cracks() -> void:
     var rng := RandomNumberGenerator.new()

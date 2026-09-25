@@ -143,11 +143,17 @@ func _draw_track(track: Dictionary) -> void:
     draw_colored_polygon(_ribbon_polygon(points, widths, 0.0), biome.floor.darkened(0.10))
     var left := _edge_path(points, widths, 0.5)
     var right := _edge_path(points, widths, -0.5)
-    draw_polyline(left, biome.membrane.darkened(0.30), 9.0, true)
-    draw_polyline(right, biome.membrane.darkened(0.30), 9.0, true)
+    # Dark outer cortex plus a narrow membrane highlight keeps every branching lumen
+    # legible at a glance without turning it into a hard-edged dungeon hallway.
+    draw_polyline(left, biome.tissue_shadow.darkened(0.10), 14.0, true)
+    draw_polyline(right, biome.tissue_shadow.darkened(0.10), 14.0, true)
+    draw_polyline(left, biome.membrane.darkened(0.30), 8.0, true)
+    draw_polyline(right, biome.membrane.darkened(0.30), 8.0, true)
     draw_polyline(_edge_path(points, widths, 0.69), biome.tissue_shadow.lightened(0.12), 3.0, true)
     draw_polyline(_edge_path(points, widths, -0.69), biome.tissue_shadow.lightened(0.12), 3.0, true)
     _draw_membrane_folds(points, widths)
+    _draw_cortical_fringe(points, widths)
+    _draw_rim_organelle_clusters(points, widths)
     _draw_floor_cells(points, widths)
     _draw_micro_cracks(points, widths)
     if bool(track.get("capped", false)):
@@ -162,6 +168,48 @@ func _draw_membrane_folds(points: PackedVector2Array, widths: PackedFloat32Array
         var side := 1.0 if rng.randf() > 0.5 else -1.0
         var center := points[index] + normal * widths[index] * side * rng.randf_range(0.43, 0.62)
         draw_line(center - tangent * widths[index] * 0.16, center + tangent * widths[index] * 0.16, biome.membrane.darkened(0.2), rng.randf_range(1.8, 4.2), true)
+
+func _draw_cortical_fringe(points: PackedVector2Array, widths: PackedFloat32Array) -> void:
+    # Short inward cilia break up the corridor rim into a living epithelial boundary.
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(corridor_data["seed"]) ^ int(points.size() * 0x41A7)
+    for index in range(1, points.size() - 1, 2):
+        var tangent := (points[index + 1] - points[index - 1]).normalized()
+        var normal := tangent.orthogonal()
+        for side in [-1.0, 1.0]:
+            var rim := points[index] + normal * widths[index] * side * 0.48
+            var toward_lumen := -normal * side
+            var tuft_count := 2 if index % 4 == 1 else 1
+            for tuft in range(tuft_count):
+                var start := rim + tangent * rng.randf_range(-8.0, 8.0)
+                var end := start + toward_lumen * rng.randf_range(7.0, 18.0) + tangent * rng.randf_range(-3.0, 3.0)
+                var cilium := biome.membrane.lightened(rng.randf_range(0.03, 0.17))
+                cilium.a = rng.randf_range(0.28, 0.56)
+                draw_line(start, end, cilium, rng.randf_range(1.1, 2.4), true)
+                var tip := biome.floor_secondary.lightened(0.14)
+                tip.a = cilium.a * 0.82
+                draw_circle(end, rng.randf_range(1.2, 2.8), tip, true, -1.0, true)
+
+func _draw_rim_organelle_clusters(points: PackedVector2Array, widths: PackedFloat32Array) -> void:
+    # Sparse vesicle groups imply biological density along the wall while leaving the
+    # central path readable for the host game's future player/combat systems.
+    var rng := RandomNumberGenerator.new()
+    rng.seed = int(corridor_data["seed"]) ^ 0x0A71C
+    for index in range(3, points.size() - 2, 5):
+        var tangent := (points[index + 1] - points[index - 1]).normalized()
+        var normal := tangent.orthogonal()
+        var side := 1.0 if rng.randf() > 0.5 else -1.0
+        var anchor := points[index] + normal * widths[index] * side * rng.randf_range(0.32, 0.43)
+        for pod in range(rng.randi_range(2, 4)):
+            var offset := tangent * rng.randf_range(-11.0, 11.0) + normal * side * rng.randf_range(-5.0, 8.0)
+            var radius := rng.randf_range(2.5, 6.5)
+            var pod_color := biome.floor_secondary.lightened(rng.randf_range(0.02, 0.19))
+            pod_color.a = rng.randf_range(0.20, 0.48)
+            draw_circle(anchor + offset, radius, pod_color, true, -1.0, true)
+            if pod % 2 == 0:
+                var core_color := biome.emissive
+                core_color.a = pod_color.a * 0.56
+                draw_circle(anchor + offset, radius * 0.33, core_color, true, -1.0, true)
 
 func _draw_floor_cells(points: PackedVector2Array, widths: PackedFloat32Array) -> void:
     var rng := RandomNumberGenerator.new()
