@@ -2,8 +2,9 @@
 .godot/
 .import/
 
-# Generated art build outputs. Source PNGs under assets/ remain trackable.
+# Generated art and local/Web release outputs. Source PNGs under assets/ remain trackable.
 assets/atlas/
+build/
 reports/screenshots/*.png
 reports/browser-qa/
 
