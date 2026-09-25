@@ -111,6 +111,21 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Publish browser QA report to this branch
+        if: always()
+        env:
+          PREVIEW_BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/browser_validation.md reports/asset_validation.json
+          if git diff --cached --quiet; then
+            echo "QA reports are already current."
+            exit 0
+          fi
+          git commit -m "chore(qa): record browser validation [skip ci]"
+          git push origin "HEAD:${PREVIEW_BRANCH}"
+
       - name: Upload GitHub Pages artifact
         if: always()
         uses: actions/upload-pages-artifact@v3
