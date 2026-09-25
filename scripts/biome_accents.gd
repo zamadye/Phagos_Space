@@ -3,6 +3,8 @@ extends Node2D
 ## Biome-specific anatomy beyond palette. Kept as a batched field so Heart, Lung, Brain,
 ## and Marrow can have unique structural language without turning the arena into a tile set.
 
+const AssetResolverScript = preload("res://scripts/asset_resolver.gd")
+
 var biome: PhagosBiomeDefinition
 var bounds := Rect2(-1800, -1200, 5200, 3000)
 var accent_seed := 1
@@ -17,7 +19,36 @@ func configure(definition: PhagosBiomeDefinition, seed_value: int, new_bounds: R
         var additive := CanvasItemMaterial.new()
         additive.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
         material = additive
+    if is_inside_tree():
+        _build_imported_overlay()
     queue_redraw()
+
+func _ready() -> void:
+    if _configured:
+        _build_imported_overlay()
+
+func _build_imported_overlay() -> void:
+    for child in get_children():
+        child.queue_free()
+    var category := ""
+    match biome.id:
+        &"lung": category = "alveoli"
+        &"brain": category = "neuron_network"
+        &"marrow": category = "marrow_cavity"
+        _: return
+    var texture := AssetResolverScript.resolve_texture(category, biome.id, "", accent_seed)
+    if texture == null:
+        return
+    var overlay := Sprite2D.new()
+    overlay.name = "ImportedBiomeOverlay"
+    overlay.texture = texture
+    overlay.position = bounds.get_center()
+    var texture_extent := maxf(texture.get_size().x, texture.get_size().y)
+    overlay.scale = Vector2.ONE * (maxf(bounds.size.x, bounds.size.y) * 0.54 / maxf(texture_extent, 1.0))
+    overlay.rotation = float(posmod(accent_seed, 628)) * 0.01
+    overlay.modulate = Color(1.0, 1.0, 1.0, 0.34)
+    overlay.z_index = -1
+    add_child(overlay)
 
 func _draw() -> void:
     if not _configured:

@@ -6,6 +6,7 @@ extends Node2D
 const VEIN_SHADER = preload("res://shaders/vein_pulse.gdshader")
 const BioGlowNode = preload("res://scripts/bio_glow.gd")
 const BioLightFactoryScript = preload("res://scripts/bio_light_factory.gd")
+const AssetResolverScript = preload("res://scripts/asset_resolver.gd")
 
 var corridor_data: Dictionary
 var biome: PhagosBiomeDefinition
@@ -41,6 +42,7 @@ func _build_runtime_children(light_count: int) -> void:
     _base_light_energy.clear()
     _light_phase.clear()
     _add_vein_overlays()
+    _add_imported_wall_rims()
     _add_signal_lights(light_count)
 
 func _add_vein_overlays() -> void:
@@ -61,13 +63,37 @@ func _add_vein_overlays() -> void:
         var material := ShaderMaterial.new()
         material.shader = VEIN_SHADER
         material.set_shader_parameter("vein_color", biome.vein)
-        material.set_shader_parameter("pulse_speed", biome.pulse_speed)
+        material.set_shader_parameter("travel_speed", biome.pulse_speed)
+        material.set_shader_parameter("travel_frequency", rng.randf_range(7.0, 13.0))
         material.set_shader_parameter("pulse_strength", 0.76 + biome.ambient_energy * 0.86)
+        material.set_shader_parameter("amplitude_random", rng.randf_range(0.18, 0.46))
         material.set_shader_parameter("phase_offset", rng.randf_range(0.0, TAU))
         material.set_shader_parameter("core_intensity", 1.1 + biome.ambient_energy * 1.4)
         line.material = material
         line.z_index = 5
         add_child(line)
+
+func _add_imported_wall_rims() -> void:
+    var texture := AssetResolverScript.wall_piece(biome.id, "straight", int(corridor_data["seed"]))
+    if texture == null or _tracks.is_empty():
+        return
+    var main_track: Dictionary = _tracks[0]
+    var points: PackedVector2Array = main_track["points"]
+    var widths: PackedFloat32Array = main_track["widths"]
+    var texture_extent := maxf(texture.get_size().x, texture.get_size().y)
+    for index in range(3, points.size() - 3, 6):
+        var tangent := (points[index + 1] - points[index - 1]).normalized()
+        var normal := tangent.orthogonal()
+        for side in [-1.0, 1.0]:
+            var rim := Sprite2D.new()
+            rim.name = "ImportedWallRim"
+            rim.texture = texture
+            rim.position = points[index] + normal * widths[index] * side * 0.69
+            rim.rotation = tangent.angle() + (PI if side < 0.0 else 0.0)
+            rim.scale = Vector2.ONE * (widths[index] * 1.65 / maxf(texture_extent, 1.0))
+            rim.modulate = Color(1.0, 1.0, 1.0, 0.28)
+            rim.z_index = 3
+            add_child(rim)
 
 func _add_signal_lights(light_count: int) -> void:
     if light_count <= 0 or _tracks.is_empty():
@@ -86,6 +112,7 @@ func _add_signal_lights(light_count: int) -> void:
         add_child(glow)
         var point_light := BioLightFactoryScript.create_point_light(biome.light_color, 0.20 + biome.ambient_energy * 0.25, 100.0, 4)
         point_light.position = points[sample_index]
+        point_light.add_to_group("phagos_active_lights")
         add_child(point_light)
         _lights.append(point_light)
         _base_light_energy.append(point_light.energy)

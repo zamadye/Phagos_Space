@@ -15,6 +15,7 @@ static func create_point_light(light_color: Color, energy: float, radius: float,
     light.blend_mode = Light2D.BLEND_MODE_ADD
     light.shadow_enabled = false
     light.z_index = z_layer
+    light.add_to_group("phagos_active_lights")
     return light
 
 static func _get_radial_texture() -> Texture2D:

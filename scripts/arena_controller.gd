@@ -13,12 +13,15 @@ const PropSpawnerScript = preload("res://scripts/prop_spawner.gd")
 const ParticleFieldNode = preload("res://scripts/biological_particles.gd")
 const ParallaxLayerNode = preload("res://scripts/parallax_tissue.gd")
 const AccentFieldNode = preload("res://scripts/biome_accents.gd")
+const AssetResolverScript = preload("res://scripts/asset_resolver.gd")
+const DebugOverlayNode = preload("res://scripts/debug_performance_overlay.gd")
 
 @export_enum("heart", "lung", "brain", "marrow") var preview_biome := "heart"
 @export var generation_seed := 8142026
 @export_range(0.75, 1.35, 0.05) var world_scale := 1.0
 @export_range(48, 220, 1) var atmospheric_particle_budget := 132
 @export_range(8, 32, 1) var point_light_budget := 20
+@export var prefer_gpu_particles := true
 
 var biome: PhagosBiomeDefinition
 var room_graph: Dictionary = {}
@@ -37,7 +40,16 @@ func _ready() -> void:
         add_child(_camera_focus)
     if _camera == null:
         push_warning("PhagosArenaController needs a Camera2D child. Arena generation still completed.")
+    AssetResolverScript.warmup()
+    if OS.is_debug_build():
+        _install_debug_overlay()
     call_deferred("generate_arena")
+
+func _install_debug_overlay() -> void:
+    var overlay := DebugOverlayNode.new()
+    overlay.name = "DebugPerformanceOverlay"
+    overlay.configure(self)
+    add_child(overlay)
 
 func generate_arena(requested_biome: StringName = &"") -> void:
     var biome_id := requested_biome
@@ -79,6 +91,41 @@ func get_spawn_position() -> Vector2:
 func get_room_graph() -> Dictionary:
     return room_graph.duplicate(true)
 
+func get_performance_snapshot() -> Dictionary:
+    var active_lights := 0
+    for node in get_tree().get_nodes_in_group("phagos_active_lights"):
+        var light_node := node as CanvasItem
+        if light_node != null and light_node.visible:
+            active_lights += 1
+    var active_particles := 0
+    var particle_backend := "cpu"
+    for field in get_tree().get_nodes_in_group("phagos_particle_fields"):
+        if not is_instance_valid(field):
+            continue
+        if field.has_method("get_active_particle_count"):
+            active_particles += int(field.call("get_active_particle_count"))
+        if field.has_method("get_backend_name"):
+            particle_backend = String(field.call("get_backend_name"))
+    var camera_position := _camera.global_position if _camera != null else _camera_focus.global_position
+    var asset_status := AssetResolverScript.get_status()
+    return {
+        "active_lights": active_lights,
+        "active_particles": active_particles,
+        "particle_backend": particle_backend,
+        "room_id": _room_id_at_position(camera_position),
+        "asset_fallback": bool(asset_status.get("fallback_active", true)),
+    }
+
+func _room_id_at_position(world_position: Vector2) -> String:
+    for room in room_graph.get("rooms", []):
+        var center: Vector2 = room["position"]
+        var size: Vector2 = room["size"]
+        var local := world_position - center
+        var ellipse_distance := (local.x * local.x) / maxf(size.x * size.x * 0.30, 1.0) + (local.y * local.y) / maxf(size.y * size.y * 0.30, 1.0)
+        if ellipse_distance <= 1.0:
+            return "%s · %s" % [String(room["id"]).to_upper(), String(room["type"]).to_upper()]
+    return "CONNECTIVE TISSUE"
+
 func _apply_ambient_tint() -> void:
     var ambient := get_node_or_null("BiomeAmbientTint") as CanvasModulate
     if ambient == null:
@@ -91,13 +138,13 @@ func _build_parallax(graph_bounds: Rect2) -> void:
     var expanded_extent := maxf(graph_bounds.size.x, graph_bounds.size.y) * 1.25
     var background := ParallaxLayerNode.new()
     background.name = "BackgroundTissue"
-    background.configure(biome, "background", 0.055, generation_seed ^ 0x101, expanded_extent)
+    background.configure(biome, "background", 0.05, generation_seed ^ 0x101, expanded_extent)
     background.set_camera(_camera)
     _runtime.add_child(background)
 
     var mid := ParallaxLayerNode.new()
     mid.name = "MidVeins"
-    mid.configure(biome, "mid", 0.125, generation_seed ^ 0x202, expanded_extent)
+    mid.configure(biome, "mid", 0.15, generation_seed ^ 0x202, expanded_extent)
     mid.set_camera(_camera)
     _runtime.add_child(mid)
 
@@ -154,12 +201,13 @@ func _build_decorations_and_particles(graph_bounds: Rect2) -> void:
     var particles := ParticleFieldNode.new()
     particles.name = "BiologicalParticles"
     particles.z_index = 9
-    particles.configure(biome, generation_seed, graph_bounds.grow(480.0), atmospheric_particle_budget)
+    particles.prefer_gpu_particles = prefer_gpu_particles
+    particles.configure(biome, generation_seed, graph_bounds.grow(480.0), atmospheric_particle_budget, prefer_gpu_particles)
     _runtime.add_child(particles)
 
     var foreground := ParallaxLayerNode.new()
-    foreground.name = "ForegroundCells"
-    foreground.configure(biome, "foreground", 0.22, generation_seed ^ 0x303, maxf(graph_bounds.size.x, graph_bounds.size.y) * 1.25)
+    foreground.name = "ForegroundProteins"
+    foreground.configure(biome, "foreground", 0.30, generation_seed ^ 0x303, maxf(graph_bounds.size.x, graph_bounds.size.y) * 1.25)
     foreground.set_camera(_camera)
     _runtime.add_child(foreground)
 

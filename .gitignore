@@ -4,8 +4,10 @@
 
 # Generated art build outputs. Source PNGs under assets/ remain trackable.
 assets/atlas/
-reports/
+reports/screenshots/*.png
+reports/browser-qa/
 
-# Python tooling
+# Python tooling and Node install cache
 __pycache__/
 *.py[cod]
+node_modules/

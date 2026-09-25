@@ -1,4 +1,4 @@
-// Translucent moving membrane ridges. Apply as an overlay Polygon2D.
+// Compatibility-safe translucent membrane ridges with layered noise and slow breathing.
 shader_type canvas_item;
 render_mode unshaded, blend_mix;
 
@@ -7,6 +7,9 @@ uniform float distortion_amount : hint_range(0.0, 0.12) = 0.028;
 uniform float movement_speed : hint_range(0.0, 2.0) = 0.18;
 uniform float ridge_density : hint_range(1.0, 28.0) = 10.0;
 uniform float opacity : hint_range(0.0, 1.0) = 0.18;
+uniform float breathing_strength : hint_range(0.0, 0.5) = 0.08;
+uniform float breathing_speed : hint_range(0.0, 3.0) = 0.58;
+uniform float phase_offset = 0.0;
 uniform float seed = 0.0;
 
 float hash21(vec2 p) {
@@ -20,15 +23,32 @@ float value_noise(vec2 p) {
     vec2 f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
     return mix(mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x),
-               mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0)), f.x), f.y);
+               mix(hash21(i + vec2(0.0, 1.0)), hash21(i + vec2(1.0, 1.0)), f.x), f.y);
+}
+
+float layered_noise(vec2 p) {
+    float result = 0.0;
+    float amplitude = 0.58;
+    for (int octave = 0; octave < 3; octave++) {
+        result += value_noise(p) * amplitude;
+        p = p * 2.07 + vec2(17.1, 9.4);
+        amplitude *= 0.5;
+    }
+    return result;
 }
 
 void fragment() {
-    vec2 flow = vec2(TIME * movement_speed, -TIME * movement_speed * 0.37);
-    float n = value_noise(UV * 8.0 + flow + seed);
-    vec2 displaced_uv = UV + (n - 0.5) * distortion_amount;
-    float bands = sin((displaced_uv.x + displaced_uv.y * 0.41 + n * 0.72) * ridge_density * 6.28318);
-    float ridge = smoothstep(0.72, 0.98, bands) * (0.45 + n * 0.55);
-    float alpha = ridge * opacity * COLOR.a;
-    COLOR = vec4(membrane_color.rgb * (0.65 + ridge * 1.2), alpha * membrane_color.a);
+    float breath = sin(TIME * breathing_speed + phase_offset + seed * 4.0) * breathing_strength;
+    vec2 slow_flow = vec2(TIME * movement_speed, -TIME * movement_speed * 0.37);
+    float broad_noise = layered_noise(UV * 4.0 + slow_flow * 0.32 + seed);
+    float fine_noise = layered_noise(UV * 13.0 - slow_flow * 0.83 + seed * 2.3);
+    vec2 distortion = vec2(broad_noise - 0.5, fine_noise - 0.5) * (distortion_amount + breath * 0.12);
+    vec2 displaced_uv = UV + distortion;
+    float broad_bands = sin((displaced_uv.x + displaced_uv.y * 0.41 + broad_noise * 0.72) * ridge_density * 6.28318 + breath);
+    float fine_bands = sin((displaced_uv.x * 0.31 - displaced_uv.y + fine_noise) * ridge_density * 2.7 - TIME * movement_speed * 0.42);
+    float ridge = smoothstep(0.69, 0.98, broad_bands) * (0.48 + broad_noise * 0.52);
+    ridge += smoothstep(0.88, 0.99, fine_bands) * 0.24;
+    float alpha = clamp(ridge, 0.0, 1.0) * opacity * COLOR.a;
+    vec3 tissue_color = membrane_color.rgb * (0.58 + ridge * (1.04 + breath));
+    COLOR = vec4(tissue_color, alpha * membrane_color.a);
 }

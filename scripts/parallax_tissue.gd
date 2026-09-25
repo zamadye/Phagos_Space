@@ -6,6 +6,7 @@ extends Node2D
 var biome: PhagosBiomeDefinition
 var layer_kind := "background"
 var parallax_factor := 0.08
+var motion_smoothing := 3.2
 var field_extent := 4200.0
 var layer_seed := 1
 var target_camera: Camera2D
@@ -28,10 +29,13 @@ func configure(definition: PhagosBiomeDefinition, new_layer_kind: String, factor
 func set_camera(camera: Camera2D) -> void:
     target_camera = camera
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
     if target_camera != null and is_instance_valid(target_camera):
-        # Camera motion of 1.0 becomes only factor motion for this field.
-        global_position = target_camera.global_position * (1.0 - parallax_factor)
+        # Camera motion of 1.0 becomes only factor motion for this field. Smooth the
+        # transform itself so living tissue drifts rather than mechanically tracks.
+        var desired_position := target_camera.global_position * (1.0 - parallax_factor)
+        var weight := 1.0 - exp(-motion_smoothing * delta)
+        global_position = global_position.lerp(desired_position, weight)
     if layer_kind == "foreground":
         queue_redraw()
 

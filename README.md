@@ -16,6 +16,18 @@ Implementasi environment production-ready untuk arena **2D top-down 90°** Phago
 
 Viewport desain adalah **1920×1080** dengan `canvas_items` stretch, sehingga tetap resolution-independent. Tidak ada input/UI debug pada scene rilis.
 
+## Web preview production
+
+Web export memakai renderer **Compatibility / WebGL 2**, single-threaded untuk GitHub Pages dan server statis biasa. Dengan Godot 4.3+ beserta export template terpasang:
+
+```bash
+chmod +x scripts/export_web.sh scripts/preview_web.sh scripts/deploy_web_vps.sh
+./scripts/export_web.sh
+./scripts/preview_web.sh
+```
+
+Preview melayani `build/web` di `http://localhost:8080`. Export menghasilkan `index.html`, `phagos.js`, `phagos.wasm`, dan `phagos.pck`; custom browser loader memiliki immune core animasi, progress, serta transisi fade 320–460 ms. Detail CI, GitHub Pages, nginx/Brotli, screenshot QA, dan VPS tersedia di [`docs/WEB_DEPLOYMENT.md`](docs/WEB_DEPLOYMENT.md).
+
 ## Yang sudah diimplementasikan
 
 - **Modular room graph**: Spawn, Combat, Elite, Shop, Upgrade, Boss, dan Secret; semua room memiliki beberapa entrance berdasarkan edge graph.
@@ -25,8 +37,8 @@ Viewport desain adalah **1920×1080** dengan `canvas_items` stretch, sehingga te
 - **Non-repeating floor treatment**: shader cytoplasm flow, membrane overlay, cellular noise, per-room UV seed, rotasi/offset prosedural.
 - **Empat biome lengkap**: Heart, Lung, Brain, dan Bone Marrow dengan palette, pulse, density, fog, dan accent anatomy berbeda.
 - **2D lighting**: capped additive `PointLight2D`, soft glows, vein pulses, cytokine / energy light nodes.
-- **Parallax tiga layer**: blurred/background tissue, mid veins, dan foreground floating cells dengan gerakan kecil.
-- **Decoration system**: static collagen/ridges/chunks, semi-animated proteins/bubbles/crystals, animated vesicles/oxygen/signals, plus batched particles.
+- **Parallax tiga layer**: background tissue 0.05, veins 0.15, dan floating proteins 0.30 dengan smoothing halus.
+- **Decoration system**: static collagen/ridges/chunks, semi-animated proteins/bubbles/crystals, animated vesicles/oxygen/signals, plus GPU particle path dan batched CPU fallback.
 - **Breakable environment props**: `BreakableProp.break_open()` menghasilkan debris, drift, dan glow fade tanpa mengikat ke combat system.
 - **Camera API**: `PhagosFollowCamera` mengikuti target `Node2D`, rotasi terkunci, smoothing opsional. Preview mengikuti marker tak terlihat karena kit ini sengaja tidak membuat karakter.
 - **Art pipeline**: prompt lock, 98-file manifest, PNG/alpha/seam validator, dan atlas packer dengan edge extrusion.
@@ -81,9 +93,24 @@ scripts/
 docs/
   ASSET_GENERATION_PROMPTS.md
   TECHNICAL_DESIGN.md
+  WEB_DEPLOYMENT.md
+web/
+  phagos_loader.html
+scripts/
+  export_web.sh
+  preview_web.sh
+  deploy_web_vps.sh
+reports/
+  asset_validation.json
+  browser_validation.md
+  screenshots/
+.github/workflows/
+  web-preview.yml
 tools/
   validate_assets.py
   atlas_assets.py
+  capture_screenshots.gd
+  browser_qa.mjs
 ```
 
 ## Graph dan scale
@@ -131,7 +158,7 @@ Runtime scene tidak menunggu placeholder bitmap: semua visual fallback dibangun 
 
 ## Performance contract (desktop 60 FPS)
 
-- One batched `BiologicalParticleField`, bukan ratusan `Sprite2D` animated.
+- `BiologicalParticleField` memakai `GPUParticles2D` pada Compatibility/WebGL bila tersedia; fallback CPU tetap satu batched `CanvasItem`, bukan ratusan `Sprite2D` animated.
 - Per-biome particle budget default 132 (dapat diubah pada `PhagosArenaController`).
 - Point lights dibatasi default 20 dan dialokasikan room dulu, lalu corridor.
 - Static room/corridor tissue digambar sekali dan hanya dynamic glow/particle yang diproses per frame.

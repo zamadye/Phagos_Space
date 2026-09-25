@@ -1,0 +1,996 @@
+{
+  "manifest": "assets/manifest/asset_manifest.json",
+  "summary": {
+    "missing": 98
+  },
+  "manual_review": [
+    "All assets are rendered from a 90-degree top-down perspective.",
+    "No cartoon outline, pixel-art treatment, square silhouette, UI, character, or background is present.",
+    "Emissive accents are consistent with the assigned biome while high saturation remains reserved for signals.",
+    "Wall edges connect with the named straight / curve / T / X / end-cap / chamber-rim kit without seams.",
+    "Each transparent alpha edge is clean at 100% and 400% zoom, including zero-RGB fringe cleanup when required by the target renderer.",
+    "Assets pack into the atlas with the importer padding described in docs/ASSET_GENERATION_PROMPTS.md."
+  ],
+  "results": [
+    {
+      "path": "assets/floor/biome_heart_floor_01.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_02.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_03.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_04.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_01.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_02.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_03.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_04.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_01.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_02.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_03.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_04.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_01.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_02.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_03.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_04.png",
+      "category": "floor",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_straight_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_curve_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_t_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_x_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_end_cap_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_chamber_rim_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_straight_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_curve_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_t_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_x_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_end_cap_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_chamber_rim_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_straight_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_curve_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_t_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_x_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_end_cap_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_chamber_rim_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_straight_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_curve_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_t_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_x_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_end_cap_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_chamber_rim_A.png",
+      "category": "wall",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_01.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_02.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_03.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_01.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_02.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_03.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_01.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_02.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_03.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_01.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_02.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_03.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/vein_cyan_generic_01.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/vein_cyan_generic_02.png",
+      "category": "vein",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_01.png",
+      "category": "alveoli",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_01.png",
+      "category": "neuron_network",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_01.png",
+      "category": "marrow_cavity",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_02.png",
+      "category": "alveoli",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_02.png",
+      "category": "neuron_network",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_02.png",
+      "category": "marrow_cavity",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_03.png",
+      "category": "alveoli",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_03.png",
+      "category": "neuron_network",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_03.png",
+      "category": "marrow_cavity",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_04.png",
+      "category": "alveoli",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_04.png",
+      "category": "neuron_network",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_04.png",
+      "category": "marrow_cavity",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_protein_01.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_protein_02.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_protein_03.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_01.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_02.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_03.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_01.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_02.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_03.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_01.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_02.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_03.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_atp_pool_01.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_atp_pool_02.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/props/prop_atp_pool_03.png",
+      "category": "prop",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_scratch_01.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_scratch_02.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_scratch_03.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_01.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_02.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_03.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_01.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_02.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_03.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_01.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_02.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_03.png",
+      "category": "decal",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/particles/particle_glow_orb_01.png",
+      "category": "particle",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/particles/particle_plasma_bubble_01.png",
+      "category": "particle",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/particles/particle_immune_dust_01.png",
+      "category": "particle",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/particles/particle_atp_spark_01.png",
+      "category": "particle",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    },
+    {
+      "path": "assets/particles/particle_cytokine_mote_01.png",
+      "category": "particle",
+      "state": "missing",
+      "errors": [
+        "Source PNG has not been imported yet."
+      ],
+      "warnings": [],
+      "metrics": {}
+    }
+  ]
+}

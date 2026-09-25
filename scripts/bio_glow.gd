@@ -34,6 +34,7 @@ func _ready() -> void:
     _material.set_shader_parameter("glow_color", glow_color)
     _material.set_shader_parameter("energy", base_energy)
     _material.set_shader_parameter("phase_offset", phase_offset)
+    _material.set_shader_parameter("pulse_speed", pulse_speed)
     _material.set_shader_parameter("flicker_amount", 0.06)
     quad.material = _material
     quad.z_index = -1

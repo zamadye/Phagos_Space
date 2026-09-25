@@ -206,7 +206,20 @@ Procedural art is both a working fallback and a layout/lighting reference. To br
 
 A final art adapter must not replace room geometry with a repeat tile grid or a rectangular dungeon layout.
 
-## 12. Quality and performance release checklist
+## 12. Web runtime hardening
+
+Phase 2 keeps this arena architecture unchanged and only adds browser-facing hardening:
+
+- `export_presets.cfg` selects the Godot Web release target, Compatibility renderer, disabled thread support, and keep-size canvas policy.
+- `web/phagos_loader.html` wraps Godot bootstrap with the biologic loading presentation; it does not add an in-game UI node.
+- `PhagosAssetResolver` reads and scans the existing manifest before resolving optional floor, vein, and prop artwork. A missing import returns `null`, leaving all procedural nodes functional.
+- `BiologicalParticleField` selects a compatibility-safe `GPUParticles2D` path where usable; the prior batched CPU field remains the deterministic fallback.
+- The parallax factors are fixed to 0.05 / 0.15 / 0.30 for tissue / veins / floating proteins.
+- `PhagosDebugPerformanceOverlay` is created only when `OS.is_debug_build()` and is revealed through F3.
+
+See [`WEB_DEPLOYMENT.md`](WEB_DEPLOYMENT.md) for export, Pages, VPS, browser QA, and screenshot commands.
+
+## 13. Quality and performance release checklist
 
 ### Visual
 

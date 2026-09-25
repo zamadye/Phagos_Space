@@ -18,12 +18,14 @@ var _inner_contour := PackedVector2Array()
 var _lights: Array[PointLight2D] = []
 var _base_light_energy: Array[float] = []
 var _light_phase: Array[float] = []
+var _identity: Dictionary = {}
 var _configured := false
 
 func configure(data: Dictionary, definition: PhagosBiomeDefinition, light_count: int = 1) -> void:
     room_data = data
     biome = definition
     position = room_data["position"]
+    _identity = _room_profile()
     _build_contours()
     _configured = true
     if is_inside_tree():
@@ -95,6 +97,9 @@ func _add_floor_layers() -> void:
     membrane_material.set_shader_parameter("movement_speed", biome.pulse_speed * 0.13)
     membrane_material.set_shader_parameter("ridge_density", 8.0 + biome.decoration_density * 3.0)
     membrane_material.set_shader_parameter("opacity", 0.16)
+    membrane_material.set_shader_parameter("breathing_strength", 0.045 + biome.ambient_energy * 0.045)
+    membrane_material.set_shader_parameter("breathing_speed", biome.pulse_speed * 0.46)
+    membrane_material.set_shader_parameter("phase_offset", float(int(room_data["seed"]) % 360) * 0.017)
     membrane_material.set_shader_parameter("seed", float(int(room_data["seed"]) % 5000) * 0.001)
     membrane_overlay.material = membrane_material
     membrane_overlay.z_index = 2
@@ -134,13 +139,41 @@ func _add_vein_overlays() -> void:
         var material := ShaderMaterial.new()
         material.shader = VEIN_SHADER
         material.set_shader_parameter("vein_color", biome.vein)
-        material.set_shader_parameter("pulse_speed", biome.pulse_speed)
-        material.set_shader_parameter("pulse_strength", 0.8 + biome.ambient_energy * 0.8)
+        material.set_shader_parameter("travel_speed", biome.pulse_speed)
+        material.set_shader_parameter("travel_frequency", rng.randf_range(7.0, 13.0))
+        material.set_shader_parameter("pulse_strength", (0.8 + biome.ambient_energy * 0.8) * float(_identity["vein_pulse"]))
+        material.set_shader_parameter("amplitude_random", rng.randf_range(0.16, 0.44))
         material.set_shader_parameter("phase_offset", rng.randf_range(0.0, TAU))
-        material.set_shader_parameter("core_intensity", 1.3 + biome.ambient_energy * 1.6)
+        material.set_shader_parameter("core_intensity", (1.3 + biome.ambient_energy * 1.6) * float(_identity["emission"]))
         vein.material = material
         vein.z_index = 4
         add_child(vein)
+    _add_imported_vein_overlay()
+
+func _add_imported_vein_overlay() -> void:
+    var texture := AssetResolverScript.vein_overlay(biome.id, int(room_data["seed"]))
+    if texture == null:
+        return
+    var size: Vector2 = room_data["size"]
+    var imported := Sprite2D.new()
+    imported.name = "ImportedVeinOverlay"
+    imported.texture = texture
+    var texture_extent := maxf(texture.get_size().x, texture.get_size().y)
+    imported.scale = Vector2.ONE * (maxf(size.x, size.y) * 0.88 / maxf(texture_extent, 1.0))
+    imported.rotation = float(int(room_data["seed"]) % 628) * 0.01
+    imported.modulate = Color(1.0, 1.0, 1.0, 0.56)
+    var material := ShaderMaterial.new()
+    material.shader = VEIN_SHADER
+    material.set_shader_parameter("vein_color", biome.vein)
+    material.set_shader_parameter("travel_speed", biome.pulse_speed)
+    material.set_shader_parameter("travel_frequency", 8.0)
+    material.set_shader_parameter("pulse_strength", float(_identity["vein_pulse"]))
+    material.set_shader_parameter("amplitude_random", 0.32)
+    material.set_shader_parameter("phase_offset", float(int(room_data["seed"]) % 360) * 0.017)
+    material.set_shader_parameter("core_intensity", 1.8 * float(_identity["emission"]))
+    imported.material = material
+    imported.z_index = 4
+    add_child(imported)
 
 func _add_biological_lights(light_count: int) -> void:
     var rng := RandomNumberGenerator.new()
@@ -151,33 +184,54 @@ func _add_biological_lights(light_count: int) -> void:
         var angle := rng.randf_range(0.0, TAU)
         var radial := sqrt(rng.randf()) * 0.46
         var local_position := Vector2(cos(angle) * size.x * radial, sin(angle) * size.y * radial)
+        if room_data["type"] == "spawn" and light_index == 0:
+            local_position = Vector2.ZERO
         var glow := BioGlowNode.new()
         glow.name = "SignalGlow"
         glow.position = local_position
-        glow.configure(biome.emissive, rng.randf_range(34.0, 72.0), 1.2 + biome.ambient_energy, biome.pulse_speed, rng.randf_range(0.0, TAU))
+        glow.configure(
+            biome.emissive,
+            rng.randf_range(34.0, 72.0) * float(_identity["glow_scale"]),
+            (1.2 + biome.ambient_energy) * float(_identity["emission"]),
+            biome.pulse_speed * float(_identity["pulse_speed"]),
+            rng.randf_range(0.0, TAU)
+        )
         glow.z_index = 5
         add_child(glow)
 
         var point_light := BioLightFactoryScript.create_point_light(
             biome.light_color,
-            0.35 + biome.ambient_energy * 0.45,
-            rng.randf_range(145.0, 235.0),
+            (0.35 + biome.ambient_energy * 0.45) * float(_identity["light_energy"]),
+            rng.randf_range(145.0, 235.0) * float(_identity["glow_scale"]),
             3
         )
         point_light.position = local_position
         add_child(point_light)
+        point_light.add_to_group("phagos_active_lights")
         _lights.append(point_light)
         _base_light_energy.append(point_light.energy)
         _light_phase.append(rng.randf_range(0.0, TAU))
+    if room_data["type"] == "spawn":
+        _add_sanctuary_glow()
+
+func _add_sanctuary_glow() -> void:
+    var sanctuary := BioGlowNode.new()
+    sanctuary.name = "SanctuaryCore"
+    sanctuary.configure(biome.emissive.lightened(0.16), 128.0, 1.5 * float(_identity["emission"]), biome.pulse_speed * 0.62, 0.0)
+    sanctuary.z_index = 4
+    add_child(sanctuary)
 
 func _process(_delta: float) -> void:
+    if room_data.get("type", "") == "boss":
+        queue_redraw()
     if _lights.is_empty():
         return
     var time := Time.get_ticks_msec() * 0.001
     for index in range(_lights.size()):
         if not is_instance_valid(_lights[index]):
             continue
-        var pulse := 0.90 + sin(time * biome.pulse_speed + _light_phase[index]) * 0.10
+        var pulse_amount := float(_identity["pulse_amount"])
+        var pulse := 1.0 + sin(time * biome.pulse_speed * float(_identity["pulse_speed"]) + _light_phase[index]) * pulse_amount
         _lights[index].energy = _base_light_energy[index] * pulse
 
 func _draw() -> void:
@@ -193,7 +247,38 @@ func _draw() -> void:
     _draw_membrane_folds()
     _draw_micro_cracks()
     _draw_static_tissue_decoration()
+    _draw_room_identity()
     _draw_entrance_handoffs()
+
+func _draw_room_identity() -> void:
+    var size: Vector2 = room_data["size"]
+    match String(room_data["type"]):
+        "spawn":
+            var sanctuary_color := biome.emissive
+            sanctuary_color.a = 0.14
+            draw_circle(Vector2.ZERO, minf(size.x, size.y) * 0.17, sanctuary_color, true, -1.0, true)
+            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.23, -0.45, TAU - 0.45, 36, biome.particle, 2.0, true)
+        "combat":
+            # Balanced low-contrast visibility rails: readable but never a visual hotspot.
+            var combat_color := biome.membrane.darkened(0.26)
+            combat_color.a = 0.42
+            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.34, 0.45, 2.45, 18, combat_color, 2.0, true)
+            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.34, 3.55, 5.60, 18, combat_color, 2.0, true)
+        "elite":
+            for index in range(5):
+                var angle := float(index) * TAU / 5.0 + 0.28
+                var point := Vector2(cos(angle), sin(angle)) * minf(size.x, size.y) * 0.27
+                draw_circle(point, 5.0, biome.emissive, true, -1.0, true)
+        "shop":
+            var calm_color := biome.particle
+            calm_color.a = 0.24
+            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.31, 0.40, 2.74, 24, calm_color, 3.0, true)
+            draw_arc(Vector2.ZERO, minf(size.x, size.y) * 0.22, 3.48, 5.86, 24, calm_color, 2.0, true)
+        "boss":
+            var boss_color := biome.emissive
+            boss_color.a = 0.18 + sin(Time.get_ticks_msec() * 0.001 * biome.pulse_speed) * 0.05
+            for ring in range(3):
+                draw_arc(Vector2.ZERO, minf(size.x, size.y) * (0.18 + ring * 0.105), 0.0, TAU, 48, boss_color, 3.0 - ring * 0.55, true)
 
 func _draw_membrane_folds() -> void:
     var rng := RandomNumberGenerator.new()
@@ -243,6 +328,48 @@ func _draw_entrance_handoffs() -> void:
         var center := direction * room_radius * 0.90
         draw_line(center - normal * width, center + normal * width, biome.floor_secondary.darkened(0.12), 20.0, true)
         draw_line(center - normal * width, center + normal * width, biome.membrane.darkened(0.34), 3.0, true)
+
+func _room_profile() -> Dictionary:
+    var profile := {
+        "emission": 1.0,
+        "light_energy": 1.0,
+        "glow_scale": 1.0,
+        "vein_pulse": 1.0,
+        "pulse_speed": 1.0,
+        "pulse_amount": 0.10,
+    }
+    match String(room_data.get("type", "combat")):
+        "spawn":
+            profile["emission"] = 1.10
+            profile["light_energy"] = 1.08
+            profile["glow_scale"] = 1.34
+            profile["pulse_speed"] = 0.72
+            profile["pulse_amount"] = 0.08
+        "elite":
+            profile["emission"] = 1.34
+            profile["light_energy"] = 1.25
+            profile["glow_scale"] = 1.18
+            profile["vein_pulse"] = 1.20
+            profile["pulse_amount"] = 0.15
+        "shop":
+            profile["emission"] = 0.72
+            profile["light_energy"] = 0.58
+            profile["glow_scale"] = 0.84
+            profile["vein_pulse"] = 0.64
+            profile["pulse_speed"] = 0.58
+            profile["pulse_amount"] = 0.045
+        "boss":
+            profile["emission"] = 1.68
+            profile["light_energy"] = 1.48
+            profile["glow_scale"] = 1.46
+            profile["vein_pulse"] = 1.48
+            profile["pulse_speed"] = 1.32
+            profile["pulse_amount"] = 0.22
+        "secret":
+            profile["emission"] = 1.18
+            profile["vein_pulse"] = 1.26
+            profile["pulse_amount"] = 0.13
+    return profile
 
 func _random_inner_point(rng: RandomNumberGenerator, max_radial: float) -> Vector2:
     var angle := rng.randf_range(0.0, TAU)
