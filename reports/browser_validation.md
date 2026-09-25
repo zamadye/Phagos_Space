@@ -1,6 +1,6 @@
 # Phagos browser validation
 
-Generated: 2026-09-25T23:22:36.837Z
+Generated: 2026-09-25T23:27:53.064Z
 
 Target URL: http://127.0.0.1:8080
 
@@ -8,9 +8,9 @@ Browser surface: **headed via Xvfb**. rAF gate: **≥ 55 FPS** (desktop browser 
 
 | Browser | WASM load | WASM MIME | Shader / WebGL | Measured FPS | FPS gate | Console errors |
 |---|---:|---:|---:|---:|---:|---:|
-| Chrome | PASS | PASS | FAIL | 6.0 | FAIL | FAIL |
-| Firefox | PASS | PASS | FAIL | 5.3 | FAIL | FAIL |
-| Edge | PASS | PASS | FAIL | 4.9 | FAIL | FAIL |
+| Chrome | PASS | PASS | PASS | 5.0 | FAIL | PASS |
+| Firefox | PASS | PASS | PASS | 5.2 | FAIL | PASS |
+| Edge | PASS | PASS | PASS | 4.9 | FAIL | PASS |
 
 ## WASM delivery
 - **Chrome:** 200 · application/wasm · http://127.0.0.1:8080/phagos.wasm
@@ -18,9 +18,9 @@ Browser surface: **headed via Xvfb**. rAF gate: **≥ 55 FPS** (desktop browser 
 - **Edge:** 200 · application/wasm · http://127.0.0.1:8080/phagos.wasm
 
 ## Diagnostics
-- **Chrome:** `Failed to load resource: the server responded with a status of 404 (File not found)`; `HTTP 404 http://127.0.0.1:8080/index.icon.png`
-- **Firefox:** `HTTP 404 http://127.0.0.1:8080/index.apple-touch-icon.png`; `HTTP 404 http://127.0.0.1:8080/index.icon.png`
-- **Edge:** `Failed to load resource: the server responded with a status of 404 (File not found)`; `HTTP 404 http://127.0.0.1:8080/index.icon.png`
+- **Chrome:** no console or WebGL errors observed.
+- **Firefox:** no console or WebGL errors observed.
+- **Edge:** no console or WebGL errors observed.
 
 ## Result
 
