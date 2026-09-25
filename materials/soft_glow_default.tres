@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://shaders/glow.gdshader" id="1_glow"]
+
+[resource]
+shader = ExtResource("1_glow")
+shader_parameter/glow_color = Color(0.35, 0.9, 1, 1)
+shader_parameter/energy = 2.0
+shader_parameter/falloff = 2.2
+shader_parameter/flicker_amount = 0.08
+shader_parameter/phase_offset = 0.0

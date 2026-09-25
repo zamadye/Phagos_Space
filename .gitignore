@@ -1,0 +1,11 @@
+# Godot editor/import cache
+.godot/
+.import/
+
+# Generated art build outputs. Source PNGs under assets/ remain trackable.
+assets/atlas/
+reports/
+
+# Python tooling
+__pycache__/
+*.py[cod]

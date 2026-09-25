@@ -1,0 +1,997 @@
+{
+  "schema_version": 1,
+  "project": "Phagos",
+  "global_style_lock": "Professional AAA-quality 2D top-down microscopic immune-system environment. Original biology-inspired art, transparent PNG, clean alpha edges, soft painterly high-frequency biological detail, emissive highlights, rounded organic silhouettes, 90-degree top-down perspective. No background, UI, characters, pixel art, or cartoon outline.",
+  "master_resolution": {
+    "default": [
+      2048,
+      2048
+    ],
+    "particle": [
+      512,
+      512
+    ]
+  },
+  "assets": [
+    {
+      "path": "assets/floor/biome_heart_floor_01.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_02.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_03.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_heart_floor_04.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_01.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_02.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_03.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_lung_floor_04.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_01.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_02.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_03.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_brain_floor_04.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_01.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_02.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_03.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/floor/biome_marrow_floor_04.png",
+      "category": "floor",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": true,
+      "requires_alpha": true,
+      "notes": "Seamless microscopic tissue floor; no visible tile boundary."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_straight_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_curve_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_t_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_x_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_end_cap_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_heart_wall_chamber_rim_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_straight_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_curve_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_t_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_x_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_end_cap_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_lung_wall_chamber_rim_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_straight_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_curve_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_t_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_x_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_end_cap_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_brain_wall_chamber_rim_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_straight_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_curve_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_t_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_x_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_end_cap_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/walls/biome_marrow_wall_chamber_rim_A.png",
+      "category": "wall",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Organic wall kit; transparent background; 96 px grid-safe edge alignment where applicable."
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_01.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_02.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_heart_vein_crimson_03.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "heart",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_01.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_02.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_lung_vein_cyan_03.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_01.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_02.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_brain_vein_cyan_03.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_01.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_02.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/biome_marrow_vein_crimson_03.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Additive-ready emissive vessel overlay; alpha retained."
+    },
+    {
+      "path": "assets/biome/vein_cyan_generic_01.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Cross-biome cyan additive vessel overlay."
+    },
+    {
+      "path": "assets/biome/vein_cyan_generic_02.png",
+      "category": "vein",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Cross-biome cyan additive vessel overlay."
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_01.png",
+      "category": "alveoli",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down translucent alveoli cluster."
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_01.png",
+      "category": "neuron_network",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down branching neuron overlay."
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_01.png",
+      "category": "marrow_cavity",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down marrow cavity with cells and fat tissue."
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_02.png",
+      "category": "alveoli",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down translucent alveoli cluster."
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_02.png",
+      "category": "neuron_network",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down branching neuron overlay."
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_02.png",
+      "category": "marrow_cavity",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down marrow cavity with cells and fat tissue."
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_03.png",
+      "category": "alveoli",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down translucent alveoli cluster."
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_03.png",
+      "category": "neuron_network",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down branching neuron overlay."
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_03.png",
+      "category": "marrow_cavity",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down marrow cavity with cells and fat tissue."
+    },
+    {
+      "path": "assets/biome/biome_lung_alveoli_04.png",
+      "category": "alveoli",
+      "width": 2048,
+      "height": 2048,
+      "biome": "lung",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down translucent alveoli cluster."
+    },
+    {
+      "path": "assets/biome/biome_brain_neuron_network_04.png",
+      "category": "neuron_network",
+      "width": 2048,
+      "height": 2048,
+      "biome": "brain",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down branching neuron overlay."
+    },
+    {
+      "path": "assets/biome/biome_marrow_cavity_04.png",
+      "category": "marrow_cavity",
+      "width": 2048,
+      "height": 2048,
+      "biome": "marrow",
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Top-down marrow cavity with cells and fat tissue."
+    },
+    {
+      "path": "assets/props/prop_protein_01.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_protein_02.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_protein_03.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_01.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_02.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_cytokine_crystal_03.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_01.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_02.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_membrane_sac_03.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_01.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_02.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_calcified_chunk_03.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_atp_pool_01.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_atp_pool_02.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/props/prop_atp_pool_03.png",
+      "category": "prop",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Independent transparent prop sprite, centered pivot expected."
+    },
+    {
+      "path": "assets/decals/decal_scratch_01.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_scratch_02.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_scratch_03.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_01.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_02.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_membrane_tear_03.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_01.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_02.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_protein_stain_03.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_01.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_02.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/decals/decal_glow_residue_03.png",
+      "category": "decal",
+      "width": 2048,
+      "height": 2048,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "Transparent decal, no baked opaque rectangle."
+    },
+    {
+      "path": "assets/particles/particle_glow_orb_01.png",
+      "category": "particle",
+      "width": 512,
+      "height": 512,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "512 px transparent particle master, centered emission silhouette."
+    },
+    {
+      "path": "assets/particles/particle_plasma_bubble_01.png",
+      "category": "particle",
+      "width": 512,
+      "height": 512,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "512 px transparent particle master, centered emission silhouette."
+    },
+    {
+      "path": "assets/particles/particle_immune_dust_01.png",
+      "category": "particle",
+      "width": 512,
+      "height": 512,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "512 px transparent particle master, centered emission silhouette."
+    },
+    {
+      "path": "assets/particles/particle_atp_spark_01.png",
+      "category": "particle",
+      "width": 512,
+      "height": 512,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "512 px transparent particle master, centered emission silhouette."
+    },
+    {
+      "path": "assets/particles/particle_cytokine_mote_01.png",
+      "category": "particle",
+      "width": 512,
+      "height": 512,
+      "biome": null,
+      "seamless": false,
+      "requires_alpha": true,
+      "notes": "512 px transparent particle master, centered emission silhouette."
+    }
+  ]
+}

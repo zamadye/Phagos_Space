@@ -1,0 +1,5 @@
+# Environment generation code favors explicit biome and draw-call expressions.
+# Keep semantic linting on while allowing shader/material setup lines to remain readable.
+max-line-length: 180
+disable:
+  - unused-argument
