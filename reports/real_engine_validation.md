@@ -1,6 +1,6 @@
 # Real-engine validation record
 
-**Run date:** 2026-09-26 (Asia/Kuching)
+**Run date:** 2026-09-26 (Asia/Makassar)
 
 ## 1. Current official Godot Web deliverable
 
@@ -33,6 +33,21 @@ The freshly generated official payload was copied exactly from `build/web/`, ser
 
 This is an official Godot 4.3 Web runtime and matching PCK pair, not the earlier cross-minor diagnostic harness. It verifies the visual pass runs in the real exported engine.
 
+### 2.1 First source-art inspection — real runtime, explicitly not a replacement export
+
+A second, **local-only** visual probe was run after the first original source-art pass. It copied the known-good Godot 4.3 Web release to `/tmp`, added the ten reviewed source assets through the normal Godot `*.png.import → CompressedTexture2D (*.ctex)` resource path, and ran the unchanged Godot Web engine in npm-unpacked headless Chromium. This was not a hand-built canvas or a replacement loader.
+
+| Check | Observed result |
+| --- | --- |
+| Engine / renderer | Godot `4.3.stable.official.77dcf97d8`; Compatibility / WebGL 2 in Chromium |
+| Scene coverage | Heart, Lung, Brain, and Bone Marrow were each launched and captured at **1920 × 1080** |
+| Floor and vessel source art | All four biome pairs appeared in their clipped room surfaces; the artwork did not render as square texture cards |
+| Alpha / matte review | No generated checkerboard or white preview backdrop appeared in the rendered Heart or Lung regions |
+| Runtime diagnostics | The loader dismissed; no browser request failures, page errors, or Godot console errors were emitted |
+| Local evidence | Ignored local captures: `reports/screenshots/source_art_probe_contact_sheet.png`; individual raw captures remain temporary by repository convention |
+
+This is meaningful engine evidence that the source PNG alpha, import remaps, resolver selection, and visual layering are viable in actual Godot rendering. It is deliberately **not** called an official re-export of the current source: the published PCK predates the newly added corridor-floor clipping code in `scripts/organic_corridor.gd`. A fresh native Godot import/export remains required to validate that newly compiled source path and to replace the official release payload.
+
 ## 3. Browser matrix and performance boundary
 
 Web Preview run `36201465915` also exercised the exact exported build in Chrome, Firefox, and Edge under headed Xvfb:
@@ -49,6 +64,8 @@ The **Export, visual QA, and browser QA** job in run `36201465915` passed. Its s
 
 ## 4. Asset and debug notes
 
-The asset-manifest validator runs successfully, but the repository currently has 98 missing optional source PNG specifications. The validated visual source is therefore the procedural fallback, not untracked or proprietary external art.
+The asset pipeline now contains a first committed original-art pass: four 2048² biome floor overlays, four 2048² vessel overlays, and Heart/Lung 2048² cortical rim assets. `tools/validate_assets.py` reports **10 pass / 88 planned entries still missing**. The resolver and corridor code map the available PNGs into rooms and spline lumen ribbons; missing categories continue to use the procedural fallback.
+
+This record deliberately does **not** claim that the new art pass has already been captured in a fresh official Web export. That requires the next owner-run Godot export/browser pass. No proprietary or externally sourced game artwork is included.
 
 The F3 performance overlay is intentionally debug-only (`OS.is_debug_build()`), so it is absent from the Web Release preview.

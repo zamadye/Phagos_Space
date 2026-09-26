@@ -107,7 +107,7 @@ func _add_floor_layers() -> void:
 
     # Final art is optional: correctly named seamless PNGs are clipped by the same
     # organic contour, so importing them never converts the room into a square tile.
-    var imported_floor := AssetResolverScript.floor_overlay(biome.id, int(room_data["seed"]))
+    var imported_floor: Texture2D = AssetResolverScript.floor_overlay(biome.id, int(room_data["seed"])) as Texture2D
     if imported_floor != null:
         var art_overlay := Polygon2D.new()
         art_overlay.name = "ImportedFloorOverlay"
@@ -127,7 +127,7 @@ func _add_vein_overlays() -> void:
         var start_index := rng.randi_range(0, _outer_contour.size() - 1)
         var length := rng.randi_range(5, 10)
         for offset in range(length):
-            var contour_index := (start_index + offset) % _outer_contour.size()
+            var contour_index: int = (start_index + int(offset)) % _outer_contour.size()
             var inward := rng.randf_range(0.81, 0.93)
             points.append(_outer_contour[contour_index] * inward)
         var vein := Line2D.new()

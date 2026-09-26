@@ -1,6 +1,8 @@
 # Phagos source-art pipeline
 
-The running Godot demo is fully procedural and does **not** depend on placeholder art. This folder is the production import contract for the final painterly source pack. Keeping source art separate lets the environment remain playable during look development and avoids committing generated atlas output.
+The running Godot demo is a **hybrid art pipeline**: procedural anatomy preserves organic spline geometry, while manifest-led transparent PNG layers supply painterly surface variation. The first authored pass currently includes four biome floor overlays, four biome vessel overlays, and Heart/Lung cortical rim art; it is loaded by `PhagosAssetResolver` at runtime. The remaining manifest entries intentionally retain a procedural fallback until their source art has passed review.
+
+Keeping source art separate lets the environment remain runnable during look development and avoids committing generated atlas output. The supplied masters are original biology-inspired work, not imported or traced external-game art.
 
 ```text
 assets/

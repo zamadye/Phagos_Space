@@ -21,6 +21,20 @@ The Godot kit already renders a complete procedural fallback; these exports are 
 - Floor exports are **seamless transparent overlay textures**. Their left/right and top/bottom edge pixels must match exactly.
 - For tools that cannot genuinely export alpha, use their transparent-background mode before export; reject a checkerboard or solid-color backdrop baked into the PNG.
 
+### Concept-to-source cleanup
+
+Some image generators return an opaque concept preview even when asked for PNG alpha. Do **not** ship that preview unchanged. For the original first art pass, use the included conservative preparation tool, then perform the required human alpha review:
+
+```bash
+python3 tools/prepare_ai_overlay.py input.png assets/floor/biome_heart_floor_01.png \
+  --profile heart --size 2048 --seamless
+python3 tools/prepare_ai_overlay.py input.png assets/walls/biome_heart_wall_straight_A.png \
+  --profile heart --size 2048 --saturation-key 0.58
+python3 tools/validate_assets.py --report reports/asset_validation.json
+```
+
+`--saturation-key` is useful only for an isolated object on a neutral/checker concept backdrop. It must be checked manually against dark and light backgrounds; the tool is a cleanup aid, not an alpha-matting claim.
+
 ### Negative prompt (append where supported)
 
 > square dungeon room, RPG tile map, grid, brick, stone, metal hallway, isometric, side view, horizon, character, enemy, weapon, UI, text, logo, icon sheet, pixel art, cel shading, thick black outline, hard rectangular silhouette, opaque backdrop, checkerboard background, collage, contact sheet, photoreal blood gore.

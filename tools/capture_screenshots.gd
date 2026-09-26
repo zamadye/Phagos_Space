@@ -21,9 +21,12 @@ func _capture_all() -> void:
     var failures: PackedStringArray = []
 
     for capture in CAPTURES:
-        var error := change_scene_to_file(capture["scene"])
+        var capture_data: Dictionary = capture
+        var capture_id: String = String(capture_data["id"])
+        var scene_path: String = String(capture_data["scene"])
+        var error: Error = change_scene_to_file(scene_path)
         if error != OK:
-            failures.append("%s: scene change failed (%s)" % [capture["id"], error_string(error)])
+            failures.append("%s: scene change failed (%s)" % [capture_id, error_string(error)])
             continue
         # Let deferred arena generation, shader warmup, particles, and two render frames settle.
         await process_frame
@@ -31,16 +34,16 @@ func _capture_all() -> void:
         await create_timer(0.75).timeout
         await RenderingServer.frame_post_draw
 
-        var image := root.get_texture().get_image()
+        var image: Image = root.get_texture().get_image() as Image
         if image == null or image.is_empty():
-            failures.append("%s: viewport image was empty" % capture["id"])
+            failures.append("%s: viewport image was empty" % capture_id)
             continue
         if image.get_size() != TARGET_SIZE:
             image.resize(TARGET_SIZE.x, TARGET_SIZE.y, Image.INTERPOLATE_LANCZOS)
-        var output_path := absolute_output.path_join("%s.png" % capture["id"])
-        var save_error := image.save_png(output_path)
+        var output_path := absolute_output.path_join("%s.png" % capture_id)
+        var save_error: Error = image.save_png(output_path)
         if save_error != OK:
-            failures.append("%s: could not write PNG (%s)" % [capture["id"], error_string(save_error)])
+            failures.append("%s: could not write PNG (%s)" % [capture_id, error_string(save_error)])
         else:
             print("Captured visual QA: %s" % output_path)
 

@@ -1,7 +1,8 @@
 {
   "manifest": "assets/manifest/asset_manifest.json",
   "summary": {
-    "missing": 98
+    "pass": 10,
+    "missing": 88
   },
   "manual_review": [
     "All assets are rendered from a 90-degree top-down perspective.",
@@ -15,12 +16,29 @@
     {
       "path": "assets/floor/biome_heart_floor_01.png",
       "category": "floor",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          11,
+          168
+        ],
+        "corner_alpha": [
+          66,
+          66,
+          66,
+          66
+        ],
+        "seam_delta_horizontal": 0.0,
+        "seam_delta_vertical": 0.0
+      }
     },
     {
       "path": "assets/floor/biome_heart_floor_02.png",
@@ -55,12 +73,29 @@
     {
       "path": "assets/floor/biome_lung_floor_01.png",
       "category": "floor",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          40,
+          78
+        ],
+        "corner_alpha": [
+          46,
+          46,
+          46,
+          46
+        ],
+        "seam_delta_horizontal": 0.0,
+        "seam_delta_vertical": 0.0
+      }
     },
     {
       "path": "assets/floor/biome_lung_floor_02.png",
@@ -95,12 +130,29 @@
     {
       "path": "assets/floor/biome_brain_floor_01.png",
       "category": "floor",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          18,
+          168
+        ],
+        "corner_alpha": [
+          40,
+          40,
+          40,
+          40
+        ],
+        "seam_delta_horizontal": 0.0,
+        "seam_delta_vertical": 0.0
+      }
     },
     {
       "path": "assets/floor/biome_brain_floor_02.png",
@@ -135,12 +187,29 @@
     {
       "path": "assets/floor/biome_marrow_floor_01.png",
       "category": "floor",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          12,
+          134
+        ],
+        "corner_alpha": [
+          55,
+          55,
+          55,
+          55
+        ],
+        "seam_delta_horizontal": 0.0,
+        "seam_delta_vertical": 0.0
+      }
     },
     {
       "path": "assets/floor/biome_marrow_floor_02.png",
@@ -175,12 +244,27 @@
     {
       "path": "assets/walls/biome_heart_wall_straight_A.png",
       "category": "wall",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/walls/biome_heart_wall_curve_A.png",
@@ -235,12 +319,27 @@
     {
       "path": "assets/walls/biome_lung_wall_straight_A.png",
       "category": "wall",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/walls/biome_lung_wall_curve_A.png",
@@ -415,12 +514,27 @@
     {
       "path": "assets/biome/biome_heart_vein_crimson_01.png",
       "category": "vein",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/biome/biome_heart_vein_crimson_02.png",
@@ -445,12 +559,27 @@
     {
       "path": "assets/biome/biome_lung_vein_cyan_01.png",
       "category": "vein",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          250
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/biome/biome_lung_vein_cyan_02.png",
@@ -475,12 +604,27 @@
     {
       "path": "assets/biome/biome_brain_vein_cyan_01.png",
       "category": "vein",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/biome/biome_brain_vein_cyan_02.png",
@@ -505,12 +649,27 @@
     {
       "path": "assets/biome/biome_marrow_vein_crimson_01.png",
       "category": "vein",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/biome/biome_marrow_vein_crimson_02.png",
