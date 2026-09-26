@@ -1,8 +1,8 @@
 {
   "manifest": "assets/manifest/asset_manifest.json",
   "summary": {
-    "pass": 10,
-    "missing": 88
+    "pass": 16,
+    "missing": 82
   },
   "manual_review": [
     "All assets are rendered from a 90-degree top-down perspective.",
@@ -394,12 +394,27 @@
     {
       "path": "assets/walls/biome_brain_wall_straight_A.png",
       "category": "wall",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/walls/biome_brain_wall_curve_A.png",
@@ -454,12 +469,27 @@
     {
       "path": "assets/walls/biome_marrow_wall_straight_A.png",
       "category": "wall",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/walls/biome_marrow_wall_curve_A.png",
@@ -834,12 +864,27 @@
     {
       "path": "assets/props/prop_protein_01.png",
       "category": "prop",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/props/prop_protein_02.png",
@@ -864,12 +909,27 @@
     {
       "path": "assets/props/prop_cytokine_crystal_01.png",
       "category": "prop",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          10,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/props/prop_cytokine_crystal_02.png",
@@ -894,12 +954,27 @@
     {
       "path": "assets/props/prop_membrane_sac_01.png",
       "category": "prop",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          250
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/props/prop_membrane_sac_02.png",
@@ -924,12 +999,27 @@
     {
       "path": "assets/props/prop_calcified_chunk_01.png",
       "category": "prop",
-      "state": "missing",
-      "errors": [
-        "Source PNG has not been imported yet."
-      ],
+      "state": "pass",
+      "errors": [],
       "warnings": [],
-      "metrics": {}
+      "metrics": {
+        "format": "PNG",
+        "mode": "RGBA",
+        "size": [
+          2048,
+          2048
+        ],
+        "alpha_range": [
+          0,
+          255
+        ],
+        "corner_alpha": [
+          0,
+          0,
+          0,
+          0
+        ]
+      }
     },
     {
       "path": "assets/props/prop_calcified_chunk_02.png",
