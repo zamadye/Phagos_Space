@@ -97,6 +97,10 @@ rm -rf "$OUTPUT_DIR"
 mv "$STAGING_DIR" "$OUTPUT_DIR"
 trap - EXIT
 
+# Mark exactly which arena sources produced this payload. preview_web.sh compares this
+# stamp before serving, so an existing but stale PCK cannot hide newly added source art.
+bash "$PROJECT_ROOT/scripts/source_fingerprint.sh" "$PROJECT_ROOT" > "$OUTPUT_DIR/.phagos-source-stamp"
+
 echo "Web release ready: $OUTPUT_DIR"
 printf '  %-18s %10s bytes\n' index.html "$(wc -c < "$OUTPUT_DIR/index.html")"
 printf '  %-18s %10s bytes\n' phagos.js "$(wc -c < "$OUTPUT_DIR/phagos.js")"

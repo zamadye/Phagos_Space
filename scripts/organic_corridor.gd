@@ -68,7 +68,9 @@ func _add_imported_lumen_overlays() -> void:
         # Source floors are seam-checked, so repeat is safe. Mapping in world-space
         # preserves their painted proportions through long, narrow spline segments.
         overlay.texture_repeat = CanvasItem.TEXTURE_REPEAT_ENABLED
-        overlay.modulate = Color(1.0, 1.0, 1.0, 0.42)
+        # The masters already have soft alpha, so a clear composite weight keeps the
+        # lumen readable at overview scale instead of disappearing into the base fill.
+        overlay.modulate = Color(1.0, 1.0, 1.0, 0.68)
         overlay.z_index = 1
         add_child(overlay)
 
@@ -107,18 +109,30 @@ func _add_imported_wall_rims() -> void:
     var main_track: Dictionary = _tracks[0]
     var points: PackedVector2Array = main_track["points"]
     var widths: PackedFloat32Array = main_track["widths"]
-    var texture_extent := maxf(texture.get_size().x, texture.get_size().y)
+    var texture_size: Vector2 = texture.get_size()
+    # Imported masters are square source files, but a corridor rim must remain a narrow
+    # band. Sampling only their central art band and fitting it non-uniformly to each
+    # spline interval prevents a square source card from ever projecting beyond a wall.
+    var source_band_height := texture_size.y * 0.46
+    var source_band_y := (texture_size.y - source_band_height) * 0.5
     for index in range(3, points.size() - 3, 6):
         var tangent := (points[index + 1] - points[index - 1]).normalized()
         var normal := tangent.orthogonal()
-        for side in [-1.0, 1.0]:
+        var segment_length := maxf(widths[index] * 1.35, 76.0)
+        var rim_depth := clampf(widths[index] * 0.38, 22.0, 50.0)
+        for side_value in [-1.0, 1.0]:
+            var side: float = float(side_value)
             var rim := Sprite2D.new()
             rim.name = "ImportedWallRim"
             rim.texture = texture
-            rim.position = points[index] + normal * widths[index] * side * 0.69
+            rim.region_enabled = true
+            rim.region_rect = Rect2(0.0, source_band_y, texture_size.x, source_band_height)
+            rim.position = points[index] + normal * widths[index] * side * 0.61
             rim.rotation = tangent.angle() + (PI if side < 0.0 else 0.0)
-            rim.scale = Vector2.ONE * (widths[index] * 1.65 / maxf(texture_extent, 1.0))
-            rim.modulate = Color(1.0, 1.0, 1.0, 0.28)
+            rim.scale = Vector2(segment_length / maxf(texture_size.x, 1.0), rim_depth / maxf(source_band_height, 1.0))
+            # The art itself has sparse transparent coverage; preserve a readable
+            # cortical silhouette without turning the rim into an opaque strip.
+            rim.modulate = Color(1.0, 1.0, 1.0, 0.32)
             rim.z_index = 3
             add_child(rim)
 

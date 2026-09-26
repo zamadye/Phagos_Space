@@ -7,8 +7,17 @@ WEB_DIR="$PROJECT_ROOT/build/web"
 PORT="${PORT:-8080}"
 URL="http://localhost:${PORT}"
 
+CURRENT_SOURCE_STAMP="$(bash "$PROJECT_ROOT/scripts/source_fingerprint.sh" "$PROJECT_ROOT")"
+BUILT_SOURCE_STAMP=""
+if [[ -f "$WEB_DIR/.phagos-source-stamp" ]]; then
+    BUILT_SOURCE_STAMP="$(tr -d '[:space:]' < "$WEB_DIR/.phagos-source-stamp")"
+fi
+
 if [[ ! -s "$WEB_DIR/index.html" || ! -s "$WEB_DIR/phagos.js" || ! -s "$WEB_DIR/phagos.wasm" || ! -s "$WEB_DIR/phagos.pck" ]]; then
     echo "Web build is missing; exporting a release first..."
+    "$PROJECT_ROOT/scripts/export_web.sh"
+elif [[ "$CURRENT_SOURCE_STAMP" != "$BUILT_SOURCE_STAMP" ]]; then
+    echo "Web build is stale relative to arena source/art; exporting a release first..."
     "$PROJECT_ROOT/scripts/export_web.sh"
 fi
 

@@ -48,6 +48,36 @@ A second, **local-only** visual probe was run after the first original source-ar
 
 This is meaningful engine evidence that the source PNG alpha, import remaps, resolver selection, and visual layering are viable in actual Godot rendering. It is deliberately **not** called an official re-export of the current source: the published PCK predates the newly added corridor-floor clipping code in `scripts/organic_corridor.gd`. A fresh native Godot import/export remains required to validate that newly compiled source path and to replace the official release payload.
 
+### 2.2 Current-source Web-engine QA — 2026-09-26
+
+The visible-art complaint was rechecked against the **current working source**, rather
+than against the old PCK. A local-only QA pack retained the real Godot 4.3 Web executable
+and current packed scenes, replaced only the old compiled script entries with the current
+GDScript source, and added the current PNG assets by the normal Godot
+`*.png.import → CompressedTexture2D (*.ctex)` route. Godot compiled and ran that source
+in the browser; no canvas imitation or hand-built gameplay renderer was involved.
+
+| Check | Observed result |
+| --- | --- |
+| Browser / engine | npm-unpacked Chromium 153 and Godot `4.3.stable.official.77dcf97d8` / Compatibility WebGL 2 |
+| Current source executed | Current `organic_room.gd`, `organic_corridor.gd`, `asset_resolver.gd`, `breakable_prop.gd`, and `capture_screenshots.gd` loaded without Godot/browser console errors; the capture assertion logged `Source-art QA: resolver reports 16 available manifest assets.` |
+| Art actually rendered | 16 current transparent 2048² textures (four floors, four vein overlays, four cortical rims, four prop masters) were loaded into the resolver path and visible in the arena: clipped lumen painting, vascular detail, narrow cortical source rims, and focal props |
+| Corrected rim mapping | Square source masters are now sampled through their central art band and fitted to spline intervals, eliminating the rectangular source-card artifacts found in the first Brain/Marrow inspection |
+| Screen coverage | Heart, Lung, Brain, and Marrow each captured at **1920 × 1080** after the rim correction |
+| Runtime diagnostics | Loader dismissed; HTTP, page, and Godot-console errors were absent in all four captures |
+
+The inspected local evidence is ignored by design as derived output:
+`reports/screenshots/current_source_{heart,lung,brain,marrow}_1920x1080.png` and
+`reports/screenshots/current_source_art_contact_sheet_1920x1080.png`. The contact-sheet
+SHA-256 is `46f68dc850843650bfc680dcf954972aae872fb8c54a34825f85093e0215dacf`.
+
+This resolves the integration question—current source art is visibly used by the actual
+Godot Web renderer—but it remains an honest **QA proof pack**, not a substitute for a
+native Godot Web export. `build/web/` is still the earlier official PCK until that native
+export is available. `scripts/preview_web.sh` now compares a source fingerprint with the
+exported `.phagos-source-stamp`, so it will export (or fail clearly when `GODOT_BIN` is
+unavailable) rather than silently serving an old-looking build after source/art changes.
+
 ## 3. Browser matrix and performance boundary
 
 Web Preview run `36201465915` also exercised the exact exported build in Chrome, Firefox, and Edge under headed Xvfb:
@@ -64,7 +94,7 @@ The **Export, visual QA, and browser QA** job in run `36201465915` passed. Its s
 
 ## 4. Asset and debug notes
 
-The asset pipeline now contains a first committed original-art pass: four 2048² biome floor overlays, four 2048² vessel overlays, and Heart/Lung 2048² cortical rim assets. `tools/validate_assets.py` reports **10 pass / 88 planned entries still missing**. The resolver and corridor code map the available PNGs into rooms and spline lumen ribbons; missing categories continue to use the procedural fallback.
+The asset pipeline now contains a second verified original-art increment: four 2048² biome floor overlays, four 2048² vessel overlays, four 2048² cortical rim masters, and four 2048² prop masters. `tools/validate_assets.py` reports **16 pass / 82 missing of 98 planned entries**. The resolver and corridor code map available PNGs into clipped rooms, spline lumen ribbons, narrow rim strips, and environment props; missing categories continue to use the procedural fallback.
 
 This record deliberately does **not** claim that the new art pass has already been captured in a fresh official Web export. That requires the next owner-run Godot export/browser pass. No proprietary or externally sourced game artwork is included.
 

@@ -114,7 +114,9 @@ func _add_floor_layers() -> void:
         art_overlay.polygon = _scale_contour(_inner_contour, 0.975)
         art_overlay.uv = _contour_texture_uv(_inner_contour, imported_floor.get_size())
         art_overlay.texture = imported_floor
-        art_overlay.modulate = Color(1.0, 1.0, 1.0, 0.52)
+        # Masters carry their own restrained alpha; keep this high enough that the
+        # authored membrane/cytoplasm read over the procedural base at 1920×1080.
+        art_overlay.modulate = Color(1.0, 1.0, 1.0, 0.78)
         art_overlay.z_index = 3
         add_child(art_overlay)
 

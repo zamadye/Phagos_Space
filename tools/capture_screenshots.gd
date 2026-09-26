@@ -10,6 +10,25 @@ const CAPTURES := [
 ]
 const OUTPUT_DIRECTORY := "res://reports/screenshots"
 const TARGET_SIZE := Vector2i(1920, 1080)
+const AssetResolverScript = preload("res://scripts/asset_resolver.gd")
+const REQUIRED_SOURCE_ART: PackedStringArray = [
+    "res://assets/floor/biome_heart_floor_01.png",
+    "res://assets/floor/biome_lung_floor_01.png",
+    "res://assets/floor/biome_brain_floor_01.png",
+    "res://assets/floor/biome_marrow_floor_01.png",
+    "res://assets/biome/biome_heart_vein_crimson_01.png",
+    "res://assets/biome/biome_lung_vein_cyan_01.png",
+    "res://assets/biome/biome_brain_vein_cyan_01.png",
+    "res://assets/biome/biome_marrow_vein_crimson_01.png",
+    "res://assets/walls/biome_heart_wall_straight_A.png",
+    "res://assets/walls/biome_lung_wall_straight_A.png",
+    "res://assets/walls/biome_brain_wall_straight_A.png",
+    "res://assets/walls/biome_marrow_wall_straight_A.png",
+    "res://assets/props/prop_membrane_sac_01.png",
+    "res://assets/props/prop_protein_01.png",
+    "res://assets/props/prop_cytokine_crystal_01.png",
+    "res://assets/props/prop_calcified_chunk_01.png",
+]
 
 func _init() -> void:
     call_deferred("_capture_all")
@@ -19,6 +38,10 @@ func _capture_all() -> void:
     DirAccess.make_dir_recursive_absolute(absolute_output)
     root.size = TARGET_SIZE
     var failures: PackedStringArray = []
+    _verify_required_source_art(failures)
+    if not failures.is_empty():
+        _finish_with_failures(failures)
+        return
 
     for capture in CAPTURES:
         var capture_data: Dictionary = capture
@@ -48,8 +71,28 @@ func _capture_all() -> void:
             print("Captured visual QA: %s" % output_path)
 
     if not failures.is_empty():
-        for failure in failures:
-            push_error(failure)
-        quit(1)
+        _finish_with_failures(failures)
         return
     quit(0)
+
+func _verify_required_source_art(failures: PackedStringArray) -> void:
+    var status: Dictionary = AssetResolverScript.warmup()
+    var available_assets: int = int(status.get("available_assets", 0))
+    print("Source-art QA: resolver reports %d available manifest assets." % available_assets)
+    for resource_path in REQUIRED_SOURCE_ART:
+        if not ResourceLoader.exists(resource_path):
+            failures.append("Source-art QA: exported resource is missing: %s" % resource_path)
+            continue
+        var texture: Texture2D = ResourceLoader.load(resource_path) as Texture2D
+        if texture == null:
+            failures.append("Source-art QA: resource did not load as Texture2D: %s" % resource_path)
+            continue
+        if texture.get_size() != Vector2(2048.0, 2048.0):
+            failures.append("Source-art QA: unexpected dimensions for %s: %s" % [resource_path, texture.get_size()])
+    if available_assets < REQUIRED_SOURCE_ART.size():
+        failures.append("Source-art QA: resolver found only %d/%d required assets." % [available_assets, REQUIRED_SOURCE_ART.size()])
+
+func _finish_with_failures(failures: PackedStringArray) -> void:
+    for failure in failures:
+        push_error(failure)
+    quit(1)
