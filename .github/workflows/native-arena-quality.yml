@@ -1,0 +1,39 @@
+name: Native arena quality
+
+on:
+  push:
+    branches:
+      - main
+      - "arena/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Native Godot material stack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Godot 4.3
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+          use-dotnet: false
+
+      - name: Set up authoring validation dependencies
+        run: python3 -m pip install --upgrade Pillow gdtoolkit
+
+      - name: Validate original baked material maps
+        run: python3 tools/validate_cross_section.py
+
+      - name: Parse Godot project and scripts
+        run: |
+          godot --headless --path . --editor --quit
+          gdlint scripts tools
+
+      - name: Build the live native arena contract
+        run: godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
