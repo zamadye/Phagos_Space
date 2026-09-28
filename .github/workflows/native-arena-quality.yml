@@ -30,6 +30,9 @@ jobs:
       - name: Validate original baked material maps
         run: python3 tools/validate_cross_section.py
 
+      - name: Check native launcher syntax
+        run: bash -n scripts/preview_native.sh
+
       - name: Parse Godot project and scripts
         run: |
           godot --headless --path . --editor --quit

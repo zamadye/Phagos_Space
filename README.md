@@ -13,9 +13,23 @@ This project is **not a copy of Pathogenic assets or code**. It studies the usef
 - Baked, tileable material strips provide directional fibers and lobules. They are original generated source assets, not copied game art.
 - There are no particles, floating circles, screen overlays, decorative props, HTML loading overlay, gameplay actors, or continuous environment animation.
 
-## Run
+## Run natively
 
-Open `project.godot` in Godot 4.3 or newer and run the main scene. The main scene is intentionally a native Godot `Node2D` composition; no browser shell or HTML overlay is part of the presentation.
+This replacement intentionally has **no web export**, `build/web/` folder, HTTP preview, or `preview_web.sh`: it is a native Godot presentation.
+
+With Godot 4.3 or newer installed, launch the scene directly from the project root:
+
+```bash
+./scripts/preview_native.sh
+```
+
+To open the project in the editor instead:
+
+```bash
+./scripts/preview_native.sh --editor
+```
+
+The helper detects `godot4` or `godot`; set `GODOT_BIN=/path/to/godot` if your executable has a different name. The main scene is intentionally a native Godot `Node2D` composition, not a browser shell or HTML overlay.
 
 ## Research and art decisions
 
