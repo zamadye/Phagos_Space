@@ -16,7 +16,9 @@ The user correction is the controlling direction:
 
 ## UI decision
 
-Public screenshots of the reference game include a combat HUD, minimap, boss bar, and build UI because it is a combat roguelite. PHAGOS has an explicit no-HUD/no-gameplay constraint, so none of those UI components belong in this rebuild. The study keeps only the **environmental** lessons: nested materials, clean silhouettes, positional palette changes, and native scene rendering.
+Public screenshots of the reference game include a combat HUD, minimap, boss bar, and build UI because it is a combat roguelite. The **current art-study scene** deliberately has no HUD or player, so its environmental hierarchy can be reviewed cleanly. The user has since expanded the next phase to UI/UX and then an immune hero. Those additions will be original native Godot `Control` and `CharacterBody2D` work; they will not copy the reference UI.
+
+A Godot Web export is allowed as a browser/WebView delivery target. That is distinct from replacing the game with an HTML/Canvas implementation: the source scene, visual stack, UI, and future hero remain Godot nodes and GDScript.
 
 ## Screenshot observations translated into original rules
 
@@ -45,6 +47,8 @@ SkinCrossSectionArena (Node2D)
 
 The authoring script merges the three corridor routes into one anatomical mask, then derives each band by subtraction. A wide mask is baked first and each narrower mask removes its centre. The result is a physically ordered exposed cross-section around one shared open cavity, without procedural noise shaders, visual overlays, or hundreds of scene nodes.
 
+`export_presets.cfg` adds a single-threaded Godot **Web** export for browser/WebView review. It generates the web payload from this same scene; it does not add a parallel HTML game implementation.
+
 ## Palette roles
 
 The user explicitly requested a controlled mixture of red, yellow, and blue. This rebuild assigns every hue a physical role:
@@ -63,7 +67,8 @@ Blue is therefore a defined deeper membrane/fascia material, not a random glow. 
 ## Explicit exclusions
 
 - No copied Pathogenic game content.
-- No `CanvasLayer` HUD, gameplay UI, HTML loader UI, fullscreen shader, bloom pass, parallax layer, or global colour overlay.
+- No HTML loader UI, fullscreen shader, bloom pass, parallax layer, or global colour overlay used to decorate the anatomical world.
+- A later real UI may use native Godot `Control` nodes (and, if needed, `CanvasLayer`) for interface composition—not as a visual substitute for the world scene.
 - No decorative particle systems, random dots, bubbles, circles, props, or glowing lines.
 - No circular rooms, radial hubs, crack-shaped cave tunnels, or sharp V turns.
 - No animation until the static cross-section has passed visual review.

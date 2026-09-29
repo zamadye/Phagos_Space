@@ -13,9 +13,11 @@ This project is **not a copy of Pathogenic assets or code**. It studies the usef
 - Baked, tileable material strips provide directional fibers and lobules. They are original generated source assets, not copied game art.
 - There are no particles, floating circles, screen overlays, decorative props, HTML loading overlay, gameplay actors, or continuous environment animation.
 
-## Run natively
+## Development and preview workflow
 
-This replacement intentionally has **no web export**, `build/web/` folder, HTTP preview, or `preview_web.sh`: it is a native Godot presentation.
+The **source of truth remains native Godot**: `.tscn` scenes, Godot nodes, GDScript, and original PNG assets. A browser/WebView build is supported as an **export target**, not as a second HTML/Canvas implementation.
+
+### Native desktop/editor loop
 
 With Godot 4.3 or newer installed, launch the scene directly from the project root:
 
@@ -29,7 +31,25 @@ To open the project in the editor instead:
 ./scripts/preview_native.sh --editor
 ```
 
-The helper detects `godot4` or `godot`; set `GODOT_BIN=/path/to/godot` if your executable has a different name. The main scene is intentionally a native Godot `Node2D` composition, not a browser shell or HTML overlay.
+### Browser/WebView loop
+
+Use the normal local web-preview workflow:
+
+```bash
+./scripts/preview_web.sh
+```
+
+On its first run, this exports the same Godot project to `build/web/`, then serves it at [http://127.0.0.1:8008](http://127.0.0.1:8008). The generated folder is intentionally ignored by Git. It contains Godot's generated HTML, JavaScript, WebAssembly, and pack files; no arena or gameplay is implemented separately in browser code.
+
+Use `WEB_PREVIEW_PORT=8010 ./scripts/preview_web.sh` to choose another port. `preview_web.sh` and `export_web.sh` detect `godot4`, `godot`, or an installed Godot Flatpak; set `GODOT_BIN=/path/to/godot` if your executable has a different name.
+
+## Planned game-development sequence
+
+1. Keep iterating the native arena/world presentation and readable tissue layers.
+2. Add the requested UI/UX with Godot `Control` nodes and themes—not an HTML overlay.
+3. Add the immune hero as a Godot `CharacterBody2D`, with input, collision, visual state, and animation.
+4. Add only the gameplay systems needed after the UI and hero foundations are approved.
+5. Re-export the same Godot project to WebView whenever a browser preview is needed.
 
 ## Research and art decisions
 

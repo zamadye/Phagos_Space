@@ -23,6 +23,7 @@ jobs:
         with:
           version: 4.3.0
           use-dotnet: false
+          include-templates: true
 
       - name: Set up authoring validation dependencies
         run: python3 -m pip install --upgrade Pillow gdtoolkit
@@ -30,8 +31,8 @@ jobs:
       - name: Validate original baked material maps
         run: python3 tools/validate_cross_section.py
 
-      - name: Check native launcher syntax
-        run: bash -n scripts/preview_native.sh
+      - name: Check native and browser launcher syntax
+        run: bash -n scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh
 
       - name: Parse Godot project and scripts
         run: |
@@ -40,3 +41,19 @@ jobs:
 
       - name: Build the live native arena contract
         run: godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
+
+      - name: Export browser/WebView build from the same Godot project
+        run: ./scripts/export_web.sh --release
+
+      - name: Verify generated Web payload
+        run: |
+          test -s build/web/index.html
+          test -s build/web/index.wasm
+          find build/web -maxdepth 1 -type f -printf '%f\n' | sort
+
+      - name: Upload browser/WebView artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phagos-godot-web
+          path: build/web/
+          if-no-files-found: error
