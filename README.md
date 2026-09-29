@@ -1,75 +1,117 @@
 # PHAGOS — Skin Cross-Section Study
 
-A clean, original Godot 4 arena study rebuilt from zero after the earlier renderer was discarded.
+An original biological-arena study with a deliberately split game-app architecture:
 
-This project is **not a copy of Pathogenic assets or code**. It studies the useful visual principles visible in public material—clear anatomical strata, biome-local palettes, readable silhouettes, and restrained motion—then implements an original static skin cutaway in native Godot.
+- **Godot 4 is the game engine**: world rendering, traversable arena, future immune hero, input, collision, animation, and gameplay live in Godot scenes and GDScript.
+- **The HTML/CSS/TypeScript web app is the WebView application layer**: it owns the browser page, UI/UX, menus, HUD, application flow, and the bridge to the engine.
 
-## What is currently built
+The top-level WebView is therefore a web app—not a GitHub repository page and not a raw Godot export page. The Godot Web payload is embedded inside the app at `/engine/`.
 
-- A top-down, no-HUD arena carved as a long open wound through a cross-section of tissue.
-- Each corridor exposes nested, clean material bands in a consistent physical order:
+This project is **not a copy of Pathogenic assets or code**. It applies only high-level public visual principles to original art and implementation.
+
+## Current engine study
+
+- A top-down cavity cut through ordered anatomy:
   **outer skin → fat → muscle → blue fascia → warm inner membrane → open cavity**.
-- Three connected, smooth routes use distinct local palette balances so the walls change by anatomical position without noisy random overlays.
-- Baked, tileable material strips provide directional fibers and lobules. They are original generated source assets, not copied game art.
-- There are no particles, floating circles, screen overlays, decorative props, HTML loading overlay, gameplay actors, or continuous environment animation.
+- Three connected, smooth routes use controlled positional palettes rather than a repeated monochrome wall.
+- Original baked tissue art provides legible fat lobules, directional muscle fibers, fascia, and a clean lumen.
+- The current arena intentionally has no fake HUD, hero, combat, particles, random circles, or decorative animation. Those systems belong to later implementation stages.
 
-## Development and preview workflow
+## Architecture
 
-The **source of truth remains native Godot**: `.tscn` scenes, Godot nodes, GDScript, and original PNG assets. A browser/WebView build is supported as an **export target**, not as a second HTML/Canvas implementation.
-
-### Native desktop/editor loop
-
-With Godot 4.3 or newer installed, launch the scene directly from the project root:
-
-```bash
-./scripts/preview_native.sh
+```text
+Browser / WebView
+└── web/                           HTML, CSS, TypeScript application
+    ├── src/                       UI/UX and application-flow source
+    ├── engineBridge.ts            typed UI ↔ engine message protocol
+    └── public/engine/             generated Godot engine payload
+        └── index.html             embedded iframe, never the app entry page
+             ↓
+Godot project root
+├── scenes/main.tscn               arena scene
+├── scripts/*.gd                   engine/game code
+└── assets/                        original game art
 ```
 
-To open the project in the editor instead:
+The web application may present real UI/UX over the engine viewport. It does **not** redraw or imitate the arena in HTML; the world remains Godot-rendered. `web/engine_bridge.js` is the browser half of the future bridge. A later Godot `JavaScriptBridge` adapter can emit game state and receive deliberate UI commands.
 
-```bash
-./scripts/preview_native.sh --editor
-```
+## Run the application WebView
 
-### Browser/WebView loop
-
-Use the normal local web-preview workflow:
+From the project root:
 
 ```bash
 ./scripts/preview_web.sh
 ```
 
-The branch carries a generated `build/web/` review bundle so `preview_web.sh` can serve the current game immediately at [http://127.0.0.1:8008](http://127.0.0.1:8008). A GitHub workflow regenerates that bundle from the same Godot project whenever source changes. If the bundle is absent locally, the script exports it first.
+Then open:
 
-The folder contains Godot's generated HTML, JavaScript, WebAssembly, and pack files; no arena or gameplay is implemented separately in browser code. Use `WEB_PREVIEW_PORT=8010 ./scripts/preview_web.sh` to choose another port. `preview_web.sh` and `export_web.sh` detect `godot4`, `godot`, or an installed Godot Flatpak; set `GODOT_BIN=/path/to/godot` if your executable has a different name.
+```text
+http://127.0.0.1:5173
+```
 
-## Planned game-development sequence
+This starts the **HTML/JS application**, which embeds the Godot engine under `/engine/`. The script installs the web dependencies on first use. Use another port when necessary:
 
-1. Keep iterating the native arena/world presentation and readable tissue layers.
-2. Add the requested UI/UX with Godot `Control` nodes and themes—not an HTML overlay.
-3. Add the immune hero as a Godot `CharacterBody2D`, with input, collision, visual state, and animation.
-4. Add only the gameplay systems needed after the UI and hero foundations are approved.
-5. Re-export the same Godot project to WebView whenever a browser preview is needed.
+```bash
+WEB_PREVIEW_PORT=8010 ./scripts/preview_web.sh
+```
+
+Do not open the repository URL as a game preview. Do not open `/engine/index.html` directly except when debugging the engine in isolation.
+
+## Develop the two layers
+
+### Godot game-engine work
+
+```bash
+./scripts/preview_native.sh --editor
+```
+
+Use Godot for the arena, hero, movement, physics, animation, combat, and world interaction. To refresh the embedded engine output after Godot changes:
+
+```bash
+./scripts/export_web.sh --release
+```
+
+### Web application / UI-UX work
+
+```bash
+cd web
+npm install
+npm run dev -- --host 0.0.0.0
+```
+
+Build the complete web application bundle with:
+
+```bash
+./scripts/build_web_app.sh
+```
+
+## Planned implementation sequence
+
+1. Iterate the Godot arena/world presentation.
+2. Build the actual UI/UX in `web/src/` using HTML, CSS, and TypeScript.
+3. Add the immune hero in Godot as a `CharacterBody2D`.
+4. Connect real UI state and engine state through the defined bridge.
+5. Add only the gameplay systems approved after UI and hero foundations are in place.
 
 ## Research and art decisions
 
-See [`docs/REFERENCE_RESEARCH.md`](docs/REFERENCE_RESEARCH.md) for the public-reference findings, what is and is not being emulated, the rendering plan, palette roles, and review checklist.
+See [`docs/REFERENCE_RESEARCH.md`](docs/REFERENCE_RESEARCH.md) for public-reference findings, confirmed-vs-inferred limits, material rules, and exclusions.
 
-## Regenerate original material strips
+## Regenerate original materials
 
 ```bash
 python3 -m pip install Pillow
 python3 tools/generate_skin_materials.py
 ```
 
-The generator creates only original assets under `assets/materials/` plus a local composition preview. It is an offline authoring step; the running Godot scene uses the baked PNGs.
+The generator creates original source strips and baked arena maps. It is an offline authoring step; Godot presents the semantic PNG layers.
 
 ## Verify
 
 ```bash
 python3 tools/validate_cross_section.py
 # With Godot installed:
-# godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
+godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
 ```
 
-The static check verifies all layer maps, material colour roles, and exclusion of overlay/particle routes. The runtime probe instantiates the scene and verifies the actual `Sprite2D` stack.
+CI validates the material stack, GDScript, exported embedded Godot engine, and the production HTML/JS application build.

@@ -9,3 +9,7 @@ __pycache__/
 *.py[cod]
 reports/
 build/
+
+# HTML/JS application dependencies and distributable bundle
+web/node_modules/
+web/dist/

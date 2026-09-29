@@ -80,8 +80,25 @@ def main() -> int:
         ):
             if forbidden in source:
                 errors.append(f"arena script contains forbidden overlay/effect route: {forbidden}")
-    if (ROOT / "web").exists():
-        errors.append("web overlay directory must not exist in the native-only rebuild")
+    # The browser page is an intentional HTML/JS application layer. It hosts the
+    # Godot engine rather than reproducing the arena in browser drawing code.
+    web_contract = {
+        "application_entry": ROOT / "web" / "index.html",
+        "application_viewport": ROOT / "web" / "src" / "components" / "GameViewport.tsx",
+        "bridge_contract": ROOT / "web" / "src" / "engineBridge.ts",
+        "engine_bridge": ROOT / "web" / "public" / "engine" / "ui_bridge.js",
+        "engine_payload": ROOT / "web" / "public" / "engine" / "index.html",
+    }
+    for role, path in web_contract.items():
+        if not path.is_file():
+            errors.append(f"missing web-app integration file: {role}")
+    viewport_path = web_contract["application_viewport"]
+    if viewport_path.is_file() and 'src={ENGINE_URL}' not in viewport_path.read_text(encoding="utf-8"):
+        errors.append("web-app viewport does not embed the Godot engine")
+    bridge_path = web_contract["engine_bridge"]
+    if bridge_path.is_file() and "PHAGOS_ENGINE_BRIDGE" not in bridge_path.read_text(encoding="utf-8"):
+        errors.append("embedded engine is missing the UI bridge contract")
+    report["web_application"] = {role: str(path.relative_to(ROOT)) for role, path in web_contract.items()}
 
     report["errors"] = errors
     report["valid"] = not errors
@@ -93,7 +110,7 @@ def main() -> int:
         for error in errors:
             print(f"  - {error}", file=sys.stderr)
         return 1
-    print("Cross-section validation passed: six exposed anatomical roles, clean native Godot stack, no overlays or particles.")
+    print("Cross-section validation passed: native anatomical stack plus an HTML/JS app shell with an embedded Godot engine.")
     return 0
 
 

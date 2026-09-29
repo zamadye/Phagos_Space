@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Export the native Godot project to a browser/WebView-compatible Web build.
-# No game code is implemented in HTML here: Godot generates the shell, JS, WASM,
-# and pack files from project.godot, scenes, assets, and GDScript.
+# Export the Godot engine payload that is embedded by the HTML/JS application.
+# The resulting engine page is intentionally a child of web/public/engine, not
+# the top-level browser application.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUILD_DIR="$ROOT_DIR/build/web"
-OUTPUT_PATH="$BUILD_DIR/index.html"
+ENGINE_DIR="$ROOT_DIR/web/public/engine"
+OUTPUT_PATH="$ENGINE_DIR/index.html"
 EXPORT_MODE="--export-release"
 
 case "${1:-}" in
@@ -41,10 +41,10 @@ MESSAGE
   exit 127
 fi
 
-rm -rf "$BUILD_DIR"
-mkdir -p "$BUILD_DIR"
+rm -rf "$ENGINE_DIR"
+mkdir -p "$ENGINE_DIR"
 
-echo "Exporting native Godot project to $OUTPUT_PATH"
+echo "Exporting Godot engine payload to $OUTPUT_PATH"
 if ! "${GODOT_COMMAND[@]}" --headless --path "$ROOT_DIR" "$EXPORT_MODE" Web "$OUTPUT_PATH"; then
   cat >&2 <<'MESSAGE'
 
@@ -60,4 +60,6 @@ if [[ ! -s "$OUTPUT_PATH" ]]; then
   exit 1
 fi
 
-echo "Web export ready: $OUTPUT_PATH"
+cp "$ROOT_DIR/web/engine_bridge.js" "$ENGINE_DIR/ui_bridge.js"
+python3 "$ROOT_DIR/tools/inject_web_bridge.py" "$OUTPUT_PATH"
+echo "Godot engine payload ready for the web app: $OUTPUT_PATH"

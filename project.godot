@@ -1,5 +1,5 @@
-; PHAGOS — original static skin cross-section study
-; No player, combat, HUD, or web overlay is created by this project.
+; PHAGOS — native Godot engine for the skin cross-section study.
+; Browser UI/UX is owned by the separate HTML/JS web application under web/.
 config_version=5
 
 [application]
