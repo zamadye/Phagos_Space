@@ -39,9 +39,9 @@ Use the normal local web-preview workflow:
 ./scripts/preview_web.sh
 ```
 
-On its first run, this exports the same Godot project to `build/web/`, then serves it at [http://127.0.0.1:8008](http://127.0.0.1:8008). The generated folder is intentionally ignored by Git. It contains Godot's generated HTML, JavaScript, WebAssembly, and pack files; no arena or gameplay is implemented separately in browser code.
+The branch carries a generated `build/web/` review bundle so `preview_web.sh` can serve the current game immediately at [http://127.0.0.1:8008](http://127.0.0.1:8008). A GitHub workflow regenerates that bundle from the same Godot project whenever source changes. If the bundle is absent locally, the script exports it first.
 
-Use `WEB_PREVIEW_PORT=8010 ./scripts/preview_web.sh` to choose another port. `preview_web.sh` and `export_web.sh` detect `godot4`, `godot`, or an installed Godot Flatpak; set `GODOT_BIN=/path/to/godot` if your executable has a different name.
+The folder contains Godot's generated HTML, JavaScript, WebAssembly, and pack files; no arena or gameplay is implemented separately in browser code. Use `WEB_PREVIEW_PORT=8010 ./scripts/preview_web.sh` to choose another port. `preview_web.sh` and `export_web.sh` detect `godot4`, `godot`, or an installed Godot Flatpak; set `GODOT_BIN=/path/to/godot` if your executable has a different name.
 
 ## Planned game-development sequence
 
