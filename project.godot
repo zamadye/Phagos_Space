@@ -1,10 +1,10 @@
-; PHAGOS — original static skin cross-section study
-; No player, combat, HUD, or web overlay is created by this project.
+; PHAGOS — playable dynamic organ-exploration vertical slice
+; Godot is the rendering, collision, input, UI, and gameplay source of truth.
 config_version=5
 
 [application]
-config/name="PHAGOS | Skin Cross-Section Study"
-config/description="A clean native Godot study of layered skin, fat, muscle, fascia, and an open cavity."
+config/name="PHAGOS | Dermal Rift Expedition"
+config/description="A native Godot exploration-adventure slice through a living, changing anatomical arena."
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 
@@ -19,6 +19,6 @@ stretch/aspect="expand"
 [rendering]
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.07, 0.04, 0.10, 1)
+environment/defaults/default_clear_color=Color(0.025, 0.02, 0.07, 1)
 textures/default_filters/use_nearest_mipmap_filter=false
 textures/canvas_textures/default_texture_filter=1

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Launch PHAGOS with the locally installed native Godot editor/runtime.
-# This project deliberately has no browser build or HTTP preview server.
+# Launch the playable PHAGOS Godot project with a locally installed native runtime.
+# Browser/WebView delivery is generated separately by scripts/export_web.sh.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

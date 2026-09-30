@@ -1,83 +1,69 @@
-# Pathogenic reference research → original PHAGOS material plan
+# Pathogenic reference boundary → original PHAGOS exploration direction
 
 ## Scope and ethics
 
-The visual target is **not** a reconstruction of *Pathogenic*. No game texture, sprite, mesh, shader, screenshot crop, UI, PCK content, or proprietary implementation is imported or reproduced here. This document records only high-level observations from public material and converts them into an original, simpler Godot study.
+PHAGOS is **not** a reconstruction of *Pathogenic*. No game texture, sprite, mesh, shader, screenshot crop, UI, PCK content, source code, room layout, enemy, upgrade, or proprietary implementation is imported or reproduced here.
 
-The user correction is the controlling direction:
+The public reference is useful only at a high level: a microscopic biological world can be colorful, readable, biome-specific, and active without becoming medically photorealistic. PHAGOS turns that observation into its own anatomy, traversal rules, landmark names, material system, objectives, and Godot implementation.
 
-> Read the space as a physical cut through skin: outer skin, fat, muscle, and deeper membrane should be visible as clean, positional layers before the arena cavity begins. The scene must not be covered in incidental effects, circles, or HTML overlays.
+The user's controlling direction remains:
 
-## Public findings
+> Read the space as a physical cut through coherent anatomy—surface skin, fat, muscle/fibrous depth, then cavity—while making that space an actual exploration adventure whose routes change with organ behavior.
 
-1. The official game page describes *Pathogenic* as a 2D top-down game made around a detailed, colorful biological world and says its cells, enemies, and projectiles use soft-body physics. It also describes distinct organ biomes rather than one universal material palette. [Official game information](https://slugdisco.com/pathogenic-game-info/)
-2. A developer/community post reports Godot as the engine and names `SoftBody2D`, `SmartShape2D`, `LimboAI`, normal maps, and a `WorldEnvironment` glow workflow. This is useful evidence for the **kind** of native-engine stack involved, but it is not a specification for this project and is not copied. [Public Godot discussion](https://www.reddit.com/r/godot/comments/1lcczic/i_quit_my_job_to_make_a_game_where_you_play_as_a/)
-3. Public commentary consistently emphasizes a human-body environment with readable biome identity and tangible, deforming combat bodies. The rendering lesson for a static arena is not “add more VFX”; it is “make the material hierarchy legible first.” [GamingOnLinux overview](https://www.gamingonlinux.com/2026/08/cellular-roguelike-shooter-pathogenic-is-a-body-infecting-good-time/) · [NoobFeed visual discussion](https://www.noobfeed.com/reviews/pathogenic-review)
+## Confirmed public observations
 
-## UI decision
+1. The official game information describes *Pathogenic* as a 2D top-down biological world with distinct organ biomes and soft-body-driven cells, enemies, and projectiles. It does **not** disclose proprietary rendering or map-generation implementation. [Official game information](https://slugdisco.com/pathogenic-game-info/)
+2. Its Steam page publicly frames the game around infecting a host, collecting organelles, and exploring a procedurally generated microscopic world. This supports the high-level idea that exploration can be central in a cellular setting; it supplies no PHAGOS content. [Steam page](https://store.steampowered.com/app/3808690/Pathogenic/)
+3. A public developer/community post reports Godot and mentions tools such as `SoftBody2D`, `SmartShape2D`, normal maps, and glow. It is secondary context, not a specification and not implementation access. [Public Godot discussion](https://www.reddit.com/r/godot/comments/1lcczic/i_quit_my_job_to_make-a-game-where-you-play-as-a/)
+4. Independent public coverage discusses readable organ identity and tangible biological action. The safe design lesson is **material hierarchy and active topology**, not copying art or adding arbitrary VFX. [GamingOnLinux](https://www.gamingonlinux.com/2026/08/cellular-roguelike-shooter-pathogenic-is-a-body-infecting-good-time/) · [NoobFeed](https://www.noobfeed.com/reviews/pathogenic-review)
 
-Public screenshots of the reference game include a combat HUD, minimap, boss bar, and build UI because it is a combat roguelite. The **current art-study scene** deliberately has no HUD or player, so its environmental hierarchy can be reviewed cleanly. The user has since expanded the next phase to UI/UX and then an immune hero. The immune hero remains original native Godot `CharacterBody2D` work. A future intentional browser UI/UX may use HTML/CSS/JS around the exported game, but it must be specified as product UI—not guessed as a replacement game layer or copied reference UI.
+## PHAGOS design translation
 
-A Godot Web export is the browser/WebView delivery target. That is distinct from replacing the game with an HTML/Canvas implementation: the source scene, world rendering, hero, and gameplay remain Godot nodes and GDScript.
-
-## Screenshot observations translated into original rules
-
-| Observation from public reference | Original PHAGOS response |
+| High-level observation | Original PHAGOS decision |
 | --- | --- |
-| A wall reads as a stack of materials, not one flat painted outline. | Bake six nested roles: skin, fat, muscle, blue fascia, warm inner membrane, and lumen. |
-| Colours change by organ and location but stay organized. | Use a deliberate, limited positional grade. Do not randomize colours per prop or particle. |
-| Material patterns follow the surface. | Bake directional fiber/lobule strips into transparent full-map layers. Muscle fibers remain in muscle; fascia folds remain in the narrow fascia band. |
-| The playable opening is strong and uncluttered. | Use a large clean lumen with no floating decoration field. |
-| Motion belongs to living entities and combat feedback. | The environment study starts completely static. Motion may be reconsidered only after a still screenshot is approved. |
-| The original is a native Godot title. | The arena is a native Godot scene. There is no custom HTML loading layer, fullscreen web overlay, or screen-space post-process in the presentation. |
+| Organ regions must be recognizable. | Each PHAGOS biome owns material roles, landmarks, topology, and behavior. Dermal Rift uses Surface Breach, Dermal Gallery, Adipose Saddle, Myofiber Fork, Fascia Valve, Lymph Pocket, Deep Cavity, and Organ Gate. |
+| Biological environments should be active. | Dermal Rift changes between resting, contraction, vascular surge, inflammation, and recovery. These states alter actual route availability, anchor positions, width envelopes, and collision—not decorative screen motion. |
+| Exploration needs legibility. | The player discovers landmarks, reads route-state warnings, chooses branches, reaches the Deep Cavity, performs an interaction, then exits through a gated organ transition. |
+| Navigation must be safe during deformation. | State shifts preview before collision commit, occur only while the explorer is in a safe connected chamber, never narrow an authored path under 260 px, and retain a route to entry. |
+| The environment must have anatomy, not generic caves. | Route bands render from outer tissue through fat, muscle, fascia, membrane, and clean cavity. Red/yellow/blue have physical tissue roles rather than being effect colors. |
 
-## Rendering architecture
+## Engine boundary
+
+The playable world is native Godot:
 
 ```text
-SkinCrossSectionArena (Node2D)
-├── DeepTissueBackdrop      (Sprite2D + baked backdrop map)
-├── OuterSkin               (Sprite2D + transparent baked band map)
-├── Fat                     (Sprite2D + transparent baked band map)
-├── MuscleFibers            (Sprite2D + transparent baked band map)
-├── BlueFascia              (Sprite2D + transparent baked band map)
-├── InnerMembrane           (Sprite2D + transparent baked seam map)
-├── OpenCavityFloor         (Sprite2D + transparent baked lumen map)
-└── Camera2D
+DermalRiftExpedition (Node2D)
+├── DermalRiftWorld          dynamic anatomy renderer from authored JSON
+├── DynamicCavityCollision   rebuilt StaticBody2D cavity boundaries
+├── TraversalCell            CharacterBody2D exploration controller
+│   └── ExplorationCamera    Camera2D
+└── ExpeditionHUD            native Godot CanvasLayer / Control UI
 ```
 
-The authoring script merges the three corridor routes into one anatomical mask, then derives each band by subtraction. A wide mask is baked first and each narrower mask removes its centre. The result is a physically ordered exposed cross-section around one shared open cavity, without procedural noise shaders, visual overlays, or hundreds of scene nodes.
+The WebView is a direct Godot Web export served over HTTP. There is no React shell, iframe, custom HTML game, or browser-side duplicate renderer.
 
-`export_presets.cfg` adds a single-threaded Godot **Web** export under `build/web/` for browser/WebView review. A static server serves that generated Godot payload directly; it does not add a parallel HTML game implementation.
+## Visual rules
 
-## Palette roles
+- **Outer skin / dermis:** muted rose and russet; entry orientation.
+- **Fat / subcutaneous tissue:** ochre, mustard, and pale gold; compressed at the Adipose Saddle.
+- **Muscle:** crimson and oxblood directional fibers; visibly contracts at the Myofiber Fork.
+- **Fascia / membrane:** cobalt, teal-blue, and violet-blue; readable state gate rather than glow.
+- **Cavity:** plum / charcoal-violet navigable lumen; kept clear enough to read player movement and interaction.
 
-The user explicitly requested a controlled mixture of red, yellow, and blue. This rebuild assigns every hue a physical role:
-
-| Material | Base role | Permitted variation |
-| --- | --- | --- |
-| Deep tissue / contour | aubergine, dark burgundy | route-local cool or warm shadow |
-| Outer skin | russet, muted rose-brown | warmer on the upper route, cooler on lower tissue |
-| Fat | ochre, mustard, pale gold | sparse warm coral septa in the baked strip |
-| Muscle | crimson, carmine, oxblood | red fiber direction follows each corridor |
-| Fascia / membrane | cobalt, teal-blue, violet-blue | a narrow bright inner fold only |
-| Lumen | muted plum, charcoal-violet | very low-contrast collagen traces |
-
-Blue is therefore a defined deeper membrane/fascia material, not a random glow. Yellow is fat, not a generic particle colour. Red is muscle and vascular tissue, not a fullscreen tint.
+Motion must communicate organ function: contraction shifts a lower passage, vascular surge opens an upper route, inflammation redirects through lymph, and recovery visibly restores choices. It must not be random wobble, camera shake, incidental particle noise, or an overlay hiding the arena.
 
 ## Explicit exclusions
 
-- No copied Pathogenic game content.
-- No HTML/Canvas layer that redraws or decorates the anatomical world outside the Godot runtime; any later web UI is deliberate product UI, not a substitute renderer.
-- No fullscreen shader, bloom pass, parallax layer, or global colour overlay used to decorate the anatomical world.
-- No decorative particle systems, random dots, bubbles, circles, props, or glowing lines.
-- No circular rooms, radial hubs, crack-shaped cave tunnels, or sharp V turns.
-- No animation until the static cross-section has passed visual review.
+- No copied Pathogenic content or inferred proprietary implementation claims.
+- No HTML/Canvas layer that redraws the Godot world.
+- No generic static anatomical poster presented as the game.
+- No random particles, noise circles, debris fields, or arbitrary glow used to simulate activity.
+- No final immune hero/combat claim before the traversal/runtime safety gates are complete.
 
-## Acceptance checklist for the first rebuild
+## Acceptance criteria for the live slice
 
-1. A screenshot instantly reads as a cutaway through skin, fat, muscle, fascia, and an open cavity.
-2. Every visible corridor shows at least four distinct wall colours in the same anatomical order.
-3. Route A/B/C differ in controlled palette balance, not random effect density.
-4. The lumen remains clean enough to read as navigable space without a HUD or player sprite.
-5. No unexplained circles, particles, overlays, or screen effects are visible.
-6. The scene is readable as a still image before any animation is added.
+1. The player can move, collide with tissue walls, explore, discover landmarks, interact with the Deep Cavity, and exit through the Organ Gate.
+2. A state change visibly affects routes and collision geometry, but never seals the active explorer.
+3. The same authored data drives validator, map, rendered anatomy, collision, and route state.
+4. A still frame identifies its tissue hierarchy; in motion, a player can understand why the map changed.
+5. The same scene works in native Godot and its direct Godot Web export.

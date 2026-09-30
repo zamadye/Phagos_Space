@@ -1,11 +1,6 @@
 [gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/skin_cross_section_arena.gd" id="1_arena"]
+[ext_resource type="Script" path="res://scripts/dermal_rift_expedition.gd" id="1_expedition"]
 
-[node name="SkinCrossSectionArena" type="Node2D"]
-script = ExtResource("1_arena")
-
-[node name="Camera2D" type="Camera2D" parent="."]
-enabled = true
-position = Vector2(0, 0)
-position_smoothing_enabled = false
+[node name="DermalRiftExpedition" type="Node2D"]
+script = ExtResource("1_expedition")

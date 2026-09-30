@@ -1,8 +1,8 @@
-# Original PHAGOS arena assets
+# Original PHAGOS anatomy studies
 
-`arena/` contains the seven baked maps displayed by the native Godot scene:
+`arena/` contains the original seven baked maps from the accepted **skin-cutaway visual prototype**:
 
-| File | Role |
+| File | Prototype material role |
 | --- | --- |
 | `00_deep_tissue_backdrop.png` | Deep quiet tissue beyond the cutaway |
 | `01_outer_skin.png` | Outer skin / dermal band |
@@ -12,6 +12,6 @@
 | `05_inner_membrane.png` | Warm inner membrane seam |
 | `06_open_cavity.png` | Clean open arena cavity |
 
-Every map is 2048×1152 and is original. All maps after the backdrop are transparent except for their named anatomical band. `SkinCrossSectionArena` stacks the maps in order with seven `Sprite2D` nodes.
+Every map is 2048×1152 and original. The maps remain a material-language reference for PHAGOS, but they are no longer presented as the whole game or stacked as the runtime scene. The playable Dermal Rift now renders and collides with dynamic Godot geometry driven by `data/organ_biomes/dermal_rift.json`.
 
-`materials/` contains the small authored strips used by the offline generator to bake the complete maps. They are source material, not runtime overlays. `preview/skin_cross_section_preview.png` is a direct composite of the same runtime maps for art review.
+`materials/` contains the small authored strips used by the offline generator to bake these studies. `preview/skin_cross_section_preview.png` is a reference composite for art review, not a playable world screenshot.

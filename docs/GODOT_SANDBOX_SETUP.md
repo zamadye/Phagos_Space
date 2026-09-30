@@ -60,12 +60,14 @@ These locations are intentionally outside Git. Sandboxes may need to run the ins
 # Parse/import the project.
 godot --headless --path . --editor --quit
 
-# Instantiate the actual main scene and validate its runtime material stack.
-godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
+# Instantiate the actual playable main scene and validate controller, collision,
+# native HUD, progression gate, and dynamic organ-state routing.
+godot --headless --path . --script res://tools/runtime_expedition_probe.gd
 
-# Validate portable project/export contracts.
+# Validate portable project/export contracts and authored arena behavior.
 python3 tools/validate_godot_setup.py
-python3 tools/validate_cross_section.py
+python3 tools/validate_arena_plan.py
+python3 tools/validate_expedition_build.py
 ```
 
 `project.godot`, `.tscn`, and `.gd` are text and can be reviewed or edited in a headless environment. The editor remains the preferred tool for visual scene authoring on a desktop machine.
@@ -106,7 +108,9 @@ Phagos_Space/
 ├── tools/
 │   ├── install_godot.sh          portable installer
 │   ├── validate_godot_setup.py   engine/export contract checks
-│   └── runtime_cross_section_probe.gd
+│   ├── runtime_expedition_probe.gd
+│   ├── validate_arena_plan.py
+│   └── validate_expedition_build.py
 ├── build/web/                    generated Godot Web payload
 └── docs/
     └── GODOT_SANDBOX_SETUP.md    this guide

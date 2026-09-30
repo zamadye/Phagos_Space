@@ -6,13 +6,20 @@
   "source_status": "original PHAGOS layout; not copied from any reference game",
   "seed_policy": {
     "mode": "deterministic_per_run",
-    "stable_inputs": ["run_seed", "biome_id", "visit_index"],
+    "stable_inputs": [
+      "run_seed",
+      "biome_id",
+      "visit_index"
+    ],
     "debug_seed": 12047
   },
   "world_bounds": {
     "width": 6400,
     "height": 3600,
-    "camera_viewport": [1920, 1080],
+    "camera_viewport": [
+      1920,
+      1080
+    ],
     "stream_radius": 1500
   },
   "material_order": [
@@ -28,8 +35,14 @@
       {
         "id": "surface_breach",
         "type": "entry",
-        "position": [480, 840],
-        "footprint": [740, 520],
+        "position": [
+          480,
+          840
+        ],
+        "footprint": [
+          740,
+          520
+        ],
         "material_profile": "dermal_entry",
         "motion_role": "stable_anchor",
         "landmark": "closed incision lip"
@@ -37,8 +50,14 @@
       {
         "id": "dermal_gallery",
         "type": "corridor_chamber",
-        "position": [1320, 790],
-        "footprint": [920, 540],
+        "position": [
+          1320,
+          790
+        ],
+        "footprint": [
+          920,
+          540
+        ],
         "material_profile": "dermal_warm",
         "motion_role": "shear_band",
         "landmark": "dermal fold gallery"
@@ -46,8 +65,14 @@
       {
         "id": "adipose_saddle",
         "type": "choice_chamber",
-        "position": [2450, 740],
-        "footprint": [960, 620],
+        "position": [
+          2450,
+          740
+        ],
+        "footprint": [
+          960,
+          620
+        ],
         "material_profile": "adipose_gold",
         "motion_role": "compression_band",
         "landmark": "adipose saddle"
@@ -55,8 +80,14 @@
       {
         "id": "capillary_balcony",
         "type": "optional_branch",
-        "position": [3220, 320],
-        "footprint": [760, 460],
+        "position": [
+          3220,
+          320
+        ],
+        "footprint": [
+          760,
+          460
+        ],
         "material_profile": "vascular_cool",
         "motion_role": "pulse_lane",
         "landmark": "capillary balcony"
@@ -64,8 +95,14 @@
       {
         "id": "myofiber_fork",
         "type": "choice_chamber",
-        "position": [3340, 1360],
-        "footprint": [1040, 660],
+        "position": [
+          3340,
+          1360
+        ],
+        "footprint": [
+          1040,
+          660
+        ],
         "material_profile": "muscle_crimson",
         "motion_role": "contractile_anchor",
         "landmark": "myofiber fork"
@@ -73,8 +110,14 @@
       {
         "id": "fascia_valve",
         "type": "state_gate",
-        "position": [4300, 920],
-        "footprint": [700, 500],
+        "position": [
+          4300,
+          920
+        ],
+        "footprint": [
+          700,
+          500
+        ],
         "material_profile": "fascia_blue",
         "motion_role": "valve_gate",
         "landmark": "fascial valve"
@@ -82,8 +125,14 @@
       {
         "id": "lymph_pocket",
         "type": "optional_branch",
-        "position": [4420, 1720],
-        "footprint": [720, 520],
+        "position": [
+          4420,
+          1720
+        ],
+        "footprint": [
+          720,
+          520
+        ],
         "material_profile": "immune_lilac",
         "motion_role": "reservoir",
         "landmark": "lymph pocket"
@@ -91,8 +140,14 @@
       {
         "id": "deep_cavity",
         "type": "hub_chamber",
-        "position": [5240, 1040],
-        "footprint": [1080, 780],
+        "position": [
+          5240,
+          1040
+        ],
+        "footprint": [
+          1080,
+          780
+        ],
         "material_profile": "deep_plum",
         "motion_role": "stable_anchor",
         "landmark": "deep cavity"
@@ -100,8 +155,14 @@
       {
         "id": "organ_gate",
         "type": "exit",
-        "position": [6030, 1030],
-        "footprint": [520, 460],
+        "position": [
+          6030,
+          1030
+        ],
+        "footprint": [
+          520,
+          460
+        ],
         "material_profile": "transition_membrane",
         "motion_role": "stable_anchor",
         "landmark": "organ gate"
@@ -203,33 +264,157 @@
   "dynamic_states": [
     {
       "id": "resting",
-      "duration_range_seconds": [18, 30],
-      "active_links": ["breach_to_gallery", "gallery_to_saddle", "saddle_to_fork", "fork_to_valve", "valve_to_cavity", "cavity_to_gate"],
-      "visual_direction": "slow tissue settling; no combat-noise overlay"
+      "duration_range_seconds": [
+        18,
+        30
+      ],
+      "active_links": [
+        "breach_to_gallery",
+        "gallery_to_saddle",
+        "saddle_to_fork",
+        "fork_to_valve",
+        "valve_to_cavity",
+        "cavity_to_gate"
+      ],
+      "visual_direction": "slow tissue settling; no combat-noise overlay",
+      "anchor_offsets": {},
+      "link_width_scales": {},
+      "state_cue": "The dermis settles. The lower myofiber passage is stable."
     },
     {
       "id": "contraction",
-      "duration_range_seconds": [6, 10],
-      "active_links": ["breach_to_gallery", "gallery_to_saddle", "saddle_to_fork", "fork_to_valve", "valve_to_cavity", "cavity_to_gate"],
-      "visual_direction": "myofiber routes offset and narrow within a safe movement envelope"
+      "duration_range_seconds": [
+        6,
+        10
+      ],
+      "active_links": [
+        "breach_to_gallery",
+        "gallery_to_saddle",
+        "saddle_to_fork",
+        "fork_to_valve",
+        "valve_to_cavity",
+        "cavity_to_gate"
+      ],
+      "visual_direction": "myofiber routes offset and narrow within a safe movement envelope",
+      "anchor_offsets": {
+        "myofiber_fork": [
+          0,
+          56
+        ],
+        "fascia_valve": [
+          -26,
+          32
+        ]
+      },
+      "link_width_scales": {
+        "saddle_to_fork": 0.79,
+        "fork_to_valve": 0.82
+      },
+      "state_cue": "Myofibers draw inward. Wait inside a chamber before the walls commit."
     },
     {
       "id": "vascular_surge",
-      "duration_range_seconds": [8, 14],
-      "active_links": ["breach_to_gallery", "gallery_to_saddle", "saddle_to_balcony", "balcony_to_valve", "valve_to_cavity", "cavity_to_gate"],
-      "visual_direction": "upper route gains cool vascular readability; lower route remains a valid retreat"
+      "duration_range_seconds": [
+        8,
+        14
+      ],
+      "active_links": [
+        "breach_to_gallery",
+        "gallery_to_saddle",
+        "saddle_to_balcony",
+        "balcony_to_valve",
+        "valve_to_cavity",
+        "cavity_to_gate"
+      ],
+      "visual_direction": "upper route gains cool vascular readability; lower route remains a valid retreat",
+      "anchor_offsets": {
+        "capillary_balcony": [
+          0,
+          -42
+        ],
+        "fascia_valve": [
+          -12,
+          -54
+        ]
+      },
+      "link_width_scales": {
+        "saddle_to_balcony": 1.08,
+        "balcony_to_valve": 0.88
+      },
+      "state_cue": "A cool capillary route opens above the adipose saddle."
     },
     {
       "id": "inflammation",
-      "duration_range_seconds": [12, 20],
-      "active_links": ["breach_to_gallery", "gallery_to_saddle", "saddle_to_fork", "fork_to_lymph", "lymph_to_cavity", "cavity_to_gate"],
-      "visual_direction": "warm swelling changes navigation choices without random debris"
+      "duration_range_seconds": [
+        12,
+        20
+      ],
+      "active_links": [
+        "breach_to_gallery",
+        "gallery_to_saddle",
+        "saddle_to_fork",
+        "fork_to_lymph",
+        "lymph_to_cavity",
+        "cavity_to_gate"
+      ],
+      "visual_direction": "warm swelling changes navigation choices without random debris",
+      "anchor_offsets": {
+        "myofiber_fork": [
+          30,
+          22
+        ],
+        "lymph_pocket": [
+          -38,
+          18
+        ],
+        "deep_cavity": [
+          -18,
+          16
+        ]
+      },
+      "link_width_scales": {
+        "saddle_to_fork": 0.84,
+        "fork_to_lymph": 0.96,
+        "lymph_to_cavity": 0.91
+      },
+      "state_cue": "Warm swelling redirects the route through the lymph pocket."
     },
     {
       "id": "recovery",
-      "duration_range_seconds": [10, 16],
-      "active_links": ["breach_to_gallery", "gallery_to_saddle", "saddle_to_balcony", "saddle_to_fork", "fork_to_valve", "valve_to_cavity", "cavity_to_gate"],
-      "visual_direction": "membranes relax and routes reopen in a legible sequence"
+      "duration_range_seconds": [
+        10,
+        16
+      ],
+      "active_links": [
+        "breach_to_gallery",
+        "gallery_to_saddle",
+        "saddle_to_balcony",
+        "saddle_to_fork",
+        "fork_to_valve",
+        "valve_to_cavity",
+        "cavity_to_gate"
+      ],
+      "visual_direction": "membranes relax and routes reopen in a legible sequence",
+      "anchor_offsets": {
+        "capillary_balcony": [
+          0,
+          -18
+        ],
+        "myofiber_fork": [
+          16,
+          18
+        ],
+        "fascia_valve": [
+          -10,
+          12
+        ]
+      },
+      "link_width_scales": {
+        "saddle_to_balcony": 0.96,
+        "saddle_to_fork": 0.94,
+        "fork_to_valve": 0.95
+      },
+      "state_cue": "Membranes relax. Both routes become legible before the next shift."
     }
   ],
   "safety_contract": {

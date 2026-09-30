@@ -55,7 +55,7 @@ The first real arena is specified in [`data/organ_biomes/dermal_rift.json`](../d
 
 ![Dermal Rift authored topology plan](preview/dermal_rift_layout_plan.png)
 
-The image is a **review-only topology plan** rendered from the JSON data. Runtime geometry will preserve its graph and safety constraints while using position-specific tissue treatment.
+The image is a **review-only topology plan** rendered from the JSON data. The playable Godot runtime now loads the same graph for its cavity geometry, `StaticBody2D` collision, route availability, landmark discovery, state cues, and map affordance. The runtime uses position-specific tissue treatment rather than treating this diagram as a background image.
 
 ### Route intent
 
@@ -91,15 +91,29 @@ Safety rules are data, not assumptions:
 
 `tools/validate_arena_plan.py` verifies every authored state still connects entry → deep cavity → organ gate.
 
+## Current playable proof — Dermal Rift expedition slice
+
+The repository now contains a native Godot traversal slice that turns this contract into play:
+
+- `scripts/traversal_cell.gd` provides a real `CharacterBody2D` controller with WASD/arrow input, sprinting, and collision;
+- `scripts/dermal_rift_expedition.gd` loads the JSON plan, builds `StaticBody2D` boundaries for every current cavity, tracks discovery and objective progression, and refuses a route shift when the active explorer is outside a safe connected chamber;
+- `scripts/dermal_rift_world.gd` draws the actual state-dependent cavity/organ layers from the same anchor/link data, including collapsed routes and moving chambers;
+- `scripts/expedition_hud.gd` and `scripts/dermal_rift_map.gd` provide Godot-native objective, interaction, state-warning, discovery, and map surfaces;
+- the player must reach the Deep Cavity, read its pulse, and then cross the Organ Gate. This gives the slice a playable explore → adapt → interact → exit loop before combat exists.
+
+This is intentionally a **traversal proxy**, not a claim that the final immune hero, combat, or full organ atlas has already been designed. Its purpose is to prove that exploration and moving-route safety are playable before those systems are added.
+
 ## Development sequence
 
 ### Milestone 0 — foundation lock ✅
 
-**Delivered:** Godot 4.3 project, Web export, direct WebView server, original layered skin study, static material validation, headless runtime probe.
+**Delivered:** Godot 4.3 project, Web export, direct WebView server, original layered anatomy studies, authored dynamic-arena data, a playable native traversal slice, and a headless runtime probe.
 
 **Exit gate:** The same Godot export runs locally, in WebView, and in CI. No browser wrapper replaces the game.
 
-### Milestone 1 — arena data and debug atlas
+### Milestone 1 — arena data and debug atlas *(in progress)*
+
+**Already proven in the playable slice:** Dermal Rift JSON loads into the live Godot graph, route widths/anchor offsets drive geometry, and the runtime probe inspects state changes. **Remaining for this milestone:** deterministic seed/replay serialization and a production debug atlas.
 
 **Build:**
 
@@ -110,7 +124,9 @@ Safety rules are data, not assumptions:
 
 **Exit gate:** Reloading the same seed reproduces the graph, state order, and collision anchors exactly.
 
-### Milestone 2 — navigable Dermal Rift
+### Milestone 2 — navigable Dermal Rift *(playable proof delivered; hardening remains)*
+
+**Already proven in the playable slice:** a controller traverses collidable generated cavities, discovers anchors, reads the Deep Cavity, and reaches the progression gate while state changes are safety-gated. **Remaining:** streaming, save/restore, and broader movement/collision stress tests.
 
 **Build:**
 
@@ -121,7 +137,9 @@ Safety rules are data, not assumptions:
 
 **Exit gate:** A proxy can traverse all planned Dermal Rift paths without clipping through material or reaching an unconnected cavity.
 
-### Milestone 3 — UI/UX system before hero
+### Milestone 3 — UI/UX system before hero *(first playable pass delivered; production system remains)*
+
+**Already proven in the playable slice:** objective, interaction prompt, state preview warning, discovery count, discovered-only map, and completion feedback are native Godot UI. **Remaining:** accessibility, focus/navigation audit, localization, settings, and production theme components.
 
 **Build:**
 

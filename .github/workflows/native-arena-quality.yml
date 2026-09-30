@@ -1,4 +1,4 @@
-name: Native arena quality
+name: Native expedition quality
 
 on:
   push:
@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   validate:
-    name: Native Godot material stack
+    name: Native Godot exploration expedition
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -28,27 +28,25 @@ jobs:
       - name: Set up authoring validation dependencies
         run: python3 -m pip install --upgrade Pillow gdtoolkit
 
-      - name: Check portable Godot setup and launchers
+      - name: Check portable Godot setup and authored arena safety
         run: |
           bash -n tools/install_godot.sh scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh
           python3 tools/validate_godot_setup.py
           python3 tools/validate_arena_plan.py
-
-      - name: Validate original baked material maps
-        run: python3 tools/validate_cross_section.py
+          python3 tools/validate_expedition_build.py
 
       - name: Render and verify the authored arena topology plan
         run: |
           python3 tools/render_arena_plan.py
           test -s docs/preview/dermal_rift_layout_plan.png
 
-      - name: Parse Godot project and scripts
+      - name: Parse playable Godot scripts
         run: |
           godot --headless --path . --editor --quit
           gdlint scripts tools
 
-      - name: Build the live native arena contract
-        run: godot --headless --path . --script res://tools/runtime_cross_section_probe.gd
+      - name: Prove the live exploration runtime
+        run: godot --headless --path . --script res://tools/runtime_expedition_probe.gd
 
       - name: Export browser/WebView build from the same Godot project
         run: ./scripts/export_web.sh --release
@@ -57,6 +55,7 @@ jobs:
         run: |
           test -s build/web/index.html
           test -s build/web/index.wasm
+          test -s build/web/index.pck
           find build/web -maxdepth 1 -type f -printf '%f\n' | sort
 
       - name: Upload browser/WebView artifact
