@@ -28,11 +28,13 @@ jobs:
       - name: Set up authoring validation dependencies
         run: python3 -m pip install --upgrade Pillow gdtoolkit
 
+      - name: Check portable Godot setup and launchers
+        run: |
+          bash -n tools/install_godot.sh scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh
+          python3 tools/validate_godot_setup.py
+
       - name: Validate original baked material maps
         run: python3 tools/validate_cross_section.py
-
-      - name: Check native, engine-export, and web-app launcher syntax
-        run: bash -n scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh scripts/build_web_app.sh
 
       - name: Parse Godot project and scripts
         run: |
@@ -45,30 +47,15 @@ jobs:
       - name: Export browser/WebView build from the same Godot project
         run: ./scripts/export_web.sh --release
 
-      - name: Verify embedded Godot engine payload
+      - name: Verify generated Web payload
         run: |
-          test -s web/public/engine/index.html
-          test -s web/public/engine/index.wasm
-          test -s web/public/engine/ui_bridge.js
-          find web/public/engine -maxdepth 1 -type f -printf '%f\n' | sort
+          test -s build/web/index.html
+          test -s build/web/index.wasm
+          find build/web -maxdepth 1 -type f -printf '%f\n' | sort
 
-      - name: Set up Node for the application UI
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Build HTML/JS application shell
-        run: |
-          npm --prefix web ci
-          npm --prefix web run build
-          test -s web/dist/index.html
-          test -s web/dist/engine/index.html
-
-      - name: Upload browser/WebView application artifact
+      - name: Upload browser/WebView artifact
         uses: actions/upload-artifact@v4
         with:
-          name: phagos-web-application
-          path: web/dist/
+          name: phagos-godot-web
+          path: build/web/
           if-no-files-found: error

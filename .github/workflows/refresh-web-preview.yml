@@ -1,23 +1,23 @@
-name: Refresh embedded Godot engine payload
+name: Refresh Godot Web preview
 
 on:
   push:
     branches:
       - "arena/01a0d899-phagos-space"
     paths-ignore:
-      - "web/public/engine/**"
+      - "build/web/**"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: refresh-embedded-godot-engine-${{ github.ref }}
+  group: refresh-godot-web-preview-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   export-and-commit:
-    name: Refresh Godot engine embedded by the web app
+    name: Export Godot Web build for local WebView
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -32,17 +32,17 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      - name: Export the Godot engine payload for the HTML/JS application
+      - name: Export the same native Godot project for WebView
         run: ./scripts/export_web.sh --release
 
-      - name: Commit refreshed embedded engine payload when it changed
+      - name: Commit generated Web preview when it changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add web/public/engine
+          git add -f build/web
           if git diff --cached --quiet; then
-            echo "Embedded Godot engine payload is already current."
+            echo "Generated Web preview is already current."
             exit 0
           fi
-          git commit -m "chore: refresh embedded Godot engine [skip ci]"
+          git commit -m "chore: refresh generated Godot Web preview [skip ci]"
           git push origin HEAD:arena/01a0d899-phagos-space

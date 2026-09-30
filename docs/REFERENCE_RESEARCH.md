@@ -16,9 +16,9 @@ The user correction is the controlling direction:
 
 ## UI decision
 
-Public screenshots of the reference game include a combat HUD, minimap, boss bar, and build UI because it is a combat roguelite. The **current art-study scene** deliberately has no HUD or player, so its environmental hierarchy can be reviewed cleanly. The user has since expanded the next phase to UI/UX and then an immune hero. The UI/UX will be original HTML/CSS/TypeScript web-app work; the immune hero remains a native Godot `CharacterBody2D`. Neither will copy the reference UI.
+Public screenshots of the reference game include a combat HUD, minimap, boss bar, and build UI because it is a combat roguelite. The **current art-study scene** deliberately has no HUD or player, so its environmental hierarchy can be reviewed cleanly. The user has since expanded the next phase to UI/UX and then an immune hero. The immune hero remains original native Godot `CharacterBody2D` work. A future intentional browser UI/UX may use HTML/CSS/JS around the exported game, but it must be specified as product UI—not guessed as a replacement game layer or copied reference UI.
 
-The browser/WebView page is an HTML/JS application shell that embeds a Godot engine export at `/engine/`. That is distinct from replacing the arena with HTML or treating raw Godot `index.html` as the whole app: the world, visual stack, hero, and gameplay stay in Godot, while the web app owns UI/UX and application flow.
+A Godot Web export is the browser/WebView delivery target. That is distinct from replacing the game with an HTML/Canvas implementation: the source scene, world rendering, hero, and gameplay remain Godot nodes and GDScript.
 
 ## Screenshot observations translated into original rules
 
@@ -29,7 +29,7 @@ The browser/WebView page is an HTML/JS application shell that embeds a Godot eng
 | Material patterns follow the surface. | Bake directional fiber/lobule strips into transparent full-map layers. Muscle fibers remain in muscle; fascia folds remain in the narrow fascia band. |
 | The playable opening is strong and uncluttered. | Use a large clean lumen with no floating decoration field. |
 | Motion belongs to living entities and combat feedback. | The environment study starts completely static. Motion may be reconsidered only after a still screenshot is approved. |
-| The original is a native Godot title. | The arena remains a native Godot scene. A separate HTML/JS shell owns real UI/UX and hosts the engine; it does not redraw the world or add decorative screen effects. |
+| The original is a native Godot title. | The arena is a native Godot scene. There is no custom HTML loading layer, fullscreen web overlay, or screen-space post-process in the presentation. |
 
 ## Rendering architecture
 
@@ -47,7 +47,7 @@ SkinCrossSectionArena (Node2D)
 
 The authoring script merges the three corridor routes into one anatomical mask, then derives each band by subtraction. A wide mask is baked first and each narrower mask removes its centre. The result is a physically ordered exposed cross-section around one shared open cavity, without procedural noise shaders, visual overlays, or hundreds of scene nodes.
 
-`export_presets.cfg` generates a single-threaded Godot **engine payload** under `web/public/engine/`. The HTML/JS application loads that payload in its own engine viewport. The web layer owns application UI/UX and a typed message bridge; it does not create a parallel HTML version of the arena.
+`export_presets.cfg` adds a single-threaded Godot **Web** export under `build/web/` for browser/WebView review. A static server serves that generated Godot payload directly; it does not add a parallel HTML game implementation.
 
 ## Palette roles
 
@@ -67,8 +67,7 @@ Blue is therefore a defined deeper membrane/fascia material, not a random glow. 
 ## Explicit exclusions
 
 - No copied Pathogenic game content.
-- No HTML/CSS/JS treatment that redraws, fakes, or decorates the anatomical world outside the Godot engine viewport.
-- A later real UI/UX is implemented by the web application; it communicates with the engine through explicit bridge events rather than becoming a visual substitute for the world scene.
+- No HTML/Canvas layer that redraws or decorates the anatomical world outside the Godot runtime; any later web UI is deliberate product UI, not a substitute renderer.
 - No fullscreen shader, bloom pass, parallax layer, or global colour overlay used to decorate the anatomical world.
 - No decorative particle systems, random dots, bubbles, circles, props, or glowing lines.
 - No circular rooms, radial hubs, crack-shaped cave tunnels, or sharp V turns.
