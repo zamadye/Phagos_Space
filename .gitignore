@@ -1,0 +1,11 @@
+# Godot imported/editor data
+.godot/
+.import/
+*.import
+*.uid
+
+# Local authoring and validation output
+__pycache__/
+*.py[cod]
+reports/
+build/

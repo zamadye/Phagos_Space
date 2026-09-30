@@ -1,0 +1,76 @@
+name: Native expedition quality
+
+on:
+  push:
+    branches:
+      - main
+      - "arena/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Native Godot exploration expedition
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Godot 4.3
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+          use-dotnet: false
+          include-templates: true
+
+      - name: Set up authoring validation dependencies
+        run: python3 -m pip install --upgrade Pillow gdtoolkit
+
+      - name: Check portable Godot setup and authored arena safety
+        run: |
+          bash -n tools/install_godot.sh scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh
+          python3 tools/validate_godot_setup.py
+          python3 tools/validate_arena_plan.py
+          python3 tools/validate_expedition_build.py
+
+      - name: Render and verify the authored arena topology plan
+        run: |
+          python3 tools/render_arena_plan.py
+          test -s docs/preview/dermal_rift_layout_plan.png
+
+      - name: Parse playable Godot scripts
+        run: |
+          godot --headless --path . --editor --quit
+          gdlint scripts tools
+
+      - name: Prove the live exploration runtime
+        run: |
+          set +e
+          godot --headless --path . --script res://tools/runtime_expedition_probe.gd > /tmp/phagos-runtime.log 2>&1
+          status=$?
+          cat /tmp/phagos-runtime.log
+          if [ "$status" -ne 0 ]; then
+            # Surface the trailing engine diagnostics as API-visible annotations too.
+            # This keeps a headless runtime failure debuggable if runner log downloads fail.
+            tail -n 80 /tmp/phagos-runtime.log | python3 -c 'import sys; [print("::error title=Godot runtime output::" + line.rstrip().replace("%", "%25")) for line in sys.stdin if line.strip()]'
+            exit "$status"
+          fi
+
+      - name: Export browser/WebView build from the same Godot project
+        run: ./scripts/export_web.sh --release
+
+      - name: Verify generated Web payload
+        run: |
+          test -s build/web/index.html
+          test -s build/web/index.wasm
+          test -s build/web/index.pck
+          find build/web -maxdepth 1 -type f -printf '%f\n' | sort
+
+      - name: Upload browser/WebView artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phagos-godot-web
+          path: build/web/
+          if-no-files-found: error
