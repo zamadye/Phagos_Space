@@ -79,7 +79,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _load_plan() -> void:
 	var source := FileAccess.get_file_as_string(PLAN_PATH)
-	var decoded := JSON.parse_string(source)
+	var decoded: Variant = JSON.parse_string(source)
 	if not (decoded is Dictionary):
 		push_error("Dermal Rift plan could not be decoded.")
 		return
