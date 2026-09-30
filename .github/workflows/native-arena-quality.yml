@@ -32,9 +32,15 @@ jobs:
         run: |
           bash -n tools/install_godot.sh scripts/preview_native.sh scripts/export_web.sh scripts/preview_web.sh
           python3 tools/validate_godot_setup.py
+          python3 tools/validate_arena_plan.py
 
       - name: Validate original baked material maps
         run: python3 tools/validate_cross_section.py
+
+      - name: Render and verify the authored arena topology plan
+        run: |
+          python3 tools/render_arena_plan.py
+          test -s docs/preview/dermal_rift_layout_plan.png
 
       - name: Parse Godot project and scripts
         run: |

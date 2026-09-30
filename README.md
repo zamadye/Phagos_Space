@@ -72,6 +72,13 @@ See [`docs/GODOT_SANDBOX_SETUP.md`](docs/GODOT_SANDBOX_SETUP.md) for the univers
 4. Add interaction and gameplay systems only after the UI and hero direction are defined.
 5. Re-export Godot for every WebView review.
 
+## Production roadmap and actual arena plan
+
+The static skin cutaway is now treated as the visual prototype for the first real dynamic exploration biome. Read:
+
+- [`docs/PRODUCTION_ROADMAP.md`](docs/PRODUCTION_ROADMAP.md) — milestones, dynamic-organ rules, UI/hero sequencing, and production gates;
+- [`data/organ_biomes/dermal_rift.json`](data/organ_biomes/dermal_rift.json) — the authored first-biome graph, organ states, motion envelopes, and route safety contract.
+
 ## Research and art decisions
 
 [`docs/REFERENCE_RESEARCH.md`](docs/REFERENCE_RESEARCH.md) records public-reference findings, confirmed-vs-inferred boundaries, original material rules, and visual exclusions.
@@ -81,6 +88,7 @@ See [`docs/GODOT_SANDBOX_SETUP.md`](docs/GODOT_SANDBOX_SETUP.md) for the univers
 ```bash
 python3 tools/validate_godot_setup.py
 python3 tools/validate_cross_section.py
+python3 tools/validate_arena_plan.py
 ```
 
 GitHub Actions validates the Godot project, material stack, GDScript, runtime scene contract, and exported Web payload.
