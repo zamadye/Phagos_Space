@@ -46,7 +46,17 @@ jobs:
           gdlint scripts tools
 
       - name: Prove the live exploration runtime
-        run: godot --headless --path . --script res://tools/runtime_expedition_probe.gd
+        run: |
+          set +e
+          godot --headless --path . --script res://tools/runtime_expedition_probe.gd > /tmp/phagos-runtime.log 2>&1
+          status=$?
+          cat /tmp/phagos-runtime.log
+          if [ "$status" -ne 0 ]; then
+            # Surface the trailing engine diagnostics as API-visible annotations too.
+            # This keeps a headless runtime failure debuggable if runner log downloads fail.
+            tail -n 80 /tmp/phagos-runtime.log | python3 -c 'import sys; [print("::error title=Godot runtime output::" + line.rstrip().replace("%", "%25")) for line in sys.stdin if line.strip()]'
+            exit "$status"
+          fi
 
       - name: Export browser/WebView build from the same Godot project
         run: ./scripts/export_web.sh --release
