@@ -77,4 +77,7 @@ func _probe() -> void:
 		return
 	for failure in failures:
 		push_error(failure)
+		# GitHub Actions exposes workflow-command errors as check annotations, which keeps
+		# the runtime contract debuggable even when a runner's raw log download is blocked.
+		print("::error title=PHAGOS runtime probe::%s" % failure)
 	quit(1)
