@@ -61,7 +61,7 @@ These locations are intentionally outside Git. Sandboxes may need to run the ins
 godot --headless --path . --editor --quit
 
 # Instantiate the actual playable main scene and validate controller, collision,
-# native HUD, progression gate, and dynamic organ-state routing.
+# hand-authored playfield, progression landmarks, local tissue valve, and collision routing.
 godot --headless --path . --script res://tools/runtime_expedition_probe.gd
 
 # Validate portable project/export contracts and authored arena behavior.

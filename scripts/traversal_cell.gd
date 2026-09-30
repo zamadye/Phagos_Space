@@ -1,24 +1,25 @@
 class_name TraversalCell
 extends CharacterBody2D
-## A small native-Godot traversal proxy used to prove exploration, collision, and
-## moving-route safety before the final immune hero is introduced.
+## A small living scout cell. It is a traversal instrument for the current vertical slice,
+## not a substitute for the final immune hero.
 
 signal position_changed(world_position: Vector2)
 
-const CELL_RADIUS := 24.0
-const CRUISE_SPEED := 430.0
-const SPRINT_SPEED := 570.0
-const ACCELERATION := 2600.0
+const CELL_RADIUS := 22.0
+const CRUISE_SPEED := 360.0
+const SPRINT_SPEED := 500.0
+const ACCELERATION := 2200.0
 
 var _input_enabled := true
-var _pulse_time := 0.0
-var _last_reported_position := Vector2.INF
+var _life_time := 0.0
+var _facing := Vector2.RIGHT
+var _last_reported_position := Vector2(100000.0, 100000.0)
 
 
 func _ready() -> void:
 	collision_layer = 2
 	collision_mask = 1
-	z_index = 20
+	z_index = 10
 	_create_collision_shape()
 	queue_redraw()
 
@@ -30,15 +31,16 @@ func set_input_enabled(enabled: bool) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_pulse_time += delta
+	_life_time += delta
 	if not _input_enabled:
 		queue_redraw()
 		return
 
-	var desired_direction := _movement_direction()
-	var desired_speed := SPRINT_SPEED if Input.is_key_pressed(KEY_SHIFT) else CRUISE_SPEED
-	var desired_velocity := desired_direction * desired_speed
-	velocity = velocity.move_toward(desired_velocity, ACCELERATION * delta)
+	var direction := _movement_direction()
+	if not direction.is_zero_approx():
+		_facing = direction
+	var target_speed := SPRINT_SPEED if Input.is_key_pressed(KEY_SHIFT) else CRUISE_SPEED
+	velocity = velocity.move_toward(direction * target_speed, ACCELERATION * delta)
 	move_and_slide()
 
 	if global_position.distance_squared_to(_last_reported_position) > 1.0:
@@ -70,11 +72,24 @@ func _create_collision_shape() -> void:
 
 
 func _draw() -> void:
-	var breathing := sin(_pulse_time * 3.0) * 1.5
-	draw_circle(Vector2.ZERO, CELL_RADIUS + 8.0 + breathing, Color(0.12, 0.78, 0.84, 0.15))
-	draw_circle(Vector2.ZERO, CELL_RADIUS + breathing, Color(0.19, 0.92, 0.83, 0.96))
-	draw_circle(Vector2(-5.0, -6.0), CELL_RADIUS * 0.48, Color(0.83, 1.0, 0.92, 0.9))
-	draw_circle(Vector2(7.0, 8.0), CELL_RADIUS * 0.34, Color(0.08, 0.24, 0.31, 0.85))
-	draw_arc(
-		Vector2.ZERO, CELL_RADIUS + 5.0, 0.25, 2.4, 20, Color(0.95, 1.0, 0.82, 0.95), 2.5, true
+	var body := PackedVector2Array()
+	for index in range(14):
+		var angle := TAU * float(index) / 14.0
+		var pulse := sin(_life_time * 3.0 + angle * 4.0) * 1.7
+		var contour := CELL_RADIUS + pulse
+		body.append(Vector2(cos(angle) * contour, sin(angle) * contour))
+	draw_colored_polygon(body, Color(0.54, 0.94, 0.76, 0.96))
+	draw_polyline(body, Color(0.88, 1.0, 0.78, 0.9), 2.0, true)
+	draw_circle(Vector2(-4.0, -3.0), 8.0, Color(0.08, 0.22, 0.27, 0.9))
+	draw_circle(Vector2(-6.0, -5.0), 3.0, Color(0.91, 1.0, 0.87, 0.95))
+
+	var tail_normal := Vector2(-_facing.y, _facing.x)
+	var tail_start := -_facing * CELL_RADIUS * 0.7
+	var tail_mid := tail_start - _facing * 22.0 + tail_normal * sin(_life_time * 5.0) * 7.0
+	var tail_end := tail_start - _facing * 42.0 - tail_normal * sin(_life_time * 5.0) * 6.0
+	draw_polyline(
+		PackedVector2Array([tail_start, tail_mid, tail_end]),
+		Color(0.37, 0.86, 0.77, 0.85),
+		3.0,
+		true
 	)

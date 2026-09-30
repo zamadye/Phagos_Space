@@ -55,7 +55,7 @@ The first real arena is specified in [`data/organ_biomes/dermal_rift.json`](../d
 
 ![Dermal Rift authored topology plan](preview/dermal_rift_layout_plan.png)
 
-The image is a **review-only topology plan** rendered from the JSON data. The playable Godot runtime now loads the same graph for its cavity geometry, `StaticBody2D` collision, route availability, landmark discovery, state cues, and map affordance. The runtime uses position-specific tissue treatment rather than treating this diagram as a background image.
+The image is a **review-only topology plan** rendered from the JSON data. The first playable Godot slice deliberately uses a hand-authored Dermal Rift playfield rather than turning this topology diagram into visible corridors. The JSON remains the production contract for future larger-biome generation; the slice proves the visual language, collision, landmark progression, local tissue valve, and safe route change in a real scene.
 
 ### Route intent
 
@@ -96,10 +96,9 @@ Safety rules are data, not assumptions:
 The repository now contains a native Godot traversal slice that turns this contract into play:
 
 - `scripts/traversal_cell.gd` provides a real `CharacterBody2D` controller with WASD/arrow input, sprinting, and collision;
-- `scripts/dermal_rift_expedition.gd` loads the JSON plan, builds `StaticBody2D` boundaries for every current cavity, tracks discovery and objective progression, and refuses a route shift when the active explorer is outside a safe connected chamber;
-- `scripts/dermal_rift_world.gd` draws the actual state-dependent cavity/organ layers from the same anchor/link data, including collapsed routes and moving chambers;
-- `scripts/expedition_hud.gd` and `scripts/dermal_rift_map.gd` provide Godot-native objective, interaction, state-warning, discovery, and map surfaces;
-- the player must reach the Deep Cavity, read its pulse, and then cross the Organ Gate. This gives the slice a playable explore → adapt → interact → exit loop before combat exists.
+- `scripts/dermal_rift_expedition.gd` builds `StaticBody2D` boundaries for an authored lumen, protects the explorer from a closing lower valve, and handles landmark progression without a screen dashboard;
+- `scripts/dermal_rift_world.gd` places the hand-authored playfield art in Godot and draws only local state-dependent tissue valves, landmark pulses, and the retracting organ membrane inside the world;
+- the player must reach the lower Echo, return to the Deep Cavity, read its pulse, and then cross the Organ Gate. This gives the slice a playable explore → adapt → interact → exit loop before combat exists.
 
 This is intentionally a **traversal proxy**, not a claim that the final immune hero, combat, or full organ atlas has already been designed. Its purpose is to prove that exploration and moving-route safety are playable before those systems are added.
 
@@ -113,7 +112,7 @@ This is intentionally a **traversal proxy**, not a claim that the final immune h
 
 ### Milestone 1 — arena data and debug atlas *(in progress)*
 
-**Already proven in the playable slice:** Dermal Rift JSON loads into the live Godot graph, route widths/anchor offsets drive geometry, and the runtime probe inspects state changes. **Remaining for this milestone:** deterministic seed/replay serialization and a production debug atlas.
+**Current boundary:** the single playable slice is intentionally hand-authored so the arena reads as a place rather than as a graph diagram. The committed JSON remains the future multi-chamber production contract. **Remaining for this milestone:** actual graph loading, deterministic seed/replay serialization, and a production debug atlas.
 
 **Build:**
 
@@ -126,7 +125,7 @@ This is intentionally a **traversal proxy**, not a claim that the final immune h
 
 ### Milestone 2 — navigable Dermal Rift *(playable proof delivered; hardening remains)*
 
-**Already proven in the playable slice:** a controller traverses collidable generated cavities, discovers anchors, reads the Deep Cavity, and reaches the progression gate while state changes are safety-gated. **Remaining:** streaming, save/restore, and broader movement/collision stress tests.
+**Already proven in the playable slice:** a controller traverses a collidable hand-authored lumen, reaches the lower Echo, returns to the Deep Cavity, opens the progression gate, and is protected from a closing local tissue valve. **Remaining:** multi-chamber streaming, save/restore, and broader movement/collision stress tests.
 
 **Build:**
 
@@ -137,9 +136,9 @@ This is intentionally a **traversal proxy**, not a claim that the final immune h
 
 **Exit gate:** A proxy can traverse all planned Dermal Rift paths without clipping through material or reaching an unconnected cavity.
 
-### Milestone 3 — UI/UX system before hero *(first playable pass delivered; production system remains)*
+### Milestone 3 — UI/UX system before hero *(not yet a screen-overlay deliverable)*
 
-**Already proven in the playable slice:** objective, interaction prompt, state preview warning, discovery count, discovered-only map, and completion feedback are native Godot UI. **Remaining:** accessibility, focus/navigation audit, localization, settings, and production theme components.
+**Current decision:** the traversal proof deliberately has no persistent HUD, map card, objective panel, or completion modal. Landmark pulses and moving tissue communicate inside the world. **Remaining:** test the real information needs first, then author restrained Godot-native UI for accessibility, focus/navigation, localization, settings, and map memory without covering the arena.
 
 **Build:**
 

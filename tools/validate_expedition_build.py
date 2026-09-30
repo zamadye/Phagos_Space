@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Structural checks for the playable native-Godot Dermal Rift expedition."""
+"""Structural checks for the hand-authored playable Dermal Rift Godot scene."""
 from __future__ import annotations
 
 import json
@@ -13,8 +13,7 @@ REQUIRED_FILES = {
     "expedition": "scripts/dermal_rift_expedition.gd",
     "world": "scripts/dermal_rift_world.gd",
     "player": "scripts/traversal_cell.gd",
-    "hud": "scripts/expedition_hud.gd",
-    "map": "scripts/dermal_rift_map.gd",
+    "playfield": "assets/arena/dermal_rift_playfield.png",
     "plan": "data/organ_biomes/dermal_rift.json",
     "runtime_probe": "tools/runtime_expedition_probe.gd",
 }
@@ -30,41 +29,60 @@ def require_text(errors: list[str], label: str, relative: str) -> str:
 
 def main() -> int:
     errors: list[str] = []
-    sources = {label: require_text(errors, label, relative) for label, relative in REQUIRED_FILES.items()}
+    sources: dict[str, str] = {}
+    for label, relative in REQUIRED_FILES.items():
+        path = ROOT / relative
+        if label == "playfield":
+            if not path.is_file() or path.stat().st_size < 10_000:
+                errors.append(f"missing or implausibly small authored playfield: {relative}")
+            continue
+        sources[label] = require_text(errors, label, relative)
 
-    scene = sources["scene"]
-    if 'res://scripts/dermal_rift_expedition.gd' not in scene:
+    scene = sources.get("scene", "")
+    if "res://scripts/dermal_rift_expedition.gd" not in scene:
         errors.append("main scene does not use the playable Dermal Rift runtime")
-    if "skin_cross_section_arena.gd" in scene:
-        errors.append("main scene still points at the retired static cross-section script")
 
+    expedition = sources.get("expedition", "")
     for required in (
         "CharacterBody2D",
         "StaticBody2D",
         "DynamicCavityCollision",
         "_rebuild_collision",
         "_is_walkable",
-        "_request_next_state",
         "_try_interact",
+        "_request_next_state",
+        "debug_collect_echo",
+        "debug_awaken_cavity",
         "get_runtime_contract",
     ):
-        if required not in sources["expedition"]:
+        if required not in expedition:
             errors.append(f"expedition runtime is missing playable contract: {required}")
+    for forbidden in ("CanvasLayer", "ExpeditionHUD", "DermalRiftMap", "toggle_map"):
+        if forbidden in expedition:
+            errors.append(f"expedition runtime still contains dashboard-overlay route: {forbidden}")
 
+    player = sources.get("player", "")
     for required in ("move_and_slide", "CollisionShape2D", "KEY_W", "KEY_LEFT"):
-        if required not in sources["player"]:
+        if required not in player:
             errors.append(f"traversal controller is missing input/collision behavior: {required}")
 
-    for required in ("CanvasLayer", "OBJECTIVE", "toggle_map", "show_completion"):
-        if required not in sources["hud"]:
-            errors.append(f"native HUD is missing exploration behavior: {required}")
-
-    for required in ("_draw_route", "_draw_chamber", "_draw_collapsed_link", "set_layout"):
-        if required not in sources["world"]:
-            errors.append(f"dynamic world renderer is missing organ-state behavior: {required}")
+    world = sources.get("world", "")
+    for required in (
+        "dermal_rift_playfield.png",
+        "Sprite2D",
+        "_draw_lower_valve",
+        "_draw_echo_landmark",
+        "_draw_organ_gate",
+        "set_world_state",
+    ):
+        if required not in world:
+            errors.append(f"playfield renderer is missing authored-world behavior: {required}")
+    for forbidden in ("CanvasLayer", "Control.new()", "PanelContainer.new()"):
+        if forbidden in world:
+            errors.append(f"playfield renderer contains a screen-overlay route: {forbidden}")
 
     try:
-        plan = json.loads(sources["plan"])
+        plan = json.loads(sources.get("plan", "{}"))
     except json.JSONDecodeError as exc:
         errors.append(f"Dermal Rift plan is invalid JSON: {exc}")
         plan = {}
@@ -73,42 +91,13 @@ def main() -> int:
     nodes = graph.get("nodes", []) if isinstance(graph, dict) else []
     links = graph.get("links", []) if isinstance(graph, dict) else []
     states = plan.get("dynamic_states", []) if isinstance(plan, dict) else []
-    node_ids = {node.get("id") for node in nodes if isinstance(node, dict)}
-    link_ids = {link.get("id") for link in links if isinstance(link, dict)}
-    if len(nodes) < 9:
-        errors.append("Dermal Rift has fewer than nine explorable anchors")
-    if len(links) < 10:
-        errors.append("Dermal Rift has fewer than ten authored routes")
-    if len(states) < 5:
-        errors.append("Dermal Rift has fewer than five organ states")
-    for expected_node in ("surface_breach", "deep_cavity", "organ_gate"):
-        if expected_node not in node_ids:
-            errors.append(f"Dermal Rift lacks required exploration landmark: {expected_node}")
-    if "cavity_to_gate" not in link_ids:
-        errors.append("Dermal Rift lacks the progression gate route")
+    if len(nodes) < 9 or len(links) < 10 or len(states) < 5:
+        errors.append("production arena plan lost its authored topology/state contract")
 
-    safety = plan.get("safety_contract", {}) if isinstance(plan, dict) else {}
-    if safety.get("never_seal_active_player_cell") is not True:
-        errors.append("arena data does not explicitly protect the active player cell")
-    if safety.get("always_keep_one_route_to_previous_stable_anchor") is not True:
-        errors.append("arena data does not require a retreat route")
-
-    for state in states:
-        if not isinstance(state, dict):
-            errors.append("arena contains a non-object state")
-            continue
-        state_id = str(state.get("id", "unknown"))
-        if not isinstance(state.get("anchor_offsets", {}), dict):
-            errors.append(f"{state_id}: lacks authored anchor offsets")
-        if not isinstance(state.get("link_width_scales", {}), dict):
-            errors.append(f"{state_id}: lacks authored route-width behavior")
-        if not str(state.get("state_cue", "")).strip():
-            errors.append(f"{state_id}: lacks a player-readable state cue")
-
-    if (ROOT / "scripts" / "skin_cross_section_arena.gd").exists():
-        errors.append("retired static-only arena script is still present")
-    if (ROOT / "tools" / "runtime_cross_section_probe.gd").exists():
-        errors.append("retired static-only runtime probe is still present")
+    if (ROOT / "scripts" / "expedition_hud.gd").exists():
+        errors.append("retired dashboard HUD script is still present")
+    if (ROOT / "scripts" / "dermal_rift_map.gd").exists():
+        errors.append("retired dashboard map script is still present")
     if (ROOT / "web").exists():
         errors.append("unexpected standalone web-app layer: WebView must serve the Godot export")
 
@@ -119,7 +108,7 @@ def main() -> int:
         return 1
 
     print(
-        "Expedition build validation passed: native controller, collision cavity, dynamic organ states, progression gate, and Godot HUD are present."
+        "Expedition build validation passed: a native controller explores an authored playfield with collision, landmarks, tissue valve, and no dashboard overlay."
     )
     return 0
 

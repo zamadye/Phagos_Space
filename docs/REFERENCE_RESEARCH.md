@@ -33,11 +33,10 @@ The playable world is native Godot:
 
 ```text
 DermalRiftExpedition (Node2D)
-├── DermalRiftWorld          dynamic anatomy renderer from authored JSON
+├── DermalRiftWorld          hand-authored playfield Sprite2D + local tissue valves
 ├── DynamicCavityCollision   rebuilt StaticBody2D cavity boundaries
-├── TraversalCell            CharacterBody2D exploration controller
-│   └── ExplorationCamera    Camera2D
-└── ExpeditionHUD            native Godot CanvasLayer / Control UI
+└── TraversalCell            CharacterBody2D exploration controller
+    └── ExplorationCamera    Camera2D
 ```
 
 The WebView is a direct Godot Web export served over HTTP. There is no React shell, iframe, custom HTML game, or browser-side duplicate renderer.

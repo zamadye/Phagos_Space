@@ -1,11 +1,7 @@
-# Runtime-authoring data
+# Organ-production authoring data
 
-`organ_biomes/dermal_rift.json` is the first playable PHAGOS arena contract. It separates **topology and dynamic organ state** from visual implementation:
+`organ_biomes/dermal_rift.json` is the **future multi-chamber production contract** for Dermal Rift. It records the nine-anchor, ten-route organ design, state safety limits, material order, movement envelopes, and state cues needed when the game expands beyond the first hand-authored traversal slice.
 
-- `scripts/dermal_rift_expedition.gd` reads nodes, links, active-route sets, anchor offsets, and route-width scales to build the playable cavity/collision layout;
-- `scripts/dermal_rift_world.gd` renders the same route and chamber data as layered anatomy;
-- artists retain material profiles and landmarks as authored data;
-- QA can validate every state and later replay a matching `run_seed` / state sequence;
-- `tools/validate_arena_plan.py` proves state connectivity, safe widths, bounded anchor motion, and player-readable state cues.
+The current Godot slice intentionally does **not** draw this topology image as visible room graph geometry. Instead, it proves the visual/playability fundamentals with a hand-authored anatomical playfield, physical cavity collision, a local fascia valve, landmark interactions, and an organ gate. That prevents a planning graph from being mistaken for the finished arena.
 
-The file is a production design contract, not a generated room layout and not a copied reference-game map. `tools/render_arena_plan.py` creates `docs/preview/dermal_rift_layout_plan.png` from this same data for topology review.
+`tools/validate_arena_plan.py` validates the production contract. `tools/render_arena_plan.py` creates `docs/preview/dermal_rift_layout_plan.png` for design review only. Neither file is a browser-game substitute or a runtime background.
