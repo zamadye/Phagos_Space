@@ -28,6 +28,78 @@ Dokumen ini menjadi urutan kerja utama agar development tidak melompat-lompat an
 
 ---
 
+## Milestone utama produk
+
+Milestone berikut adalah checkpoint produk yang harus terlihat dan dapat diuji oleh user. Fase teknis di bawahnya adalah pekerjaan yang mengantar sampai milestone tersebut tercapai.
+
+### M1 — Arena gameplay 3D selesai dan sesuai referensi `NEXT`
+
+**Target:** arena gameplay sudah benar-benar berfungsi, dapat dimainkan, terasa masuk ke dalam ruang 3D, dan cocok dengan foto/planning yang sudah dikunci.
+
+**Wajib selesai:**
+
+- [ ] Tunnel pembuluh, jalur S, rail, lighting, palette, dan framing cocok dengan `Gameplay-Arena.jpg`.
+- [ ] Player benar-benar bergerak maju di world space sepanjang `Curve3D`.
+- [ ] Kamera perspective third-person menjaga komposisi avatar lower-center.
+- [ ] Dinding, jalur, sel, partikel, vesikel, dan hazard hidup/beranimasi.
+- [ ] Arena dapat berubah texture/material/element secara halus sepanjang perjalanan.
+- [ ] Ada start, active run, collision/hazard, finish, retry, dan satu sesi yang dapat diselesaikan.
+- [ ] Web export dapat boot dengan `index.html`, `index.js`, `index.wasm`, dan `index.pck`.
+
+**Exit evidence:** screenshot overlay 1024×1024, video/smoke run dari start sampai finish, dan Web debug build yang berjalan dari Python root server.
+
+### M2 — Character dan enemies GLB terintegrasi `PLANNED`
+
+**Target:** karakter dan musuh berada sebagai object 3D hidup di dalam arena menggunakan asset `.glb`, bukan foto statis, billboard, atau sprite 2D.
+
+**Wajib selesai:**
+
+- [ ] Asset GLB yang dipilih berhasil di-import Godot dan tampil sebagai `MeshInstance3D`/scene 3D.
+- [ ] Character player memiliki idle, run, hit, dan transition animation yang sesuai dengan silhouette referensi.
+- [ ] Enemy/patogen memiliki idle motion, movement/approach, hit/defeat, dan collision.
+- [ ] Asset tanpa animation clip diberi procedural animation atau animation player tambahan.
+- [ ] Material/transparency/scale asset cocok dengan lighting arena.
+- [ ] Tidak ada object penting yang diganti dengan foto PNG/JPG.
+- [ ] Asset licensing/attribution dicatat sebelum dipakai dalam release.
+
+**Exit evidence:** asset inspector/import result, gameplay screenshot yang memperlihatkan player dan enemy 3D, serta test collision/animation.
+
+### M3 — UI/UX user-friendly `PLANNED`
+
+**Target:** user dapat memahami flow game, result, login, reward, dan store tanpa mengganggu framing arena biologis.
+
+**Wajib selesai:**
+
+- [ ] UI loading/boot tidak mengganggu arena setelah game siap.
+- [ ] HUD gameplay minimal dan tidak menutupi komposisi foto.
+- [ ] Result screen setelah satu sesi menjelaskan score, reward, dan langkah berikutnya.
+- [ ] Login screen memiliki pilihan Web2 dan Web3 dengan bahasa yang jelas.
+- [ ] Error, retry, wallet pending, cancelled transaction, dan network mismatch memiliki feedback.
+- [ ] Reward/item/product/inventory mudah dipahami.
+- [ ] Interaksi mouse, keyboard, touch, responsive layout, focus state, dan loading state diuji.
+- [ ] UI tidak menampilkan jargon blockchain tanpa penjelasan user-friendly.
+
+**Exit evidence:** user-flow test dari load → run → finish → login → reward tanpa bantuan developer.
+
+### M4 — Login Web2 dan Web3 Ronin terintegrasi `PLANNED`
+
+**Target:** setelah sesi selesai, player dapat login menggunakan Web2 atau Web3, lalu mendapatkan identity/reward yang benar.
+
+**Wajib selesai:**
+
+- [ ] Web2 username/password melalui Next.js/Auth.js.
+- [ ] Web3 Ronin Stash/Privy dengan Google/email/social login.
+- [ ] External Ronin Wallet extension/mobile sebagai fallback.
+- [ ] Guest run dapat di-bind ke canonical `player_id`.
+- [ ] JavaScriptBridge dan one-time auth ticket aman.
+- [ ] Backend memverifikasi token/signature dan alamat wallet; tidak percaya data mentah client.
+- [ ] Account linking, logout, reconnect, wrong chain, cancel, dan expired session diuji.
+- [ ] Reward ledger/referral siap menerima source Web2 dan Web3 yang sama.
+
+**Exit evidence:** dua test user (Web2 dan Web3) menyelesaikan run yang sama, login setelah finish, dan menerima entitlement tanpa duplicate.
+
+---
+
 ## Current progress board
 
 | Fase | Track | Status | Output utama |
@@ -36,7 +108,9 @@ Dokumen ini menjadi urutan kerja utama agar development tidak melompat-lompat an
 | 1. Godot project foundation | Game | `NEXT` | Project Godot 4.6.2, main Node3D, input, export preset |
 | 2. 3D reference blockout | Visual | `PLANNED` | Tunnel, jalur S, avatar framing, overlay match |
 | 3. Living dynamic arena | Visual/Tech | `PLANNED` | Shader motion, segment pooling, dynamic texture/biome |
+| 4A. Character & enemy GLB integration | Game/Asset | `PLANNED` | GLB player/enemy scenes, animation, collision, material |
 | 4. Playable core run | Gameplay | `PLANNED` | Player movement, hazard, collision, session selesai |
+| UX. UI/UX design system | Product | `PLANNED` | HUD, result, login, reward, store, responsive states |
 | 5. Web export & bridge shell | Web | `PLANNED` | `index.*`, Python root server, WebGL 2.0, JSBridge stub |
 | 6. Guest run/session service | Backend | `PLANNED` | Guest run, end-session, score validation |
 | 7. Web2 Auth.js login | Auth | `PLANNED` | Username/password, session, linking model |
@@ -162,6 +236,32 @@ ArenaSegment
 - Semua visible actor memiliki motion.
 - Framerate dan memory masih terukur pada WebGL 2.0.
 
+## Fase 4A — Character & enemy GLB integration `PLANNED`
+
+### Tujuan
+
+Memasukkan character dan enemies sebagai asset 3D `.glb` yang hidup di dalam arena. Foto referensi hanya dipakai sebagai acuan visual, bukan sebagai object gameplay.
+
+### Tasks
+
+- [ ] Audit asset GLB yang akan digunakan untuk player dan enemy.
+- [ ] Import scene GLB ke Godot dan cek material, scale, orientation, skeleton, dan animation library.
+- [ ] Pilih player GLB yang paling dekat dengan silhouette avatar pada foto.
+- [ ] Tambahkan idle, run, hit, defeat, dan transition animation player.
+- [ ] Tambahkan enemy/patogen GLB dengan idle, approach, attack/hazard, hit, dan defeat.
+- [ ] Untuk GLB tanpa clip, tambahkan procedural bob, pulse, rotation, atau `AnimationPlayer`.
+- [ ] Buat collision 3D untuk player, enemy, collectible, dan hazard.
+- [ ] Pastikan texture/material GLB tidak menjadi billboard atau foto statis.
+- [ ] Optimasi mesh/material/animation untuk WebGL 2.0 dan actor pooling.
+- [ ] Catat attribution/license setiap asset yang masuk release.
+
+### Exit gate
+
+- Player dan enemy terlihat sebagai geometry 3D asli di dalam arena.
+- Semua actor utama dapat bergerak dan merespons collision.
+- Screenshot/video membuktikan tidak ada foto statis yang menggantikan character/enemy.
+- Import dan animation berjalan di desktop debug serta Web debug.
+
 ## Fase 4 — Playable core run `PLANNED`
 
 ### Tujuan
@@ -184,6 +284,45 @@ Membuat satu sesi run lengkap dari start sampai finish sebelum login.
 - Player benar-benar masuk ke arena dan meninggalkan objek di belakang.
 - Run dapat selesai tanpa login.
 - Tidak ada reward bernilai tinggi yang diberikan client sebelum backend mengesahkan run.
+
+## Fase UX — UI/UX design system `PLANNED`
+
+### Tujuan
+
+Membangun flow UI yang user-friendly tanpa merusak komposisi arena biologis. UI gameplay dibuat ringan dan hanya muncul ketika dibutuhkan; foto referensi tidak memiliki HUD besar.
+
+### Screen/flow yang wajib ada
+
+```text
+Boot/loading
+  → Arena gameplay
+  → Pause/retry
+  → Session result
+  → Web2/Web3 login choice
+  → Reward/inventory
+  → Store/IAP
+  → Error/pending/success states
+```
+
+### Tasks
+
+- [ ] Buat design tokens warna, typography, spacing, button, modal, card, and state.
+- [ ] Buat HUD minimal untuk score/distance/status tanpa menutupi focal composition.
+- [ ] Buat result screen yang menjelaskan run, score, reward, dan CTA berikutnya.
+- [ ] Buat login choice Web2 vs Web3 dengan bahasa non-teknis.
+- [ ] Buat wallet pending, wrong network, cancelled signature, retry, dan expired-session state.
+- [ ] Buat reward/inventory view untuk item, product, points, dan lucky reward.
+- [ ] Buat store flow untuk product catalog dan payment confirmation.
+- [ ] Uji keyboard, mouse, touch, focus, responsive, loading, empty, and error state.
+- [ ] Uji UI dengan Web2 user, Web3 user, dan guest yang belum login.
+- [ ] Pastikan modal/UI tidak mengeksekusi transaksi tanpa explicit user action.
+
+### Exit gate
+
+- Tester baru dapat menyelesaikan flow load → run → finish → login → reward tanpa bantuan developer.
+- Semua async state memberi feedback yang jelas.
+- UI tidak menutup avatar, jalur, atau focal area pada screenshot arena.
+- UI berjalan di debug Web dan desktop Godot tanpa broken input.
 
 ---
 
@@ -471,37 +610,39 @@ Fase ini hanya dimulai apabila Android/Google Play menjadi target rilis. Tidak b
 
 ---
 
-## Milestone definitions
+## Technical supporting gates
 
-### M0 — Architecture locked `DONE`
+These gates support the four main product milestones above. They are implementation checkpoints, not replacements for the product milestones.
+
+### G0 — Architecture locked `DONE`
 
 Design, 3D direction, web runtime, server command, Web3 login/payment/reward research, dan roadmap tersedia.
 
-### M1 — 3D visual proof
+### G1 — 3D visual proof
 
 Zona awal sudah terlihat seperti foto referensi, kamera benar, jalur masuk ke kedalaman, dan semua elemen bergerak.
 
-### M2 — Playable vertical slice
+### G2 — Playable vertical slice
 
 Player dapat menyelesaikan satu sesi run 3D, melihat result, lalu kembali/retry.
 
-### M3 — Web guest-to-auth proof
+### G3 — Web guest-to-auth proof
 
 Game Web dapat berjalan dari root Python server, player finish sebagai guest, lalu login Web2/Web3 melalui bridge.
 
-### M4 — Reward proof
+### G4 — Reward proof
 
 Authenticated player menerima item/produk dari ledger tanpa duplicate. Referral dasar bekerja.
 
-### M5 — Ronin testnet commerce proof
+### G5 — Ronin testnet commerce proof
 
 PurchaseRouter Saigon berhasil memvalidasi purchase dan memberi product/item. Lucky reward masih capped dan testnet.
 
-### M6 — Campaign proof
+### G6 — Campaign proof
 
 Airdrop Merkle claim atau reward campaign berhasil dengan proof, expiry, anti-double-claim, dan ledger sync.
 
-### M7 — Release candidate
+### G7 — Release candidate
 
 Web release stabil, performa terukur, auth/payment test lulus, security checklist selesai, dan keputusan Android sudah jelas.
 
