@@ -1,0 +1,18 @@
+# Local toolchain staging (recreated by scripts/prepare_toolchain.sh)
+.local/
+.arena_inspect/
+
+# Godot generated files
+.godot/
+export/
+web/debug/
+web/release/
+
+# Node/browser tooling
+node_modules/
+.npm/
+*.tgz
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
