@@ -15,6 +15,12 @@ CHROMIUM_TGZ=".local/npm-pack/sparticuz-chromium-${CHROMIUM_VERSION}.tgz"
 
 mkdir -p .local/godot .local/web_templates/debug .local/web_templates/release .local/npm-pack
 
+# Godot resolves export templates from its per-version user data directory.
+# Keep the source archives in the repository and install a local copy there so
+# `--export-debug Web` remains reproducible without downloading templates.
+GODOT_TEMPLATE_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/godot/export_templates/4.6.2.stable"
+mkdir -p "$GODOT_TEMPLATE_DIR"
+
 if [[ ! -x "$GODOT_BIN" ]]; then
   [[ -f "$GODOT_ZIP" ]] || { echo "Missing $GODOT_ZIP" >&2; exit 1; }
   unzip -p "$GODOT_ZIP" > "$GODOT_BIN"
@@ -30,6 +36,9 @@ if [[ ! -f .local/web_templates/release/godot.wasm ]]; then
   [[ -f "$RELEASE_ZIP" ]] || { echo "Missing $RELEASE_ZIP" >&2; exit 1; }
   unzip -oq "$RELEASE_ZIP" -d .local/web_templates/release
 fi
+
+cp -f "$DEBUG_ZIP" "$GODOT_TEMPLATE_DIR/web_nothreads_debug.zip"
+cp -f "$RELEASE_ZIP" "$GODOT_TEMPLATE_DIR/web_nothreads_release.zip"
 
 if [[ ! -f "$CHROMIUM_TGZ" ]]; then
   command -v npm >/dev/null || { echo "npm is required to pack @sparticuz/chromium" >&2; exit 1; }
