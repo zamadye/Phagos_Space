@@ -207,6 +207,47 @@ Sistem utama:
 - Renderer yang direncanakan: **Compatibility** untuk kompatibilitas WebGL2 dan shader yang terukur.
 - Viewport kanonik: 1024 × 1024; browser boleh scale, tetapi aspect ratio dan framing tidak boleh berubah.
 
+## 9. Kontrak arsitektur runtime Web
+
+Arsitektur ini sekarang dikunci dan akan dipakai saat fase implementasi. Tidak akan dibuat server custom atau server dari subfolder.
+
+```text
+Build   : Godot export → index.html, index.js, index.wasm, index.pck
+Serve   : python3 -m http.server 8000 --bind 0.0.0.0
+Load    : index.html → index.js → Engine → index.wasm
+Render  : Engine → WebGL 2.0 → <canvas>
+Bridge  : JavaScriptBridge ↔ GDScript ↔ Browser API
+```
+
+### Lokasi build dan working directory server
+
+- Build Web akan ditempatkan langsung di **repository root** `/home/user/Phagos_Space/`.
+- File canonical yang harus ada setelah export:
+  - `/home/user/Phagos_Space/index.html`
+  - `/home/user/Phagos_Space/index.js`
+  - `/home/user/Phagos_Space/index.wasm`
+  - `/home/user/Phagos_Space/index.pck`
+- Server harus dijalankan dari directory tersebut, bukan dari `.local/`, `web/`, `export/`, atau subfolder lain.
+- Command server yang dipakai persis:
+
+```bash
+cd /home/user/Phagos_Space
+python3 -m http.server 8000 --bind 0.0.0.0
+```
+
+- Tidak akan dibuat `serve.py`, `serve.mjs`, `npx serve`, atau wrapper command lain untuk menjalankan server.
+- `python3 -m http.server` menggunakan Python MIME lookup; pada environment ini `.wasm` terdeteksi sebagai `application/wasm`. Header `X-Content-Type-Options: nosniff` dan header security lain akan diverifikasi pada fase browser test.
+- Karena build memakai **non-threads**, COOP/COEP untuk SharedArrayBuffer tidak menjadi prasyarat runtime. Jika kemudian threads diaktifkan, server ini harus diganti/di-front oleh server yang benar-benar dapat mengirim `Cross-Origin-Opener-Policy` dan `Cross-Origin-Embedder-Policy`; command yang dikunci sekarang tidak boleh diam-diam dianggap mampu mengirim header custom.
+- Semua asset game, `.pck`, dan JS bridge memakai same-origin/relative URL. Tidak ada browser-facing code yang mengarah ke `localhost` atau `127.0.0.1`.
+
+### Urutan runtime yang harus diuji
+
+1. `index.html` diminta dari root server dan membuat `<canvas>`.
+2. `index.js` di-load oleh HTML dan membuat instance Godot `Engine`.
+3. Loader menemukan `index.wasm` dan `index.pck` melalui URL relatif dengan response `.wasm` bertipe `application/wasm`.
+4. WASM menginisialisasi renderer Compatibility/WebGL 2.0 dan menggambar ke canvas.
+5. GDScript memanggil JavaScriptBridge hanya untuk API browser yang memang diperlukan; bridge dibuat setelah game boot agar core gameplay tetap berjalan tanpa browser API.
+
 ### `@sparticuz/chromium` npm pack
 
 - Package yang dipack: `@sparticuz/chromium@153.0.0`.
@@ -222,7 +263,7 @@ Semua setup dapat diulang dengan:
 ./scripts/prepare_toolchain.sh
 ```
 
-## 9. Tahapan implementasi setelah rencana disetujui
+## 10. Tahapan implementasi setelah rencana disetujui
 
 1. **Reference lock** — set viewport 1024², buat calibration scene dan kamera, lalu cocokkan avatar/rails/vanishing point.
 2. **Greybox organik** — buat dinding tunnel dan jalur S; belum ada gameplay, hanya evaluasi screenshot.
@@ -233,7 +274,7 @@ Semua setup dapat diulang dengan:
 7. **Web validation** — export debug dengan bundle non-threads, serve pada `0.0.0.0`, capture screenshot via Sparticuz Chromium, lalu compare dengan reference.
 8. **Release lock** — matikan reference overlay, export release, jalankan capture smoke test dan cek performa.
 
-## 10. Definition of done untuk klaim “100% mengikuti design”
+## 11. Definition of done untuk klaim “100% mengikuti design”
 
 - Avatar berada di lower-center pada framing kanonik dan terlihat dari belakang.
 - Jalur salmon dengan dua rail lavender membentuk kurva S yang sama secara visual pada foreground, tikungan, dan vanishing area.
