@@ -1,6 +1,8 @@
 # Phagos Space — analisis referensi visual dan rencana teknis
 
 > Status: **fase pra-produksi**. Dokumen ini dibuat setelah `Gameplay-Arena.jpg` dilihat langsung. Belum ada scene gameplay atau script game yang dibuat; toolchain sudah dipersiapkan supaya implementasi berikutnya dapat dimulai dari referensi yang sama.
+>
+> Arsitektur login Web2, Ronin Web3, IAP, referral, dan airdrop dicatat terpisah di [`WEB3_AUTH_PAYMENTS_PLAN.md`](WEB3_AUTH_PAYMENTS_PLAN.md).
 
 ## 1. Referensi yang menjadi sumber kebenaran
 
