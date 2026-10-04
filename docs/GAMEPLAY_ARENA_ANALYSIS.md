@@ -191,7 +191,94 @@ Sistem utama:
 - `PlayerController`: movement lane/follow, hit, dash/phagocytosis setelah mekanik disepakati.
 - `ReferenceCapture`: hanya aktif pada debug; watermark/overlay tidak masuk release.
 
-## 8. Target teknis Web dan toolchain yang sudah dipersiapkan
+## 8. Kontrak arena 3D dinamis dan progressive depth
+
+### 8.1 Arena bukan game 2D
+
+Arena gameplay akan dibangun sebagai **ruang 3D penuh**. `<canvas>` pada runtime Web hanya merupakan permukaan output HTML tempat Godot menggambar; itu bukan berarti arena dibuat dengan `Node2D`, sprite 2D, atau gambar background yang digeser.
+
+Komponen arena utama yang dipakai:
+
+- `Node3D`, `MeshInstance3D`, `StaticBody3D`, dan `CollisionShape3D` untuk volume dan collision.
+- `Camera3D` perspective dengan depth, occlusion, parallax, dan perubahan ukuran objek karena jarak.
+- `Path3D`/`Curve3D` sebagai sumbu perjalanan pembuluh, bukan background scrolling.
+- `GPUParticles3D`/`MultiMeshInstance3D` untuk sel dan partikel yang benar-benar berada di volume dunia.
+- `WorldEnvironment`, fog, material translucent, dan shader flow untuk rasa ruang biologis yang dalam.
+
+Canvas 2D hanya boleh dipakai untuk UI/debug overlay setelah gameplay diperlukan. UI tidak boleh menggantikan geometry arena.
+
+### 8.2 Rasa berjalan masuk ke dalam
+
+Perjalanan pemain menggunakan koordinat jarak sepanjang jalur, disebut `distance_s`. Nilai ini harus terus bertambah ketika avatar bergerak maju.
+
+- Avatar benar-benar bergerak di world space mengikuti tangent `Curve3D`; bukan karakter diam dengan texture/UV yang digeser ke belakang.
+- Camera rig mengikuti avatar dari belakang dengan target ke depan, sehingga foreground, tikungan, sel, dinding, dan titik hilang mengalami parallax serta occlusion nyata.
+- Collision, hazard, collectible, dan trigger berada di posisi 3D yang dilalui player. Objek dapat muncul dari kedalaman, mendekat, dilewati, lalu mengecil dan keluar di belakang kamera.
+- Jalur dapat memiliki perubahan arah horizontal dan perubahan elevasi yang halus. Tikungan tidak dibuat hanya dengan rotasi sprite.
+- Segment dunia di belakang player boleh dipool dan dipasang kembali jauh di depan untuk efisiensi, tetapi transform dan `distance_s` player tetap merepresentasikan perjalanan nyata.
+- Kamera tidak boleh mengunci player sementara seluruh lingkungan hanya melakukan fake scroll. Fake UV flow hanya dipakai sebagai lapisan tambahan di atas gerak geometry nyata.
+
+Dengan aturan ini, saat player maju, pemain akan merasa masuk ke lumen pembuluh dan melewati ruang biologis, bukan berlari di tempat.
+
+### 8.3 Arena dinamis sepanjang perjalanan
+
+Foto `Gameplay-Arena.jpg` ditetapkan sebagai **komposisi kanonik untuk zona awal**. Setelah kamera bergerak lebih jauh, arena dapat berubah bertahap pada texture, material, prop, warna, dan pola animasinya tanpa kehilangan identitas biologis dan tanpa memotong hard-cut.
+
+Setiap bagian jalur akan berupa `ArenaSegment` 3D dengan data:
+
+```text
+ArenaSegment
+├── distance_start / distance_end
+├── deterministic_seed
+├── BiomeProfile
+├── VesselShellSegment
+├── PathSurfaceSegment
+├── RailSegment
+├── ActorSpawnPoints
+└── TransitionBlend
+```
+
+`BiomeProfile` akan mengatur:
+
+- texture dinding: albedo/base color, normal, roughness, emission, dan variasi serat;
+- palette pembuluh, rail, sel biru, partikel kuning, darah, dan patogen;
+- material/tekstur jalur serta intensitas pulse aliran;
+- campuran prop, ukuran, densitas, dan arah drift;
+- bentuk/warna vesikel dan patogen;
+- fog, ambient red, aksen biru/kuning, dan intensitas cahaya;
+- kecepatan animasi dinding, sel, partikel, dan hazard.
+
+Perubahan dilakukan dengan cara berikut:
+
+1. Segment berikutnya dipreload dan dipool sebelum masuk frame.
+2. Texture/material baru dipasang pada segment di depan, bukan mengganti seluruh arena secara mendadak di depan kamera.
+3. Dua profile di-crossfade melalui parameter shader/material dan perubahan densitas prop.
+4. Warna, UV flow, normal, roughness, dan emission berubah mengikuti `TransitionBlend` sepanjang `distance_s`.
+5. Actor dari profile sebelumnya diberi exit motion dan actor profile baru diberi enter motion agar seluruh dunia tetap hidup.
+6. Seed deterministic memastikan layout dapat direproduksi saat debug screenshot, meskipun variasi elemen berubah-ubah antar segment.
+
+Implementasi awal sebaiknya memakai pool beberapa segment aktif, misalnya beberapa segment di belakang dan lebih banyak segment di depan. Jumlah dan panjang segment akan ditentukan setelah blockout dan pengukuran performa WebGL 2.0, bukan diasumsikan dari awal.
+
+### 8.4 Batas perubahan agar tetap mengikuti desain
+
+- Zona pertama, framing kamera, jalur S, warna utama, dan distribusi visual harus cocok dengan `Gameplay-Arena.jpg`.
+- Perubahan sepanjang perjalanan bersifat diegetic: serat pembuluh, pola jaringan, kepadatan sel, dan ambience berganti seperti player memasuki bagian tubuh yang berbeda.
+- Tidak ada random texture swap yang memutus kontinuitas visual atau membuat arena terlihat seperti level yang tidak berhubungan.
+- Transition harus terjadi di depan player setelah landmark foto sudah terlewati; screenshot calibration untuk zona awal tetap stabil.
+- Semua profile baru harus memenuhi aturan “semua elemen yang terlihat hidup dan beranimasi”.
+
+### 8.5 Target validasi depth dan dinamika
+
+Fase blockout dianggap gagal jika salah satu hal berikut terjadi:
+
+- player terlihat diam sementara geometry dunia hanya bergeser lewat UV;
+- objek dekat tidak membesar, tidak memiliki parallax, atau tidak dapat dilewati secara spatial;
+- camera bisa melihat void di luar lumen;
+- pergantian texture terjadi sebagai pop mendadak di depan kamera;
+- profile baru menonaktifkan animasi sel, patogen, partikel, atau dinding;
+- frame zona awal tidak lagi cocok dengan overlay referensi.
+
+## 10. Target teknis Web dan toolchain yang sudah dipersiapkan
 
 ### Godot
 
@@ -207,7 +294,7 @@ Sistem utama:
 - Renderer yang direncanakan: **Compatibility** untuk kompatibilitas WebGL2 dan shader yang terukur.
 - Viewport kanonik: 1024 × 1024; browser boleh scale, tetapi aspect ratio dan framing tidak boleh berubah.
 
-## 9. Kontrak arsitektur runtime Web
+## 11. Kontrak arsitektur runtime Web
 
 Arsitektur ini sekarang dikunci dan akan dipakai saat fase implementasi. Tidak akan dibuat server custom atau server dari subfolder.
 
@@ -263,7 +350,7 @@ Semua setup dapat diulang dengan:
 ./scripts/prepare_toolchain.sh
 ```
 
-## 10. Tahapan implementasi setelah rencana disetujui
+## 12. Tahapan implementasi setelah rencana disetujui
 
 1. **Reference lock** — set viewport 1024², buat calibration scene dan kamera, lalu cocokkan avatar/rails/vanishing point.
 2. **Greybox organik** — buat dinding tunnel dan jalur S; belum ada gameplay, hanya evaluasi screenshot.
@@ -274,7 +361,7 @@ Semua setup dapat diulang dengan:
 7. **Web validation** — export debug dengan bundle non-threads, serve pada `0.0.0.0`, capture screenshot via Sparticuz Chromium, lalu compare dengan reference.
 8. **Release lock** — matikan reference overlay, export release, jalankan capture smoke test dan cek performa.
 
-## 11. Definition of done untuk klaim “100% mengikuti design”
+## 13. Definition of done untuk klaim “100% mengikuti design”
 
 - Avatar berada di lower-center pada framing kanonik dan terlihat dari belakang.
 - Jalur salmon dengan dua rail lavender membentuk kurva S yang sama secara visual pada foreground, tikungan, dan vanishing area.
