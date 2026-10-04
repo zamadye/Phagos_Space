@@ -2,7 +2,7 @@
 
 > Status: **fase pra-produksi**. Dokumen ini dibuat setelah `Gameplay-Arena.jpg` dilihat langsung. Belum ada scene gameplay atau script game yang dibuat; toolchain sudah dipersiapkan supaya implementasi berikutnya dapat dimulai dari referensi yang sama.
 >
-> Arsitektur login Web2, Ronin Web3, IAP, referral, dan airdrop dicatat terpisah di [`WEB3_AUTH_PAYMENTS_PLAN.md`](WEB3_AUTH_PAYMENTS_PLAN.md).
+> Arsitektur login Web2, Ronin Web3, IAP, referral, dan airdrop dicatat terpisah di [`WEB3_AUTH_PAYMENTS_PLAN.md`](WEB3_AUTH_PAYMENTS_PLAN.md). Urutan delivery dan progress gate ada di [`PROJECT_ROADMAP.md`](PROJECT_ROADMAP.md).
 
 ## 1. Referensi yang menjadi sumber kebenaran
 

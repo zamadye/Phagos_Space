@@ -325,14 +325,15 @@ Initial supported enum:
 ```text
 POINTS
 ITEM_OFFCHAIN
+PRODUCT_OFFCHAIN
 RON
 ERC20
 ERC721
 ERC1155
-EQUITY_PENDING_LEGAL_REVIEW
+LUCKY_REWARD
 ```
 
-`EQUITY_PENDING_LEGAL_REVIEW` must be disabled in production until the legal instrument, jurisdiction, KYC/AML, eligibility, disclosures, transfer restrictions, tax handling, and cap-table/issuer process are approved. If “equity” means actual company ownership, revenue share, or an investment-like token, it cannot be treated as a normal game item or casually airdropped. This is a legal/compliance workstream, not just a Solidity feature.
+Dalam konteks Phagos Space, istilah “equity” yang dimaksud adalah **value/reward di dalam game**, bukan saham perusahaan atau kepemilikan bisnis. Bentuknya dapat berupa item, produk/game entitlement, atau RON sebagai hadiah keberuntungan. `LUCKY_REWARD` harus tetap memiliki campaign rule, batas hadiah, odds/transparansi, anti-abuse, dan pencatatan ledger yang jelas. Untuk hadiah RON, fase development memakai Saigon testnet; mainnet baru boleh setelah kontrak, treasury, dan aturan kampanye lolos review.
 
 ### 8.2 Item rewards
 
@@ -416,7 +417,7 @@ No server private key is held in the Godot client. A backend worker may use a de
 8. **Ronin IAP sandbox** — deploy/test `PurchaseRouter` on Saigon, index receipts, and grant an item only after final verification.
 9. **Android billing adapter** — only when Android distribution is requested; implement Play Billing 8+ and backend verification/RTDN.
 10. **Airdrop campaign** — build Merkle snapshot/claim flow after ledger and identity linking are stable.
-11. **Compliance/equity gate** — no equity-like reward is enabled until legal/compliance decisions are documented.
+11. **Lucky reward gate** — hadiah item/produk/RON hanya aktif setelah campaign rule, odds/eligibility, anti-abuse, dan ledger diuji.
 12. **Production hardening** — contract review/audit, source verification, multisig, monitoring, fraud controls, and disaster recovery.
 
 ## 11. Decisions that must be confirmed before coding the integration
@@ -424,5 +425,5 @@ No server private key is held in the Godot client. A backend worker may use a de
 1. Should Web3 login show **Ronin Stash with Google/email** as the primary button and **existing Ronin Wallet** as a fallback inside the same Web3 modal?
 2. Is the Web2 account allowed to link a Ronin wallet later, or must users choose one permanent login type?
 3. For the first reward, should we use a simple off-chain item/points ledger before deploying any token/NFT contract?
-4. Does “equity reward” mean actual company ownership/revenue share, or a non-financial in-game token? The former must remain disabled pending legal/compliance approval.
+4. For lucky rewards, should the first campaign distribute only items/products, or also include a small Saigon-testnet RON path?
 5. Is Android/Google Play an immediate target, or should phase one support Web + Ronin only?
