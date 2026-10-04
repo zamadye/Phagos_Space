@@ -6,6 +6,7 @@ extends Node3D
 ## imported GLB scenes without changing the path/camera/streaming contract.
 
 const BioActorScript = preload("res://scripts/bio_actor.gd")
+const SiderocyteScene = preload("res://assets/siderocyte.glb")
 
 const TRACK_WIDTH := 5.4
 const RAIL_RADIUS := 0.34
@@ -83,7 +84,7 @@ func _process(delta: float) -> void:
 func _build_environment() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("140308")
+	environment.background_color = Color("3b0b16")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("b84f5b")
 	environment.ambient_light_energy = 0.72
@@ -171,9 +172,16 @@ func _build_tunnel() -> void:
 	tunnel_material = _make_tunnel_material()
 	var tunnel := MeshInstance3D.new()
 	tunnel.name = "AnimatedVesselShell"
-	tunnel.mesh = _make_tunnel_mesh(22, 15)
+	tunnel.mesh = _make_tunnel_mesh(64, 24)
 	tunnel.material_override = tunnel_material
 	add_child(tunnel)
+
+	var tunnel_cap := MeshInstance3D.new()
+	tunnel_cap.name = "VesselFarEndCap"
+	tunnel_cap.mesh = _make_tunnel_cap_mesh(24)
+	var cap_material := _material(Color("7b1b2b"), Color("5a101e"), 0.62)
+	tunnel_cap.material_override = cap_material
+	add_child(tunnel_cap)
 
 func _make_tunnel_mesh(rings: int, ring_vertices: int) -> ArrayMesh:
 	var vertices := PackedVector3Array()
@@ -204,6 +212,25 @@ func _make_tunnel_mesh(rings: int, ring_vertices: int) -> ArrayMesh:
 			indices.append(next_slice)
 			indices.append(next_ring)
 			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _make_tunnel_cap_mesh(ring_vertices: int) -> ArrayMesh:
+	var frame := _path_frame(path_length)
+	var center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+	var vertices := PackedVector3Array([center])
+	var normals := PackedVector3Array([-frame.tangent])
+	var uvs := PackedVector2Array([Vector2(0.5, 0.5)])
+	var indices := PackedInt32Array()
+	for slice in ring_vertices:
+		var around := TAU * float(slice) / float(ring_vertices)
+		var radial: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+		vertices.append(center + radial * TUNNEL_RADIUS)
+		normals.append(-frame.tangent)
+		uvs.append(Vector2(0.5 + cos(around) * 0.5, 0.5 + sin(around) * 0.5))
+	for slice in ring_vertices:
+		indices.append(0)
+		indices.append(1 + slice)
+		indices.append(1 + ((slice + 1) % ring_vertices))
 	return _array_mesh(vertices, normals, uvs, indices)
 
 func _build_track() -> void:
@@ -305,8 +332,8 @@ func _build_biological_field() -> void:
 	actors_root.name = "LivingBiologicalActors"
 	add_child(actors_root)
 
-	var blue_material := _material(Color("3679a6"), Color("173954"), 0.15)
-	var yellow_material := _material(Color("f3c64c"), Color("f8ba3c"), 0.72)
+	var blue_material := _material(Color("2c78ad"), Color("1e73aa"), 0.95)
+	var yellow_material := _material(Color("f3c64c"), Color("f8ba3c"), 0.88)
 	var red_material := _material(Color("d85e64"), Color("4c101d"), 0.18)
 	var virus_material := _material(Color("9d2939"), Color("3d0711"), 0.24)
 	var vesicle_material := _material(Color("d26b91"), Color("7d1d4d"), 0.3)
@@ -320,7 +347,7 @@ func _build_biological_field() -> void:
 		var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
 		var normal: Vector3 = (frame.right * cos(angle) + frame.up * sin(angle)).normalized()
 		var actor := _actor_with_mesh("BlueMembraneCell_%02d" % index, _sphere_mesh(), blue_material)
-		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 0.42), Vector3(1.35, 0.46, 0.9), float(index) * 1.31, 0.75, 0.12, 0.08)
+		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.65, 0.6, 1.1), float(index) * 1.31, 0.75, 0.12, 0.08)
 		actor.drift_axis = frame.tangent
 		actors_root.add_child(actor)
 
@@ -338,7 +365,19 @@ func _build_biological_field() -> void:
 		var distance := 18.0 + float(index) * 15.5
 		var frame := _path_frame(minf(distance, path_length - 5.0))
 		var offset := sin(float(index) * 1.8) * 1.8
-		var actor := _actor_with_mesh("RedBloodCell_%02d" % index, _sphere_mesh(), red_material)
+		var actor: BioActor = BioActorScript.new()
+		actor.name = "RedBloodCell_%02d" % index
+		if index % 3 == 0:
+			var siderocyte: Node3D = SiderocyteScene.instantiate()
+			siderocyte.name = "SiderocyteGLBVisual"
+			siderocyte.scale = Vector3.ONE * 0.34
+			actor.add_child(siderocyte)
+		else:
+			var visual := MeshInstance3D.new()
+			visual.name = "ProceduralRedCellVisual"
+			visual.mesh = _sphere_mesh()
+			visual.material_override = red_material
+			actor.add_child(visual)
 		actor.configure(frame.position + frame.right * offset + frame.up * 0.7, Vector3(0.95 + fmod(float(index), 3.0) * 0.22, 0.24, 0.82), float(index) * 0.9, 0.9, 0.22, 0.25)
 		actor.drift_axis = frame.tangent
 		actors_root.add_child(actor)
@@ -490,7 +529,7 @@ func _make_tunnel_material() -> ShaderMaterial:
 	var shader := Shader.new()
 	shader.code = """
 shader_type spatial;
-render_mode cull_front, diffuse_burley, specular_disabled;
+render_mode cull_disabled, unshaded, specular_disabled;
 
 uniform vec3 red_deep : source_color = vec3(0.20, 0.015, 0.028);
 uniform vec3 red_mid : source_color = vec3(0.46, 0.045, 0.075);
@@ -533,8 +572,8 @@ void vertex() {
 void fragment() {
     float current = sin(UV.x * 42.0 - TIME * 2.4) * 0.5 + 0.5;
     float zone = sin(UV.x * 4.2) * 0.5 + 0.5;
-    vec3 salmon_a = vec3(0.68, 0.25, 0.30);
-    vec3 salmon_b = vec3(0.90, 0.48, 0.47);
+    vec3 salmon_a = vec3(0.70, 0.34, 0.40);
+    vec3 salmon_b = vec3(0.96, 0.62, 0.58);
     vec3 color = mix(salmon_a, salmon_b, zone * 0.38 + current * 0.12);
     ALBEDO = color;
     ROUGHNESS = 0.54;
@@ -611,7 +650,7 @@ func _build_camera() -> void:
 	camera = Camera3D.new()
 	camera.name = "Camera3D_ThirdPersonChase"
 	camera.current = true
-	camera.fov = 50.0
+	camera.fov = 55.0
 	camera.near = 0.05
 	camera.far = 190.0
 	add_child(camera)
@@ -654,9 +693,9 @@ func _update_world(delta: float) -> void:
 	player.global_position = player_position
 	player.look_at(player_position + frame.tangent, frame.up)
 
-	var camera_position: Vector3 = player_position - frame.tangent * 7.0 + frame.up * 3.6
+	var camera_position: Vector3 = player_position - frame.tangent * 10.0 + frame.up * 3.8
 	camera.global_position = camera_position
-	camera.look_at(player_position + frame.tangent * 9.0 + frame.up * 0.65, frame.up)
+	camera.look_at(player_position + frame.tangent * 12.0 + frame.up * 0.55, frame.up)
 
 	var run_phase := elapsed_run_time * 7.0
 	if player_parts.has("body"):

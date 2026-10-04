@@ -3,7 +3,7 @@
 Tanggal validasi: **2026-10-05**  
 Branch: `arena/01a107da-phagos-space`
 
-M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, dan root-server contract; visual screenshot comparison dan an interactive desktop/browser capture masih menjadi pekerjaan berikutnya.
+M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, root-server contract, dan browser WebGL smoke boot. Visual screenshot comparison terhadap seluruh frame `Gameplay-Arena.jpg` dan visible retry sequence masih menjadi pekerjaan berikutnya.
 
 ## Reproducible commands
 
@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 1,488,876 bytes |
+| `index.pck` | 1,737,524 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
@@ -67,8 +67,33 @@ curl -fsSI http://127.0.0.1:8000/index.wasm
 
 Observed: both responses were `200 OK`; `.wasm` was served as `application/wasm`.
 
+## Browser WebGL smoke evidence
+
+The browser smoke test uses Puppeteer Core and `@sparticuz/chromium`. The important workaround is implemented in `tools/browser/smoke.mjs`: it sets the package's AL2023 compatibility path before dynamically importing Chromium. The package then extracts its bundled `al2023.tar.br` libraries and sets `LD_LIBRARY_PATH`, so the test does not depend on system-installed `libnspr4.so`, `libnss3.so`, or `libnssutil3.so`.
+
+Reproducible command after the root server is running:
+
+```bash
+cd tools/browser
+npm install
+npm run smoke
+```
+
+Observed result:
+
+```json
+{
+  "title": "Phagos Space (DEBUG)",
+  "canvas": true,
+  "canvasBox": { "width": 1024, "height": 1024 },
+  "errors": []
+}
+```
+
+Screenshot evidence: `evidence/m1-web-smoke.png`.
+
 ## Remaining evidence before M1 can be marked DONE
 
-- Capture a 1024×1024 browser/desktop gameplay screenshot and compare it against `Gameplay-Arena.jpg`.
-- Capture a visible start → active run → hazard → finish → retry smoke sequence.
-- Run browser WebGL smoke test. The repository includes `tools/browser/smoke.mjs`; the current sandbox could not launch its Chromium binary because the OS image lacks `libnspr4.so`, `libnss3.so`, and `libnssutil3.so`. This is an environment limitation, not a game runtime error.
+- Compare the captured 1024×1024 screenshot against `Gameplay-Arena.jpg` with an overlay/mismatch review.
+- Capture a visible start → active run → hazard → finish → retry sequence in the browser.
+- Decide whether the procedural player is visually sufficient for M1 or should be replaced with a validated GLB in M2.
