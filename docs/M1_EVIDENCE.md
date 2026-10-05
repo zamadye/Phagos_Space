@@ -1,9 +1,9 @@
 # M1 validation evidence
 
-Tanggal validasi: **2026-10-05**  
+Tanggal validasi: **2026-10-06**  
 Branch: `arena/01a107da-phagos-space`
 
-M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, root-server contract, browser WebGL boot, debug reference overlay, Pokemon player GLB, under-glass blood flow, dan satu sesi browser start → active → hazard → finish → retry. Overlay serta final art/framing calibration terhadap `Gameplay-Arena.jpg` masih menjadi pekerjaan berikutnya.
+M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, root-server contract, browser WebGL boot, debug reference overlay, Pokemon player GLB, authored blood-flow MultiMesh, wall-event uniforms, dan satu sesi browser start → active → hazard → finish → retry. Reference visual gate tetap belum lulus; screenshot overlay terbaru dipakai untuk iterasi berikutnya.
 
 ## Reproducible commands
 
@@ -106,9 +106,10 @@ Asset-driven field check after repository FBX/OBJ conversion:
 ```text
 AUTHORED_BLOOD_CELL_ACTORS=34
 TOTAL_BIO_ACTORS=149
+M1 blood multimesh: red_instances=66; purple_instances=16; actors=82
 ```
 
-Screenshot evidence: `evidence/m1-assets-active.png`. The red-cell field now uses `siderocyte.glb`, `lynphocyte.glb`, `metamyelocyte.glb`, and `myelocyte.glb`; procedural sphere cells remain only as fallback.
+Screenshot evidence: `evidence/m1-assets-active.png` and `evidence/m1-web-smoke.png`. The runtime bloodstream now uses two `MultiMeshInstance3D` nodes with the authored `siderocyte.glb` mesh as the primary source; procedural `SphereMesh` is only the missing-asset fallback. Distance progression, Curve3D frame placement, lateral wave, and per-instance rotation remain runtime-controlled.
 
 ## Route graph and branch evidence
 
@@ -169,7 +170,7 @@ The intended sequence is:
 - `evidence/m1-web-finish.png` — `SESSION COMPLETE`, distance, and retry prompt.
 - `evidence/m1-web-retry.png` — `R` resets the run to the active start state.
 
-After the Blender wall/pathogen integration, the current short smoke validation is PASS (`canvas=true`, `errors=[]`). The long finish/retry browser sequence remains a separate visual-runtime gate because software-rendered Chromium becomes substantially slower with the authored wall tiles; partial screenshots are not treated as a full M1 QA pass.
+After the MultiMesh and wall-event integration, the current short smoke validation is PASS (`canvas=true`, `errors=[]`). The full finish/retry browser sequence was also executed from `tools/browser` with `canvas=true` and `errors=[]`; it produced all five evidence screenshots. The test takes about five minutes in software-rendered Chromium, so the command timeout must allow for the authored wall tiles.
 
 ## Visual gate review
 

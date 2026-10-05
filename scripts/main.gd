@@ -484,35 +484,63 @@ func _build_blood_flow_cells() -> void:
 	for material in [cell_material, purple_cell_material]:
 		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		material.albedo_color.a = 0.92
+	var cell_mesh: Mesh = _mesh_from_scene(SiderocyteScene)
+	if cell_mesh == null:
+		cell_mesh = _sphere_mesh()
+	var red_count := 66
+	var purple_count := 16
+	var red_multimesh := _make_blood_multimesh(cell_mesh, red_count, cell_material)
+	var purple_multimesh := _make_blood_multimesh(cell_mesh, purple_count, purple_cell_material)
+	flow_root.add_child(red_multimesh)
+	flow_root.add_child(purple_multimesh)
+	print("M1 blood multimesh: red_instances=%d; purple_instances=%d; actors=%d" % [red_multimesh.multimesh.instance_count, purple_multimesh.multimesh.instance_count, red_count + purple_count])
+	var red_instance := 0
+	var purple_instance := 0
 	for index in 82:
-		var cell := MeshInstance3D.new()
-		cell.name = "FlowingRedCell_%02d" % index
-		cell.mesh = _sphere_mesh()
-		var selected_material: StandardMaterial3D = purple_cell_material if index % 5 == 0 else cell_material
-		cell.material_override = selected_material
+		# Keep the authored distribution deterministic: exactly 16 purple and 66 red cells.
+		var is_purple := index % 5 == 0 and index < 80
+		var selected_multimesh: MultiMeshInstance3D = purple_multimesh if is_purple else red_multimesh
+		var instance_index := purple_instance if is_purple else red_instance
+		if is_purple:
+			purple_instance += 1
+		else:
+			red_instance += 1
 		var size := 0.22 + fmod(float(index), 4.0) * 0.045
-		cell.scale = Vector3(size * 1.45, size * 0.22, size)
-		flow_root.add_child(cell)
 		var distance := fmod(5.0 + float(index) * 8.1, maxf(path_length, 1.0))
 		var lateral := sin(float(index) * 1.91) * (TRACK_WIDTH * 0.38)
 		blood_flow_cells.append({
-			"node": cell,
+			"multimesh": selected_multimesh.multimesh,
+			"instance": instance_index,
 			"distance": distance,
 			"lateral": lateral,
 			"speed": 2.1 + fmod(float(index), 5.0) * 0.32,
-			"phase": float(index) * 0.73
+			"phase": float(index) * 0.73,
+			"size": size,
+			"rotation": 0.0
 		})
+
+func _make_blood_multimesh(cell_mesh: Mesh, count: int, material: StandardMaterial3D) -> MultiMeshInstance3D:
+	var instance := MultiMeshInstance3D.new()
+	instance.name = "BloodCellMultiMesh_%02d" % count
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = cell_mesh
+	multimesh.instance_count = count
+	instance.multimesh = multimesh
+	instance.material_override = material
+	return instance
 
 func _update_blood_flow_cells(delta: float) -> void:
 	for cell_data in blood_flow_cells:
-		var cell: Node3D = cell_data.node
 		var distance: float = fmod(float(cell_data.distance) + float(cell_data.speed) * delta, maxf(path_length, 1.0))
 		cell_data.distance = distance
 		var frame := _path_frame(distance)
 		var lateral_wave := sin(elapsed_run_time * 0.8 + float(cell_data.phase)) * 0.06
-		cell.position = frame.position + frame.right * (float(cell_data.lateral) + lateral_wave) + frame.up * 0.105
-		cell.rotation.y += delta * (0.35 + float(cell_data.speed) * 0.1)
-
+		var cell_position: Vector3 = frame.position + frame.right * (float(cell_data.lateral) + lateral_wave) + frame.up * 0.105
+		cell_data.rotation += delta * (0.35 + float(cell_data.speed) * 0.1)
+		var cell_basis := Basis().scaled(Vector3(float(cell_data.size) * 1.45, float(cell_data.size) * 0.22, float(cell_data.size)))
+		cell_basis = cell_basis.rotated(Vector3.UP, float(cell_data.rotation))
+		cell_data.multimesh.set_instance_transform(int(cell_data.instance), Transform3D(cell_basis, cell_position))
 func _make_ribbon_mesh(width: float, height: float) -> ArrayMesh:
 	var vertices := PackedVector3Array()
 	var normals := PackedVector3Array()
@@ -970,6 +998,16 @@ func _sphere_mesh() -> SphereMesh:
 	sphere.rings = 8
 	return sphere
 
+func _mesh_from_scene(scene: PackedScene) -> Mesh:
+	if scene == null:
+		return null
+	var instance := scene.instantiate()
+	var mesh_nodes := instance.find_children("*", "MeshInstance3D", true, false)
+	var mesh_instance := mesh_nodes[0] as MeshInstance3D if not mesh_nodes.is_empty() else null
+	var mesh: Mesh = mesh_instance.mesh if mesh_instance != null else null
+	instance.free()
+	return mesh
+
 func _material(color: Color, emission: Color, emission_energy: float) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
@@ -986,14 +1024,35 @@ func _make_authored_wall_material() -> ShaderMaterial:
 shader_type spatial;
 render_mode cull_disabled, unshaded, specular_disabled;
 uniform float breathing_clock = 0.0;
+uniform vec3 event_world_position = vec3(0.0);
+uniform float event_strength = 0.0;
+uniform float event_radius = 2.8;
+
+void vertex() {
+    vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+    float breath = sin(breathing_clock * 0.82) * 0.5 + 0.5;
+    // Low-frequency travelling wave: the authored folds remain fixed, while
+    // a slow muscular wave moves through the vessel surface.
+    float travelling_wave = sin(world_position.z * 0.075 + world_position.x * 0.035 + breathing_clock * 0.52) * 0.5 + 0.5;
+    float event_distance = distance(world_position, event_world_position);
+    float event_influence = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001));
+    float local_bulge = event_influence * event_strength;
+    float breathing = 0.012 + breath * 0.024 + travelling_wave * 0.016 + local_bulge * 0.34;
+    VERTEX += NORMAL * breathing;
+}
+
 void fragment() {
     float pulse = sin(breathing_clock * 0.82) * 0.5 + 0.5;
     float static_fold = sin(VERTEX.y * 0.43 + VERTEX.x * 0.19 + sin(VERTEX.z * 0.22) * 2.0) * 0.5 + 0.5;
+    float travelling_light = sin(VERTEX.y * 0.25 + breathing_clock * 0.42) * 0.5 + 0.5;
+    float event_distance = distance((MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz, event_world_position);
+    float event_glow = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001)) * event_strength;
     vec3 deep = vec3(0.22, 0.010, 0.028);
     vec3 warm = vec3(0.43, 0.026, 0.052);
-    vec3 base = mix(deep, warm, 0.34 + static_fold * 0.24);
+    vec3 base = mix(deep, warm, 0.30 + static_fold * 0.22 + travelling_light * 0.08);
+    base += vec3(0.18, 0.008, 0.025) * event_glow;
     ALBEDO = base * (0.92 + pulse * 0.08);
-    EMISSION = base * (0.055 + pulse * 0.018);
+    EMISSION = base * (0.055 + pulse * 0.018 + event_glow * 0.04);
 }
 """
 	var material := ShaderMaterial.new()
@@ -1237,6 +1296,8 @@ func _update_world(delta: float) -> void:
 	if player_parts.has("helmet"):
 		var helmet: Node3D = player_parts["helmet"]
 		helmet.rotation.z = sin(run_phase * 0.5) * 0.018
+	var strongest_wall_event_strength := 0.0
+	var strongest_wall_event_position := Vector3.ZERO
 	for hazard in hazards:
 		var hazard_node: Node3D = hazard.node
 		var hazard_phase := elapsed_run_time * 4.0 + float(hazard.phase)
@@ -1269,6 +1330,14 @@ func _update_world(delta: float) -> void:
 				emergence = smoothstep(0.0, 1.0, emergence_cycle / 1.2)
 			elif emergence_cycle > 4.6:
 				emergence = 1.0 - smoothstep(0.0, 1.0, (emergence_cycle - 4.6) / 1.4)
+			var event_strength := 0.08
+			if emergence_cycle < 1.2:
+				event_strength = smoothstep(0.0, 1.0, emergence_cycle / 1.2)
+			elif emergence_cycle > 4.6:
+				event_strength = 1.0 - emergence
+			if event_strength > strongest_wall_event_strength:
+				strongest_wall_event_strength = event_strength
+				strongest_wall_event_position = wall_position
 			hazard_node.position = wall_position.lerp(road_position, emergence)
 		hazard_node.rotation.y = hazard_phase * 0.6
 
@@ -1296,6 +1365,9 @@ func _update_world(delta: float) -> void:
 		tunnel_material.set_shader_parameter("motion_clock", arena_motion_clock)
 	if is_instance_valid(authored_wall_material):
 		authored_wall_material.set_shader_parameter("breathing_clock", arena_motion_clock)
+		authored_wall_material.set_shader_parameter("event_world_position", strongest_wall_event_position)
+		authored_wall_material.set_shader_parameter("event_strength", strongest_wall_event_strength)
+		authored_wall_material.set_shader_parameter("event_radius", 3.4)
 	if is_instance_valid(track_material):
 		track_material.set_shader_parameter("journey_phase", player_distance / 55.0)
 		track_material.set_shader_parameter("motion_clock", arena_motion_clock)

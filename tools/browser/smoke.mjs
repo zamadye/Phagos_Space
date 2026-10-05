@@ -1,4 +1,10 @@
 import puppeteer from "puppeteer-core";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { mkdirSync } from "node:fs";
+
+const evidenceDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../evidence");
+mkdirSync(evidenceDir, { recursive: true });
 
 // @sparticuz/chromium ships an AL2023-compatible lib bundle in
 // al2023.tar.br. Enable its extraction path before the dynamic import so the
@@ -23,7 +29,7 @@ page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
 // is the reliable page-ready boundary for the smoke check.
 await page.goto("http://127.0.0.1:8000/index.html", { waitUntil: "load", timeout: 120000 });
 await new Promise((resolve) => setTimeout(resolve, 8000));
-await page.screenshot({ path: "evidence/m1-web-smoke.png" });
+await page.screenshot({ path: path.join(evidenceDir, "m1-web-smoke.png") });
 const canvas = await page.$("canvas");
 const canvasBox = canvas ? await canvas.boundingBox() : null;
 console.log(JSON.stringify({ title: await page.title(), canvas: Boolean(canvas), canvasBox, errors }, null, 2));
