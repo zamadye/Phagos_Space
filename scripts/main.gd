@@ -70,10 +70,12 @@ func _ready() -> void:
 	print("M1 arena ready: path_length=", snappedf(path_length, 0.1), "m; hazards=", hazards.size())
 
 func _process(delta: float) -> void:
+	# Wall breathing is time-based, not travel-based: it continues while the
+	# player is stopped and also remains visible in the calibration frame.
+	arena_motion_clock += delta
 	if debug_calibration_lock:
 		_update_world(0.0)
 		return
-	var distance_before := player_distance
 	if not session_finished:
 		elapsed_run_time += delta
 		hazard_cooldown = maxf(0.0, hazard_cooldown - delta)
@@ -97,11 +99,8 @@ func _process(delta: float) -> void:
 	else:
 		if Input.is_action_just_pressed("restart_run") or Input.is_key_pressed(KEY_R):
 			_restart_session()
-			distance_before = player_distance
-	var travel_delta := absf(player_distance - distance_before)
-	# World-space surface/wall motion advances from actual player travel. The
-	# blood cells below the glass remain a separate continuous bloodstream layer.
-	arena_motion_clock += travel_delta * 0.45
+	# The blood cells below the glass remain a separate continuous bloodstream
+	# layer; only the wall breathing uses this independent clock.
 	_update_world(delta)
 
 func _build_environment() -> void:
@@ -897,25 +896,30 @@ uniform float journey_phase = 0.0;
 uniform float motion_clock = 0.0;
 
 void vertex() {
-    VERTEX += NORMAL * sin(journey_phase * 0.35) * 0.0;
-    float breathing = sin(motion_clock * 0.72 + UV.y * 18.0 + UV.x * 4.0) * 0.07;
+    // The vessel wall breathes in place. No UV or journey-time scrolling is
+    // used here, so folds never read as a wall travelling past the player.
+    float breath = sin(motion_clock * 0.82) * 0.5 + 0.5;
+    float local_ripple = sin(UV.x * 5.0 + UV.y * 3.0) * 0.5 + 0.5;
+    float breathing = 0.018 + breath * 0.042 + local_ripple * 0.012;
     VERTEX += NORMAL * breathing;
 }
 
 void fragment() {
-    float broad_folds = sin(UV.y * 10.0 + sin(UV.x * 7.0) * 3.0 + motion_clock * 0.06) * 0.5 + 0.5;
-    float fibers = sin(UV.x * 92.0 + sin(UV.y * 18.0) * 7.0 + motion_clock * 0.22) * 0.5 + 0.5;
+    float broad_folds = sin(UV.y * 10.0 + sin(UV.x * 7.0) * 3.0) * 0.5 + 0.5;
+    float fibers = sin(UV.x * 92.0 + sin(UV.y * 18.0) * 7.0) * 0.5 + 0.5;
     float micro_fibers = sin(UV.x * 210.0 + UV.y * 33.0) * 0.5 + 0.5;
-    float flow = sin(UV.y * 34.0 - motion_clock * 0.8 + UV.x * 9.0) * 0.5 + 0.5;
-    float zone = sin(UV.y * 11.0 + motion_clock * 0.035) * 0.5 + 0.5;
+    float veins = sin(UV.y * 34.0 + UV.x * 9.0) * 0.5 + 0.5;
+    float zone = sin(UV.y * 11.0) * 0.5 + 0.5;
+    float breath_light = sin(motion_clock * 0.82 - 0.6) * 0.5 + 0.5;
     vec3 zone_color = mix(red_mid, red_hot, smoothstep(0.40, 0.92, zone));
     vec3 color = mix(red_deep, zone_color, 0.42 + broad_folds * 0.30);
     color += red_hot * fibers * 0.16;
     color += red_hot * micro_fibers * 0.035;
-    color += red_hot * pow(flow, 7.0) * 0.16;
+    color += red_hot * pow(veins, 7.0) * 0.16;
+    color *= 0.94 + breath_light * 0.10;
     ALBEDO = color;
-    ROUGHNESS = 0.66 - flow * 0.18;
-    EMISSION = color * (0.075 + flow * 0.055);
+    ROUGHNESS = 0.66 - veins * 0.18;
+    EMISSION = color * (0.075 + veins * 0.055 + breath_light * 0.012);
 }
 """
 	var material := ShaderMaterial.new()

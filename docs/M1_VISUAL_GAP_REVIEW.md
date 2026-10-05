@@ -11,6 +11,15 @@ Calibration: `F3` resets/locks the canonical start zone before the `F2` overlay 
 
 Reference harus dipakai sebagai acceptance untuk **composition dan density**, bukan hanya sebagai acuan warna merah.
 
+## Koreksi wall motion terbaru
+
+Wall sekarang memakai animasi **breathing in place**, bukan animasi berjalan/scrolling:
+
+- vertex wall mengembang dan mengempis dengan satu siklus waktu yang koheren;
+- pola serat, lipatan, dan vein tetap berada di tempatnya;
+- `motion_clock` berjalan independen dari jarak player, sehingga napas tetap terlihat saat player berhenti dan pada frame kalibrasi;
+- layer blood cells dan track tetap dipisahkan dari animasi wall.
+
 ## Perbedaan yang terlihat
 
 | Area | Reference `Gameplay-Arena.jpg` | Current build | Required correction |
