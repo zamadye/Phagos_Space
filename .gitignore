@@ -1,0 +1,24 @@
+# Local toolchain staging (recreated by scripts/prepare_toolchain.sh)
+.local/
+.arena_inspect/
+
+# Godot generated files
+.godot/
+*.import
+export/
+web/debug/
+web/release/
+
+# Textures extracted by the GLB importer (not source assets)
+creaturesenemiesreo_*.png
+low_poly_animated_pokemon_cartoon_character_pack_*.png
+low_poly_animated_pokemon_cartoon_character_pack_*.jpg
+
+# Node/browser tooling
+node_modules/
+.npm/
+*.tgz
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
