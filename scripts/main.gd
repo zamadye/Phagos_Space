@@ -212,8 +212,8 @@ func _make_branch_curve(side: float) -> Curve3D:
 	var curve := Curve3D.new()
 	curve.bake_interval = 0.45
 	var points: Array[Vector3] = []
-	var distances := [0.0, 14.0, 32.0, 54.0, 78.0]
-	var offsets := [0.0, side * 1.8, side * 4.8, side * 5.6, side * 3.4]
+	var distances := [0.0, 18.0, 40.0, 66.0, 96.0]
+	var offsets := [0.0, side * 1.8, side * 4.8, side * 5.4, 0.0]
 	for index in distances.size():
 		var frame := _path_frame(branch_junction_distance + distances[index])
 		points.append(frame.position + frame.right * offsets[index])
@@ -270,6 +270,11 @@ func _build_route_branch_geometry() -> void:
 		branch_track.mesh = _make_ribbon_mesh_for_curve(curve, curve_length, TRACK_WIDTH * 0.72, 0.12)
 		branch_track.material_override = track_material
 		branch_root.add_child(branch_track)
+		var branch_tunnel := MeshInstance3D.new()
+		branch_tunnel.name = "BranchVesselShell_" + side_name
+		branch_tunnel.mesh = _make_tunnel_mesh_for_curve(curve, curve_length, 20, 24)
+		branch_tunnel.material_override = tunnel_material
+		branch_root.add_child(branch_tunnel)
 		for rail_side in [-1, 1]:
 			var branch_rail := MeshInstance3D.new()
 			branch_rail.name = "BranchRail_%s_%d" % [side_name, rail_side]
@@ -290,6 +295,16 @@ func _path_frame(distance: float) -> Dictionary:
 	var up := right.cross(tangent).normalized()
 	return {"position": position, "tangent": tangent, "right": right, "up": up}
 
+func _active_route_frame(distance: float) -> Dictionary:
+	if not route_state.is_empty() and bool(route_state.get("junction_entered", false)) and distance >= branch_junction_distance:
+		var branch_name: String = route_state.get("selected_branch", "")
+		var branch_value: Variant = branch_curves.get(branch_name)
+		if branch_value is Curve3D:
+			var branch_curve := branch_value as Curve3D
+			var branch_length := branch_curve.get_baked_length()
+			return _curve_frame(branch_curve, branch_length, distance - branch_junction_distance)
+	return _path_frame(distance)
+
 func _build_tunnel() -> void:
 	tunnel_material = _make_tunnel_material()
 	var tunnel := MeshInstance3D.new()
@@ -305,6 +320,35 @@ func _build_tunnel() -> void:
 	cap_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	tunnel_cap.material_override = cap_material
 	add_child(tunnel_cap)
+
+func _make_tunnel_mesh_for_curve(curve: Curve3D, curve_length: float, rings: int, ring_vertices: int) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	for ring in rings + 1:
+		var ratio := float(ring) / float(rings)
+		var frame := _curve_frame(curve, curve_length, curve_length * ratio)
+		var center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+		for slice in ring_vertices:
+			var around := TAU * float(slice) / float(ring_vertices)
+			var normal: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+			vertices.append(center + normal * TUNNEL_RADIUS)
+			normals.append(normal)
+			uvs.append(Vector2(float(slice) / float(ring_vertices), ratio))
+	for ring in rings:
+		for slice in ring_vertices:
+			var current := ring * ring_vertices + slice
+			var next_slice := ring * ring_vertices + ((slice + 1) % ring_vertices)
+			var next_ring := (ring + 1) * ring_vertices + slice
+			var next_both := (ring + 1) * ring_vertices + ((slice + 1) % ring_vertices)
+			indices.append(current)
+			indices.append(next_ring)
+			indices.append(next_slice)
+			indices.append(next_slice)
+			indices.append(next_ring)
+			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
 
 func _make_tunnel_mesh(rings: int, ring_vertices: int) -> ArrayMesh:
 	var vertices := PackedVector3Array()
@@ -1056,7 +1100,7 @@ func _build_hud() -> void:
 	finish_panel.add_child(finish_label)
 
 func _update_world(delta: float) -> void:
-	var frame := _path_frame(player_distance)
+	var frame := _active_route_frame(player_distance)
 	var player_position: Vector3 = frame.position + frame.right * lane_offset + frame.up * 0.82
 	player.global_position = player_position
 	player.look_at(player_position + frame.tangent, frame.up)

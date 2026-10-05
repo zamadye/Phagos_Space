@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 7,320,872 bytes |
+| `index.pck` | 7,322,360 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
@@ -117,9 +117,10 @@ Deterministic headless route check:
 ROUTE_GRAPH_MAIN_SEGMENTS=5
 ROUTE_BRANCH_CURVES=["left", "right"]
 ROUTE_STATE={ current_route: "branch_right", selected_branch: "right", junction_entered: true, branch_collision: true }
+TRAVERSAL_BRANCH_MID=(6.635485, 0.150688, -201.3434)
 ```
 
-The default branch is derived from seed `20261005`; `Q`/left can request the left branch and `E`/right can request the right branch before the junction. Branch geometry and collision gates are present; full branch traversal/player route switching remains a later gameplay pass.
+The default branch is derived from seed `20261005`; `Q`/left can request the left branch and `E`/right can request the right branch before the junction. Player/camera now sample the selected branch Curve3D after the junction; the branch tunnel shell, path, rails, and collision gates are active.
 
 ## Full M1 debug QA sequence
 

@@ -252,7 +252,7 @@ ArenaSegment
 - [x] Pathogen landmark memiliki spike geometry di area route/hazard.
 - [x] Route graph untuk segment lurus, S, belok kiri, belok kanan, dan transition yang terbaca.
 - [x] Branch/junction 3D dengan pilihan kiri/kanan, collision gate, dan route state deterministic.
-- [ ] Full player traversal benar-benar pindah ke branch curve setelah junction.
+- [x] Full player/camera traversal pindah ke selected branch Curve3D setelah junction.
 - [ ] Jalur idle ketika player berhenti; route geometry dan camera hanya maju ketika player benar-benar berjalan.
 
 ### Exit gate
