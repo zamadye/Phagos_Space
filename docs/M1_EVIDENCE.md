@@ -107,9 +107,10 @@ Asset-driven field check after repository FBX/OBJ conversion:
 AUTHORED_BLOOD_CELL_ACTORS=34
 TOTAL_BIO_ACTORS=149
 M1 blood multimesh: red_instances=66; purple_instances=16; actors=82
+M1 blue cell multimesh: instances=26; mesh_source=lynphocyte.glb
 ```
 
-Screenshot evidence: `evidence/m1-assets-active.png` and `evidence/m1-web-smoke.png`. The runtime bloodstream now uses two `MultiMeshInstance3D` nodes with the authored `siderocyte.glb` mesh as the primary source; procedural `SphereMesh` is only the missing-asset fallback. Distance progression, Curve3D frame placement, lateral wave, and per-instance rotation remain runtime-controlled.
+Screenshot evidence: `evidence/m1-assets-active.png` and `evidence/m1-web-smoke.png`. The runtime bloodstream now uses two `MultiMeshInstance3D` nodes with the authored `siderocyte.glb` mesh as the primary source; procedural `SphereMesh` is only the missing-asset fallback. Wall-bound blue membrane cells now use a third `MultiMeshInstance3D` with `lynphocyte.glb`; route frame placement, surface orientation, bob, pulse, lateral wave, and per-instance rotation remain runtime-controlled.
 
 GPU ambient activity check:
 

@@ -8,6 +8,7 @@ extends Node3D
 const BioActorScript = preload("res://scripts/bio_actor.gd")
 const OrganicActivityManagerScript = preload("res://scripts/organic_activity_manager.gd")
 const SiderocyteScene = preload("res://assets/siderocyte.glb")
+const LymphocyteScene = preload("res://assets/lynphocyte.glb")
 const PokemonPackScene = preload("res://low_poly_animated_pokemon_cartoon_character_pack.glb")
 const RepositoryEnemyScene = preload("res://creaturesenemiesreo.glb")
 
@@ -48,6 +49,8 @@ var rail_material: StandardMaterial3D
 var player_parts: Dictionary = {}
 var pokemon_visual: Node3D
 var organic_activity_manager: OrganicActivityManager
+var blue_cell_multimesh: MultiMeshInstance3D
+var blue_cell_instances: Array[Dictionary] = []
 
 var hud_layer: CanvasLayer
 var hud_label: Label
@@ -708,18 +711,7 @@ func _build_biological_field() -> void:
 	add_child(organic_activity_manager)
 	organic_activity_manager.configure(path_curve, path_length, authored_cell_mesh, authored_organism_mesh, red_material, virus_material, yellow_material)
 
-	for index in 26:
-		var distance := 9.0 + float(index) * 10.3
-		var frame := _path_frame(minf(distance, path_length - 5.0))
-		var angle := fmod(float(index) * 1.77 + 0.9, TAU)
-		var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
-		var normal: Vector3 = (frame.right * cos(angle) + frame.up * sin(angle)).normalized()
-		var actor := _make_blue_cluster("BlueMembraneCell_%02d" % index, blue_material)
-		var cluster_scale := 0.72 + fmod(float(index), 5.0) * 0.15
-		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.42, 0.56, 1.0) * cluster_scale, float(index) * 1.31, 0.75, 0.12, 0.08)
-		actor.drift_axis = frame.tangent
-		actor.align_to_surface(normal, frame.tangent)
-		actors_root.add_child(actor)
+	_build_blue_membrane_multimesh(blue_material)
 
 	for index in 34:
 		var distance := 14.0 + float(index) * 7.75
@@ -776,6 +768,63 @@ func _build_biological_field() -> void:
 		amoeba.configure(frame.position + frame.right * (side * 4.7) + frame.up * (2.8 + fmod(float(index), 2.0)), Vector3.ONE * 0.82, float(index) * 2.2, 0.55, 0.28, 0.12)
 		amoeba.drift_axis = frame.tangent
 		actors_root.add_child(amoeba)
+
+func _build_blue_membrane_multimesh(material: StandardMaterial3D) -> void:
+	var blue_mesh: Mesh = _mesh_from_scene(LymphocyteScene)
+	if blue_mesh == null:
+		blue_mesh = _sphere_mesh()
+	blue_cell_multimesh = MultiMeshInstance3D.new()
+	blue_cell_multimesh.name = "BlueMembraneMultiMesh_26"
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = blue_mesh
+	multimesh.instance_count = 26
+	blue_cell_multimesh.multimesh = multimesh
+	blue_cell_multimesh.material_override = material
+	actors_root.add_child(blue_cell_multimesh)
+	for index in 26:
+		var distance := 9.0 + float(index) * 10.3
+		var frame := _path_frame(minf(distance, path_length - 5.0))
+		var angle := fmod(float(index) * 1.77 + 0.9, TAU)
+		var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+		var normal: Vector3 = (frame.right * cos(angle) + frame.up * sin(angle)).normalized()
+		var position: Vector3 = shell_center + normal * (TUNNEL_RADIUS - 1.1)
+		# The imported lymphocyte scene carries a 0.01 node scale. The extracted
+		# mesh is intentionally placed at a wrapper scale that restores its
+		# authored biological size without modifying the GLB.
+		var cluster_scale := (0.72 + fmod(float(index), 5.0) * 0.15) * 0.25
+		var side: Vector3 = frame.tangent.cross(normal).normalized()
+		var orientation := Basis(side, normal, -frame.tangent)
+		blue_cell_instances.append({
+			"instance": index,
+			"position": position,
+			"normal": normal,
+			"tangent": frame.tangent,
+			"side": side,
+			"scale": cluster_scale,
+			"phase": float(index) * 1.31,
+			"speed": 0.75 + fmod(float(index), 4.0) * 0.08,
+			"spin": 0.08 + fmod(float(index), 3.0) * 0.025,
+			"orientation": orientation
+		})
+		multimesh.set_instance_transform(index, Transform3D(orientation.scaled(Vector3.ONE * cluster_scale), position))
+	print("M1 blue cell multimesh: instances=%d; mesh_source=lynphocyte.glb" % blue_cell_instances.size())
+
+func _update_blue_membrane_multimesh(delta: float) -> void:
+	if not is_instance_valid(blue_cell_multimesh) or blue_cell_multimesh.multimesh == null:
+		return
+	for cell_data in blue_cell_instances:
+		var instance_index: int = int(cell_data.instance)
+		var phase: float = float(cell_data.phase)
+		var tangent: Vector3 = cell_data.tangent
+		var normal: Vector3 = cell_data.normal
+		var side: Vector3 = cell_data.side
+		var base_position: Vector3 = cell_data.position
+		var position: Vector3 = base_position + tangent * sin(elapsed_run_time * float(cell_data.speed) + phase) * 0.12
+		var orientation: Basis = Basis(side, normal, -tangent)
+		orientation = orientation.rotated(normal, elapsed_run_time * float(cell_data.spin) + phase * 0.05)
+		var scale_value: float = float(cell_data.scale) * (1.0 + sin(elapsed_run_time * 1.2 + phase) * 0.045)
+		blue_cell_multimesh.multimesh.set_instance_transform(instance_index, Transform3D(orientation.scaled(Vector3.ONE * scale_value), position))
 
 func _build_hazards() -> void:
 	var hazard_root := Node3D.new()
@@ -1349,6 +1398,7 @@ func _update_world(delta: float) -> void:
 		elif hazard_message_time > 0.0:
 			run_state = "HAZARD HIT"
 		hud_label.text = "PHAGOS SPACE  •  RUN 01  •  %03d%%  •  %s  •  HITS %02d" % [int(progress_ratio * 100.0), run_state, hit_count]
+	_update_blue_membrane_multimesh(delta)
 	_update_blood_flow_cells(delta)
 	if is_instance_valid(tunnel_material):
 		tunnel_material.set_shader_parameter("journey_phase", player_distance / 55.0)
