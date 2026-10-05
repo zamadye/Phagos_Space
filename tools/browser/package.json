@@ -1,0 +1,18 @@
+{
+  "name": "phagos-space-browser-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Local browser tooling for Godot Web smoke checks and reference screenshot capture.",
+  "type": "module",
+  "scripts": {
+    "smoke": "node smoke.mjs",
+    "qa:m1": "node m1_qa.mjs"
+  },
+  "engines": {
+    "node": ">=22.17.0"
+  },
+  "devDependencies": {
+    "@sparticuz/chromium": "153.0.0",
+    "puppeteer-core": "24.20.0"
+  }
+}
