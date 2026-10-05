@@ -11,7 +11,7 @@ const BioActorScript = preload("res://scripts/bio_actor.gd")
 const SiderocyteScene = preload("res://assets/siderocyte.glb")
 const PokemonPackScene = preload("res://low_poly_animated_pokemon_cartoon_character_pack.glb")
 
-const TRACK_WIDTH := 5.4
+const TRACK_WIDTH := 4.5
 const RAIL_RADIUS := 0.34
 const TUNNEL_RADIUS := 15.0
 const TUNNEL_CENTER_HEIGHT := 5.8
@@ -250,12 +250,12 @@ func _make_tunnel_cap_mesh(ring_vertices: int) -> ArrayMesh:
 func _build_track() -> void:
 	track_material = _make_track_material()
 	rail_material = StandardMaterial3D.new()
-	rail_material.albedo_color = Color("b991d2")
-	rail_material.roughness = 0.34
+	rail_material.albedo_color = Color("a983bd")
+	rail_material.roughness = 0.38
 	rail_material.metallic = 0.02
 	rail_material.emission_enabled = true
-	rail_material.emission = Color("8e5eb6")
-	rail_material.emission_energy_multiplier = 0.78
+	rail_material.emission = Color("704b91")
+	rail_material.emission_energy_multiplier = 0.52
 
 	var track := MeshInstance3D.new()
 	track.name = "SalmonPathSurface"
