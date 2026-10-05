@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 7,497,072 bytes |
+| `index.pck` | 7,497,200 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
@@ -133,7 +133,7 @@ assets/pathogen_emergence.glb
   AnimationPlayer: Pathogen_EmergeFromWall
 ```
 
-The wall animation is a keyed membrane shape deformation loop; its material has no journey/UV scrolling. The six hazards now use authored pathogen geometry. Their spawn modes are:
+The wall animation is a keyed membrane shape deformation loop; its material has no journey/UV scrolling. Wall modules are placed at 10m intervals with a 2m overlap and deterministic radial/twist variation to hide seams through turns. The six hazards now use authored pathogen geometry. Their spawn modes are:
 
 ```text
 road, wall_left, road, wall_right, wall_left, road

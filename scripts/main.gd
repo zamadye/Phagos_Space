@@ -350,7 +350,9 @@ func _build_authored_wall_tiles(scene: PackedScene, curve: Curve3D, curve_length
 		var tile_up: Vector3 = frame.up.rotated(frame.tangent, tile_twist).normalized()
 		tile.basis = Basis(tile_right, frame.tangent, tile_up)
 		var radial_scale := 0.97 + sin(float(index) * 1.19 + 0.4) * 0.035
-		tile.scale = Vector3(radial_scale, tile_length / 12.0, radial_scale)
+		# Keep a 2m overlap between authored modules so bend transitions never
+		# reveal the dark background through a seam.
+		tile.scale = Vector3(radial_scale, (tile_length + 2.0) / 12.0, radial_scale)
 		parent.add_child(tile)
 		for authored_mesh in tile.find_children("*", "MeshInstance3D", true, false):
 			var mesh_instance := authored_mesh as MeshInstance3D
@@ -1213,7 +1215,9 @@ func _update_world(delta: float) -> void:
 			hazard_node.position = road_position
 		else:
 			var wall_side := -1.0 if spawn_mode == "wall_left" else 1.0
-			var wall_angle := 0.58 if wall_side < 0.0 else PI - 0.58
+			# Negative right is the left wall; keep the socket selection visually
+			# consistent with the hazard's declared wall_left/wall_right mode.
+			var wall_angle := PI - 0.58 if wall_side < 0.0 else 0.58
 			var wall_normal: Vector3 = (hazard_frame.right * cos(wall_angle) + hazard_frame.up * sin(wall_angle)).normalized()
 			var wall_position: Vector3 = hazard_frame.position + hazard_frame.up * TUNNEL_CENTER_HEIGHT + wall_normal * (TUNNEL_RADIUS - 1.35)
 			var emergence_cycle := fmod(elapsed_run_time + float(hazard.phase), 6.0)
