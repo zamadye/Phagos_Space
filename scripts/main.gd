@@ -97,16 +97,16 @@ func _process(delta: float) -> void:
 func _build_environment() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("3b0b16")
+	environment.background_color = Color("3e0c18")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("b84f5b")
-	environment.ambient_light_energy = 0.72
+	environment.ambient_light_color = Color("bd4f62")
+	environment.ambient_light_energy = 0.80
 	environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled = true
-	environment.fog_light_color = Color("6d202d")
-	environment.fog_light_energy = 0.55
-	environment.fog_density = 0.012
+	environment.fog_light_color = Color("78263c")
+	environment.fog_light_energy = 0.58
+	environment.fog_density = 0.010
 	environment.fog_sky_affect = 0.0
 
 	var world := WorldEnvironment.new()
@@ -192,7 +192,8 @@ func _build_tunnel() -> void:
 	var tunnel_cap := MeshInstance3D.new()
 	tunnel_cap.name = "VesselFarEndCap"
 	tunnel_cap.mesh = _make_tunnel_cap_mesh(24)
-	var cap_material := _material(Color("7b1b2b"), Color("5a101e"), 0.62)
+	var cap_material := _material(Color("6b1d36"), Color("b63758"), 0.82)
+	cap_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	tunnel_cap.material_override = cap_material
 	add_child(tunnel_cap)
 
@@ -249,12 +250,12 @@ func _make_tunnel_cap_mesh(ring_vertices: int) -> ArrayMesh:
 func _build_track() -> void:
 	track_material = _make_track_material()
 	rail_material = StandardMaterial3D.new()
-	rail_material.albedo_color = Color("8d6baa")
-	rail_material.roughness = 0.44
-	rail_material.metallic = 0.05
+	rail_material.albedo_color = Color("b991d2")
+	rail_material.roughness = 0.34
+	rail_material.metallic = 0.02
 	rail_material.emission_enabled = true
-	rail_material.emission = Color("3b214f")
-	rail_material.emission_energy_multiplier = 0.48
+	rail_material.emission = Color("8e5eb6")
+	rail_material.emission_energy_multiplier = 0.78
 
 	var track := MeshInstance3D.new()
 	track.name = "SalmonPathSurface"
@@ -275,13 +276,16 @@ func _build_blood_flow_cells() -> void:
 	flow_root.name = "BloodCellsUnderGlass"
 	add_child(flow_root)
 	var cell_material := _material(Color("b93645"), Color("e84958"), 0.22)
-	cell_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cell_material.albedo_color.a = 0.92
-	for index in 34:
+	var purple_cell_material := _material(Color("a95a92"), Color("d77abd"), 0.18)
+	for material in [cell_material, purple_cell_material]:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.albedo_color.a = 0.92
+	for index in 82:
 		var cell := MeshInstance3D.new()
 		cell.name = "FlowingRedCell_%02d" % index
 		cell.mesh = _sphere_mesh()
-		cell.material_override = cell_material
+		var selected_material: StandardMaterial3D = purple_cell_material if index % 5 == 0 else cell_material
+		cell.material_override = selected_material
 		var size := 0.22 + fmod(float(index), 4.0) * 0.045
 		cell.scale = Vector3(size * 1.45, size * 0.22, size)
 		flow_root.add_child(cell)
@@ -386,22 +390,24 @@ func _build_biological_field() -> void:
 	var red_material := _material(Color("d85e64"), Color("4c101d"), 0.18)
 	var virus_material := _material(Color("9d2939"), Color("3d0711"), 0.24)
 	var vesicle_material := _material(Color("d26b91"), Color("7d1d4d"), 0.3)
+	vesicle_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	vesicle_material.albedo_color.a = 0.58
 	var dark_material := _material(Color("36101d"), Color("120208"), 0.05)
 
-	var blue_angles := [0.9, 2.2, 3.4, 4.7, 5.5, 1.4, 3.9, 5.9]
-	for index in blue_angles.size():
-		var distance := 12.0 + float(index) * 28.0
+	for index in 26:
+		var distance := 9.0 + float(index) * 10.3
 		var frame := _path_frame(minf(distance, path_length - 5.0))
-		var angle: float = blue_angles[index]
+		var angle := fmod(float(index) * 1.77 + 0.9, TAU)
 		var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
 		var normal: Vector3 = (frame.right * cos(angle) + frame.up * sin(angle)).normalized()
-		var actor := _actor_with_mesh("BlueMembraneCell_%02d" % index, _sphere_mesh(), blue_material)
-		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.65, 0.6, 1.1), float(index) * 1.31, 0.75, 0.12, 0.08)
+		var actor := _make_blue_cluster("BlueMembraneCell_%02d" % index, blue_material)
+		var cluster_scale := 0.72 + fmod(float(index), 5.0) * 0.15
+		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.42, 0.56, 1.0) * cluster_scale, float(index) * 1.31, 0.75, 0.12, 0.08)
 		actor.drift_axis = frame.tangent
 		actors_root.add_child(actor)
 
-	for index in 24:
-		var distance := 8.0 + float(index) * 10.2
+	for index in 68:
+		var distance := 6.0 + float(index) * 4.35
 		var frame := _path_frame(minf(distance, path_length - 4.0))
 		var side := -1.0 if index % 2 == 0 else 1.0
 		var offset := sin(float(index) * 2.14) * 1.8
@@ -410,8 +416,8 @@ func _build_biological_field() -> void:
 		actor.drift_axis = Vector3.UP
 		actors_root.add_child(actor)
 
-	for index in 15:
-		var distance := 18.0 + float(index) * 15.5
+	for index in 34:
+		var distance := 14.0 + float(index) * 7.75
 		var frame := _path_frame(minf(distance, path_length - 5.0))
 		var offset := sin(float(index) * 1.8) * 1.8
 		var actor: BioActor = BioActorScript.new()
@@ -419,7 +425,7 @@ func _build_biological_field() -> void:
 		if index % 3 == 0:
 			var siderocyte: Node3D = SiderocyteScene.instantiate()
 			siderocyte.name = "SiderocyteGLBVisual"
-			siderocyte.scale = Vector3.ONE * 0.34
+			siderocyte.scale = Vector3.ONE * 0.15
 			actor.add_child(siderocyte)
 		else:
 			var visual := MeshInstance3D.new()
@@ -427,24 +433,24 @@ func _build_biological_field() -> void:
 			visual.mesh = _sphere_mesh()
 			visual.material_override = red_material
 			actor.add_child(visual)
-		actor.configure(frame.position + frame.right * offset + frame.up * 0.7, Vector3(0.95 + fmod(float(index), 3.0) * 0.22, 0.24, 0.82), float(index) * 0.9, 0.9, 0.22, 0.25)
+		actor.configure(frame.position + frame.right * offset + frame.up * 0.7, Vector3(0.48 + fmod(float(index), 3.0) * 0.12, 0.16, 0.42), float(index) * 0.9, 0.9, 0.22, 0.25)
 		actor.drift_axis = frame.tangent
 		actors_root.add_child(actor)
 
-	for index in 8:
-		var distance := 30.0 + float(index) * 29.0
+	for index in 13:
+		var distance := 26.0 + float(index) * 18.5
 		var frame := _path_frame(minf(distance, path_length - 5.0))
 		var offset := sin(float(index) * 2.7) * 1.6
 		var virus := _make_virus("Pathogen_%02d" % index, virus_material, dark_material)
 		virus.configure(frame.position + frame.right * offset + frame.up * 0.9, Vector3.ONE * (0.72 + fmod(float(index), 3.0) * 0.1), float(index) * 1.22, 1.2, 0.16, 0.34)
 		actors_root.add_child(virus)
 
-	for index in 4:
-		var distance := 48.0 + float(index) * 47.0
+	for index in 8:
+		var distance := 38.0 + float(index) * 25.5
 		var frame := _path_frame(minf(distance, path_length - 6.0))
 		var side := -1.0 if index % 2 == 0 else 1.0
 		var amoeba := _make_vesicle("LivingVesicle_%02d" % index, vesicle_material, yellow_material)
-		amoeba.configure(frame.position + frame.right * (side * 4.7) + frame.up * (2.8 + fmod(float(index), 2.0)), Vector3.ONE * 1.2, float(index) * 2.2, 0.55, 0.28, 0.12)
+		amoeba.configure(frame.position + frame.right * (side * 4.7) + frame.up * (2.8 + fmod(float(index), 2.0)), Vector3.ONE * 0.82, float(index) * 2.2, 0.55, 0.28, 0.12)
 		amoeba.drift_axis = frame.tangent
 		actors_root.add_child(amoeba)
 
@@ -506,6 +512,27 @@ func _check_hazards() -> void:
 			lane_offset = clampf(lane_offset - signf(float(hazard.lane)) * 0.35, -MAX_LANE_OFFSET, MAX_LANE_OFFSET)
 			break
 
+func _make_blue_cluster(actor_name: String, material: Material) -> BioActor:
+	var actor: BioActor = BioActorScript.new()
+	actor.name = actor_name
+	var cluster_mesh := _sphere_mesh()
+	var center := MeshInstance3D.new()
+	center.name = "BlueMembraneCore"
+	center.mesh = cluster_mesh
+	center.material_override = material
+	center.scale = Vector3(1.0, 0.48, 0.82)
+	actor.add_child(center)
+	for index in 4:
+		var lobe := MeshInstance3D.new()
+		lobe.name = "BlueMembraneLobe_%02d" % index
+		lobe.mesh = cluster_mesh
+		lobe.material_override = material
+		var angle := TAU * float(index) / 4.0 + 0.35
+		lobe.position = Vector3(cos(angle) * 0.62, sin(float(index) * 1.4) * 0.12, sin(angle) * 0.48)
+		lobe.scale = Vector3(0.52, 0.26, 0.38)
+		actor.add_child(lobe)
+	return actor
+
 func _actor_with_mesh(actor_name: String, mesh: Mesh, material: Material) -> BioActor:
 	var actor: BioActor = BioActorScript.new()
 	actor.name = actor_name
@@ -544,6 +571,7 @@ func _make_vesicle(actor_name: String, membrane_material: Material, dot_material
 	body.name = "VesicleMembrane"
 	body.mesh = _sphere_mesh()
 	body.material_override = membrane_material
+	body.scale = Vector3(1.30, 0.72, 1.0)
 	vesicle.add_child(body)
 	for index in 5:
 		var dot := MeshInstance3D.new()
@@ -580,9 +608,9 @@ func _make_tunnel_material() -> ShaderMaterial:
 shader_type spatial;
 render_mode cull_disabled, unshaded, specular_disabled;
 
-uniform vec3 red_deep : source_color = vec3(0.20, 0.015, 0.028);
-uniform vec3 red_mid : source_color = vec3(0.46, 0.045, 0.075);
-uniform vec3 red_hot : source_color = vec3(0.76, 0.12, 0.16);
+uniform vec3 red_deep : source_color = vec3(0.22, 0.014, 0.036);
+uniform vec3 red_mid : source_color = vec3(0.52, 0.052, 0.105);
+uniform vec3 red_hot : source_color = vec3(0.82, 0.16, 0.23);
 uniform float journey_phase = 0.0;
 uniform float motion_clock = 0.0;
 
@@ -593,15 +621,19 @@ void vertex() {
 }
 
 void fragment() {
-    float fibers = sin(UV.x * 72.0 + sin(UV.y * 14.0) * 4.0 + motion_clock * 0.22) * 0.5 + 0.5;
+    float broad_folds = sin(UV.y * 10.0 + sin(UV.x * 7.0) * 3.0 + motion_clock * 0.06) * 0.5 + 0.5;
+    float fibers = sin(UV.x * 92.0 + sin(UV.y * 18.0) * 7.0 + motion_clock * 0.22) * 0.5 + 0.5;
+    float micro_fibers = sin(UV.x * 210.0 + UV.y * 33.0) * 0.5 + 0.5;
     float flow = sin(UV.y * 34.0 - motion_clock * 0.8 + UV.x * 9.0) * 0.5 + 0.5;
     float zone = sin(UV.y * 11.0 + motion_clock * 0.035) * 0.5 + 0.5;
-    vec3 zone_color = mix(red_mid, red_hot, smoothstep(0.58, 0.96, zone));
-    vec3 color = mix(red_deep, zone_color, 0.48 + fibers * 0.24);
-    color += red_hot * pow(flow, 7.0) * 0.13;
+    vec3 zone_color = mix(red_mid, red_hot, smoothstep(0.40, 0.92, zone));
+    vec3 color = mix(red_deep, zone_color, 0.42 + broad_folds * 0.30);
+    color += red_hot * fibers * 0.16;
+    color += red_hot * micro_fibers * 0.035;
+    color += red_hot * pow(flow, 7.0) * 0.16;
     ALBEDO = color;
-    ROUGHNESS = 0.62 - flow * 0.12;
-    EMISSION = color * (0.045 + flow * 0.035);
+    ROUGHNESS = 0.66 - flow * 0.18;
+    EMISSION = color * (0.075 + flow * 0.055);
 }
 """
 	var material := ShaderMaterial.new()
@@ -623,13 +655,13 @@ void vertex() {
 void fragment() {
     float current = sin(UV.x * 42.0 - motion_clock * 2.4) * 0.5 + 0.5;
     float zone = sin(UV.x * 4.2) * 0.5 + 0.5;
-    vec3 salmon_a = vec3(0.70, 0.34, 0.40);
-    vec3 salmon_b = vec3(0.96, 0.62, 0.58);
-    vec3 color = mix(salmon_a, salmon_b, zone * 0.38 + current * 0.12);
+    vec3 salmon_a = vec3(0.78, 0.30, 0.34);
+    vec3 salmon_b = vec3(1.00, 0.70, 0.60);
+    vec3 color = mix(salmon_a, salmon_b, zone * 0.46 + current * 0.16);
     ALBEDO = color;
-    ROUGHNESS = 0.54;
-    EMISSION = color * (0.025 + current * 0.025);
-    ALPHA = 0.68;
+    ROUGHNESS = 0.48;
+    EMISSION = color * (0.045 + current * 0.04);
+    ALPHA = 0.60;
 }
 """
 	var material := ShaderMaterial.new()
@@ -793,7 +825,7 @@ func _update_world(delta: float) -> void:
 
 	var camera_position: Vector3 = player_position - frame.tangent * 10.0 + frame.up * 3.8
 	camera.global_position = camera_position
-	camera.look_at(player_position + frame.tangent * 12.0 + frame.up * 0.55, frame.up)
+	camera.look_at(player_position + frame.tangent * 12.0 + frame.up * 0.85, frame.up)
 
 	var run_phase := elapsed_run_time * 7.0
 	if player_parts.has("body"):
