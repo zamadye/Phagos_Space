@@ -7,7 +7,7 @@ Calibration: `F3` resets/locks the canonical start zone before the `F2` overlay 
 
 ## Verdict
 
-**Visual acceptance belum lulus.** Runtime gameplay, world-space movement, Web export, Pokemon player import, blood-flow layer, finish, dan retry sudah bekerja. Namun current arena belum cukup dekat dengan reference image untuk mengklaim visual match.
+**Visual acceptance belum lulus.** Runtime gameplay, world-space movement, Web export, Pokemon player import, blood-flow layer, finish, dan retry sudah bekerja. Iterasi actor pass juga sudah menambahkan wall-aligned blue clusters, depth-aware yellow particles, transparent amoeba loops, smaller red-cell foreground props, dan spiky hazard landmarks. Namun current arena belum cukup dekat dengan reference image untuk mengklaim visual match.
 
 Reference harus dipakai sebagai acceptance untuk **composition dan density**, bukan hanya sebagai acuan warna merah.
 

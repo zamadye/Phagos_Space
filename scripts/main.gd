@@ -408,6 +408,7 @@ func _build_biological_field() -> void:
 		var cluster_scale := 0.72 + fmod(float(index), 5.0) * 0.15
 		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.42, 0.56, 1.0) * cluster_scale, float(index) * 1.31, 0.75, 0.12, 0.08)
 		actor.drift_axis = frame.tangent
+		actor.align_to_surface(normal, frame.tangent)
 		actors_root.add_child(actor)
 
 	for index in 68:
@@ -416,8 +417,17 @@ func _build_biological_field() -> void:
 		var side := -1.0 if index % 2 == 0 else 1.0
 		var offset := sin(float(index) * 2.14) * 1.8
 		var actor := _actor_with_mesh("GoldenParticle_%02d" % index, _sphere_mesh(), yellow_material)
-		actor.configure(frame.position + frame.right * (offset + side * 2.0) + frame.up * (1.3 + fmod(float(index) * 0.81, 4.5)), Vector3.ONE * (0.12 + fmod(float(index), 3.0) * 0.035), float(index) * 0.73, 0.6 + fmod(float(index), 4.0) * 0.17, 0.3, 0.15)
-		actor.drift_axis = Vector3.UP
+		var particle_position: Vector3
+		if index < 48:
+			var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+			var wall_angle := fmod(float(index) * 2.31 + 0.4, TAU)
+			var wall_normal: Vector3 = (frame.right * cos(wall_angle) + frame.up * sin(wall_angle)).normalized()
+			particle_position = shell_center + wall_normal * (TUNNEL_RADIUS - 0.72)
+			actor.drift_axis = frame.tangent
+		else:
+			particle_position = frame.position + frame.right * (offset + side * 2.0) + frame.up * (1.3 + fmod(float(index) * 0.81, 4.5))
+			actor.drift_axis = Vector3.UP
+		actor.configure(particle_position, Vector3.ONE * (0.12 + fmod(float(index), 3.0) * 0.035), float(index) * 0.73, 0.6 + fmod(float(index), 4.0) * 0.17, 0.3, 0.15)
 		actors_root.add_child(actor)
 
 	for index in 34:
@@ -429,7 +439,7 @@ func _build_biological_field() -> void:
 		if index % 3 == 0:
 			var siderocyte: Node3D = SiderocyteScene.instantiate()
 			siderocyte.name = "SiderocyteGLBVisual"
-			siderocyte.scale = Vector3.ONE * 0.15
+			siderocyte.scale = Vector3.ONE * 0.10
 			actor.add_child(siderocyte)
 		else:
 			var visual := MeshInstance3D.new()
@@ -446,7 +456,8 @@ func _build_biological_field() -> void:
 		var frame := _path_frame(minf(distance, path_length - 5.0))
 		var offset := sin(float(index) * 2.7) * 1.6
 		var virus := _make_virus("Pathogen_%02d" % index, virus_material, dark_material)
-		virus.configure(frame.position + frame.right * offset + frame.up * 0.9, Vector3.ONE * (0.72 + fmod(float(index), 3.0) * 0.1), float(index) * 1.22, 1.2, 0.16, 0.34)
+		var landmark_scale := 1.05 if index % 4 == 0 else 0.68 + fmod(float(index), 3.0) * 0.08
+		virus.configure(frame.position + frame.right * offset + frame.up * 0.9, Vector3.ONE * landmark_scale, float(index) * 1.22, 1.2, 0.16, 0.34)
 		actors_root.add_child(virus)
 
 	for index in 8:
@@ -497,6 +508,18 @@ func _build_hazards() -> void:
 		core.scale = Vector3.ONE * 0.22
 		core.material_override = core_material
 		area.add_child(core)
+		var spike_material := _material(Color("5b1021"), Color("c3304a"), 0.38)
+		var spike_mesh := BoxMesh.new()
+		spike_mesh.size = Vector3(0.12, 0.12, 0.52)
+		for spike_index in 8:
+			var spike := MeshInstance3D.new()
+			spike.name = "HazardSpike_%02d" % spike_index
+			spike.mesh = spike_mesh
+			spike.material_override = spike_material
+			var spike_angle := TAU * float(spike_index) / 8.0
+			spike.position = Vector3(cos(spike_angle) * 0.52, sin(spike_angle) * 0.52, 0.0)
+			spike.rotation_degrees = Vector3(0.0, 0.0, -rad_to_deg(spike_angle))
+			area.add_child(spike)
 		hazard_root.add_child(area)
 		hazards.append({"distance": float(data.distance), "lane": float(data.lane), "phase": float(data.phase), "node": area})
 
@@ -577,6 +600,20 @@ func _make_vesicle(actor_name: String, membrane_material: Material, dot_material
 	body.material_override = membrane_material
 	body.scale = Vector3(1.30, 0.72, 1.0)
 	vesicle.add_child(body)
+	var loop_mesh := TorusMesh.new()
+	loop_mesh.inner_radius = 0.34
+	loop_mesh.outer_radius = 0.08
+	loop_mesh.rings = 16
+	loop_mesh.ring_segments = 8
+	for index in 2:
+		var loop := MeshInstance3D.new()
+		loop.name = "VesicleMembraneLoop_%02d" % index
+		loop.mesh = loop_mesh
+		loop.material_override = membrane_material
+		loop.position = Vector3((float(index) - 0.5) * 0.72, 0.12 + float(index) * 0.12, 0.12)
+		loop.rotation_degrees = Vector3(0.0, 18.0 + float(index) * 34.0, 12.0 - float(index) * 24.0)
+		loop.scale = Vector3(1.0, 0.72, 1.0)
+		vesicle.add_child(loop)
 	for index in 5:
 		var dot := MeshInstance3D.new()
 		dot.name = "VesicleDot_%02d" % index

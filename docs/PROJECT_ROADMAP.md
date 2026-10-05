@@ -245,6 +245,11 @@ ArenaSegment
 - [ ] `BiomeProfile` untuk material, palette, prop mix, lighting, animation rate.
 - [ ] Crossfade texture/material antar-segment dengan transition area.
 - [x] Seed deterministic untuk screenshot regression.
+- [x] Blue membrane actor menempel ke surface normal dinding dan memakai cluster/lobe mesh.
+- [x] Yellow particle placement terbagi antara dinding dan depth volume.
+- [x] Amoeba/vesicle memiliki membrane transparency, internal dots, dan loop/tentacle landmark.
+- [x] Foreground red blood cell scale dikontrol agar tidak mendominasi frame.
+- [x] Pathogen landmark memiliki spike geometry di area route/hazard.
 - [ ] Route graph untuk segment lurus, S, belok kiri, belok kanan, dan transition yang terbaca.
 - [ ] Branch/junction 3D dengan pilihan kiri/kanan, collision rail, dan route state deterministic.
 - [ ] Jalur idle ketika player berhenti; route geometry dan camera hanya maju ketika player benar-benar berjalan.
