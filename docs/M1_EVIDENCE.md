@@ -3,7 +3,7 @@
 Tanggal validasi: **2026-10-06**  
 Branch: `arena/01a107da-phagos-space`
 
-M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, root-server contract, browser WebGL boot, debug reference overlay, Pokemon player GLB, authored blood-flow MultiMesh, wall-event uniforms, dan satu sesi browser start → active → hazard → finish → retry. Reference visual gate tetap belum lulus; screenshot overlay terbaru dipakai untuk iterasi berikutnya.
+M1 masih **IN PROGRESS**. Evidence di bawah membuktikan runtime, export, root-server contract, browser WebGL boot, debug reference overlay, Pokemon player GLB, authored blood-flow MultiMesh, GPU ambient activity, wall-event uniforms, dan satu sesi browser start → active → hazard → finish → retry. Reference visual gate tetap belum lulus; screenshot overlay terbaru dipakai untuk iterasi berikutnya.
 
 ## Reproducible commands
 
@@ -110,6 +110,14 @@ M1 blood multimesh: red_instances=66; purple_instances=16; actors=82
 ```
 
 Screenshot evidence: `evidence/m1-assets-active.png` and `evidence/m1-web-smoke.png`. The runtime bloodstream now uses two `MultiMeshInstance3D` nodes with the authored `siderocyte.glb` mesh as the primary source; procedural `SphereMesh` is only the missing-asset fallback. Distance progression, Curve3D frame placement, lateral wave, and per-instance rotation remain runtime-controlled.
+
+GPU ambient activity check:
+
+```text
+M1 organic activity: blood_emitters=5; organism_emitters=5; mote_emitters=5; gpu_particles=true
+```
+
+`OrganicActivityManager` owns five route-aligned blood-flow emitters, five authored pathogen-organism emitters, five golden-mote emitters, and one emergence burst. Each emitter is a `GPUParticles3D`; the blood and organism draw passes use imported authored meshes. Wall emergence calls the manager with the strongest socket event so the burst follows the same scripted event as the wall bulge.
 
 ## Route graph and branch evidence
 

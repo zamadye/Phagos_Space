@@ -6,6 +6,7 @@ extends Node3D
 ## wrapper layer; source GLBs are not unpacked, re-meshed, or re-exported.
 
 const BioActorScript = preload("res://scripts/bio_actor.gd")
+const OrganicActivityManagerScript = preload("res://scripts/organic_activity_manager.gd")
 const SiderocyteScene = preload("res://assets/siderocyte.glb")
 const PokemonPackScene = preload("res://low_poly_animated_pokemon_cartoon_character_pack.glb")
 const RepositoryEnemyScene = preload("res://creaturesenemiesreo.glb")
@@ -46,6 +47,7 @@ var track_material: ShaderMaterial
 var rail_material: StandardMaterial3D
 var player_parts: Dictionary = {}
 var pokemon_visual: Node3D
+var organic_activity_manager: OrganicActivityManager
 
 var hud_layer: CanvasLayer
 var hud_label: Label
@@ -698,6 +700,13 @@ func _build_biological_field() -> void:
 	vesicle_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	vesicle_material.albedo_color.a = 0.58
 	var dark_material := _material(Color("36101d"), Color("120208"), 0.05)
+	var authored_cell_mesh: Mesh = _mesh_from_scene(SiderocyteScene)
+	var pathogen_scene := load("res://assets/pathogen_emergence.glb") as PackedScene
+	var authored_organism_mesh: Mesh = _mesh_from_scene(pathogen_scene)
+	organic_activity_manager = OrganicActivityManagerScript.new()
+	organic_activity_manager.name = "OrganicActivityManager"
+	add_child(organic_activity_manager)
+	organic_activity_manager.configure(path_curve, path_length, authored_cell_mesh, authored_organism_mesh, red_material, virus_material, yellow_material)
 
 	for index in 26:
 		var distance := 9.0 + float(index) * 10.3
@@ -710,25 +719,6 @@ func _build_biological_field() -> void:
 		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.42, 0.56, 1.0) * cluster_scale, float(index) * 1.31, 0.75, 0.12, 0.08)
 		actor.drift_axis = frame.tangent
 		actor.align_to_surface(normal, frame.tangent)
-		actors_root.add_child(actor)
-
-	for index in 68:
-		var distance := 6.0 + float(index) * 4.35
-		var frame := _path_frame(minf(distance, path_length - 4.0))
-		var side := -1.0 if index % 2 == 0 else 1.0
-		var offset := sin(float(index) * 2.14) * 1.8
-		var actor := _actor_with_mesh("GoldenParticle_%02d" % index, _sphere_mesh(), yellow_material)
-		var particle_position: Vector3
-		if index < 48:
-			var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
-			var wall_angle := fmod(float(index) * 2.31 + 0.4, TAU)
-			var wall_normal: Vector3 = (frame.right * cos(wall_angle) + frame.up * sin(wall_angle)).normalized()
-			particle_position = shell_center + wall_normal * (TUNNEL_RADIUS - 0.72)
-			actor.drift_axis = frame.tangent
-		else:
-			particle_position = frame.position + frame.right * (offset + side * 2.0) + frame.up * (1.3 + fmod(float(index) * 0.81, 4.5))
-			actor.drift_axis = Vector3.UP
-		actor.configure(particle_position, Vector3.ONE * (0.12 + fmod(float(index), 3.0) * 0.035), float(index) * 0.73, 0.6 + fmod(float(index), 4.0) * 0.17, 0.3, 0.15)
 		actors_root.add_child(actor)
 
 	for index in 34:
@@ -1368,6 +1358,10 @@ func _update_world(delta: float) -> void:
 		authored_wall_material.set_shader_parameter("event_world_position", strongest_wall_event_position)
 		authored_wall_material.set_shader_parameter("event_strength", strongest_wall_event_strength)
 		authored_wall_material.set_shader_parameter("event_radius", 3.4)
+	if is_instance_valid(organic_activity_manager):
+		organic_activity_manager.set_activity_clock(arena_motion_clock)
+		if strongest_wall_event_strength > 0.02:
+			organic_activity_manager.set_emergence_event(strongest_wall_event_position, strongest_wall_event_strength)
 	if is_instance_valid(track_material):
 		track_material.set_shader_parameter("journey_phase", player_distance / 55.0)
 		track_material.set_shader_parameter("motion_clock", arena_motion_clock)
