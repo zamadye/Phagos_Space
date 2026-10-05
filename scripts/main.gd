@@ -749,6 +749,8 @@ func _build_hazards() -> void:
 	add_child(hazard_root)
 	var hazard_material := _material(Color("ef465b"), Color("ff193f"), 0.9)
 	var core_material := _material(Color("ffd36b"), Color("ff9e38"), 1.25)
+	var socket_material := _material(Color("d73568"), Color("ff5a84"), 1.15)
+	var pathogen_scene := load("res://assets/pathogen_emergence.glb") as PackedScene
 	var hazard_data := [
 		{"distance": 34.0, "lane": -1.25, "phase": 0.3, "spawn_mode": "road"},
 		{"distance": 72.0, "lane": 0.0, "phase": 1.7, "spawn_mode": "wall_left"},
@@ -760,6 +762,18 @@ func _build_hazards() -> void:
 	for index in hazard_data.size():
 		var data: Dictionary = hazard_data[index]
 		var frame := _path_frame(float(data.distance))
+		var wall_socket: MeshInstance3D = null
+		if str(data.spawn_mode) != "road":
+			wall_socket = MeshInstance3D.new()
+			wall_socket.name = "WallEmergenceSocket_%02d" % index
+			var socket_mesh := TorusMesh.new()
+			socket_mesh.inner_radius = 0.62
+			socket_mesh.outer_radius = 0.10
+			socket_mesh.rings = 18
+			socket_mesh.ring_segments = 8
+			wall_socket.mesh = socket_mesh
+			wall_socket.material_override = socket_material
+			add_child(wall_socket)
 		var area := Area3D.new()
 		area.name = "HazardCollision_%02d" % index
 		area.position = frame.position + frame.right * float(data.lane) + frame.up * 0.78
@@ -770,7 +784,6 @@ func _build_hazards() -> void:
 		shape.radius = 0.78
 		collision.shape = shape
 		area.add_child(collision)
-		var pathogen_scene := load("res://assets/pathogen_emergence.glb") as PackedScene
 		if pathogen_scene != null:
 			var pathogen_visual := pathogen_scene.instantiate()
 			pathogen_visual.name = "BlenderPathogenEmergence"
@@ -808,7 +821,7 @@ func _build_hazards() -> void:
 				spike.rotation_degrees = Vector3(0.0, 0.0, -rad_to_deg(spike_angle))
 				area.add_child(spike)
 		hazard_root.add_child(area)
-		hazards.append({"distance": float(data.distance), "lane": float(data.lane), "phase": float(data.phase), "spawn_mode": str(data.spawn_mode), "node": area})
+		hazards.append({"distance": float(data.distance), "lane": float(data.lane), "phase": float(data.phase), "spawn_mode": str(data.spawn_mode), "socket": wall_socket, "node": area})
 
 func _check_hazards() -> void:
 	if hazard_cooldown > 0.0:
@@ -1213,6 +1226,9 @@ func _update_world(delta: float) -> void:
 		var spawn_mode: String = hazard.get("spawn_mode", "road")
 		if spawn_mode == "road":
 			hazard_node.position = road_position
+			var road_socket_value: Variant = hazard.get("socket")
+			if road_socket_value is Node3D:
+				(road_socket_value as Node3D).visible = false
 		else:
 			var wall_side := -1.0 if spawn_mode == "wall_left" else 1.0
 			# Negative right is the left wall; keep the socket selection visually
@@ -1220,6 +1236,14 @@ func _update_world(delta: float) -> void:
 			var wall_angle := PI - 0.58 if wall_side < 0.0 else 0.58
 			var wall_normal: Vector3 = (hazard_frame.right * cos(wall_angle) + hazard_frame.up * sin(wall_angle)).normalized()
 			var wall_position: Vector3 = hazard_frame.position + hazard_frame.up * TUNNEL_CENTER_HEIGHT + wall_normal * (TUNNEL_RADIUS - 1.35)
+			var socket_value: Variant = hazard.get("socket")
+			if socket_value is Node3D:
+				var socket_node := socket_value as Node3D
+				socket_node.visible = true
+				var socket_side: Vector3 = wall_normal.cross(hazard_frame.tangent).normalized()
+				socket_node.position = wall_position
+				socket_node.basis = Basis(hazard_frame.tangent, socket_side, wall_normal)
+				socket_node.scale = Vector3.ONE * (0.82 + sin(elapsed_run_time * 2.4 + float(hazard.phase)) * 0.10)
 			var emergence_cycle := fmod(elapsed_run_time + float(hazard.phase), 6.0)
 			var emergence := 1.0
 			if emergence_cycle < 1.2:

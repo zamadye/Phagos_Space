@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 7,497,200 bytes |
+| `index.pck` | 7,497,808 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
@@ -139,7 +139,7 @@ The wall animation is a keyed membrane shape deformation loop; its material has 
 road, wall_left, road, wall_right, wall_left, road
 ```
 
-Wall-origin hazards interpolate from a tunnel-wall socket to the lane while retaining their collision wrapper and Blender-authored emergence visual.
+Wall-origin hazards interpolate from a tunnel-wall socket to the lane while retaining their collision wrapper and Blender-authored emergence visual. Three explicit `WallEmergenceSocket` nodes are created for the two left-wall and one right-wall spawn events; their side selection is validated against the route frame.
 
 ## Full M1 debug QA sequence
 
