@@ -143,8 +143,8 @@ Ini adalah keputusan desain sementara karena mekanik tidak terlihat di gambar. J
 
 | Asset | Temuan | Peran yang aman |
 |---|---|---|
-| `creaturesenemiesreo.glb` | 5 mesh, 3 material, **0 animation**. Metadata glTF menyebut sumber Sketchfab dan lisensi **CC-BY-4.0**. | Kandidat patogen/creature. Tambahkan animasi procedural; attribution wajib di credits jika dipakai. |
-| `low_poly_animated_pokemon_cartoon_character_pack.glb` | 61 mesh, 59 material, 20 skin, 1 animation dengan banyak channel. | Kandidat base karakter/placeholder animasi. Wajib diuji karena visual pack tidak otomatis sama dengan avatar pada foto. Jangan jadikan penentu desain sebelum screenshot cocok. |
+| `creaturesenemiesreo.glb` | 5 mesh, 3 material, **0 animation**. Metadata glTF menyebut sumber Sketchfab dan lisensi **CC-BY-4.0**. | Enemy/creature biologis. Visual GLB dipertahankan; tambahkan behavior, skill, collision, dan procedural motion di layer gameplay. Attribution wajib di credits. |
+| `low_poly_animated_pokemon_cartoon_character_pack.glb` | 61 mesh, 59 material, 20 skin, 1 animation dengan banyak channel. | Player character utama M2. Bentuk unik dan visual pack dipertahankan utuh; animation/state/skill controller ditambahkan tanpa membongkar GLB. |
 | `siderocyte.zip` → `siderocyte.glb` | 1 mesh, 2 material, alpha blend pada permukaan dan material granule, **0 animation**. | Kandidat sel darah/prop organik. Tambahkan float/spin/wobble. |
 | `lynphocyte.zip` → `Lynphocyte.fbx` | File FBX memiliki `Take 001`, `AnimationStack`, `AnimationLayer`. | Kandidat sel imun/karakter. Perlu validasi import FBX atau konversi ke GLB sebelum dipakai di Web. |
 | `white-blood-cell-development-metamyelocyte.zip` | OBJ `metamyelocyte.obj` + texture `open-chromatin-tex4.jpeg` ungu. | Prop/cell background. OBJ tidak beranimasi; gunakan shader/rig ringan. |
@@ -156,8 +156,8 @@ Ini adalah keputusan desain sementara karena mekanik tidak terlihat di gambar. J
 ### Risiko asset penting
 
 - Tidak ada asset yang secara eksplisit merupakan mesh lumen/pembuluh dan jalur S sesuai foto. Dinding dan jalur harus dibuat sebagai geometry/material procedural agar komposisi dapat dikontrol.
-- Banyak model biologis yang tersedia tidak memiliki animation clip. Itu bukan alasan membiarkannya diam: animasi procedural wajib ditambahkan.
-- `Lynphocyte.fbx` perlu diuji pada Godot 4.6.2; target pipeline akhir sebaiknya GLB supaya import Web deterministik.
+- Banyak model biologis yang tersedia tidak memiliki animation clip. Itu bukan alasan membiarkannya diam: motion/skill layer procedural wajib ditambahkan pada wrapper, tanpa mengubah mesh GLB.
+- `Lynphocyte.fbx` perlu diuji pada Godot 4.6.2; bila dipakai, import wrapper harus mempertahankan bentuk source dan tidak melakukan re-mesh.
 - File `creaturesenemiesreo.glb` menyimpan attribution/licensing metadata; credits harus disertakan bila dipakai.
 
 ## 7. Arsitektur scene yang akan dibuat pada fase coding
@@ -357,11 +357,12 @@ Semua setup dapat diulang dengan:
 1. **Reference lock** — set viewport 1024², buat calibration scene dan kamera, lalu cocokkan avatar/rails/vanishing point.
 2. **Greybox organik** — buat dinding tunnel dan jalur S; belum ada gameplay, hanya evaluasi screenshot.
 3. **Living pass** — masukkan shader aliran, pulse, GPUParticles, sel biru/kuning, darah, vesikel, dan virus; semua diberi phase/seed.
-4. **Player pass** — pilih asset yang paling dekat dengan avatar; fallback ke model sederhana hanya bila tetap cocok dengan siluet foto.
-5. **Gameplay pass** — implement lane/follow, hazard, collision, dan objective setelah proposal gameplay dikonfirmasi.
-6. **Lighting/material pass** — cocokkan red/blue/yellow contrast, translucency, fog, dan fake bloom yang aman untuk Web.
-7. **Web validation** — export debug dengan bundle non-threads, serve pada `0.0.0.0`, capture screenshot via Sparticuz Chromium, lalu compare dengan reference.
-8. **Release lock** — matikan reference overlay, export release, jalankan capture smoke test dan cek performa.
+4. **Player pass** — import `low_poly_animated_pokemon_cartoon_character_pack.glb` sebagai player character intact; jangan bongkar atau ubah bentuk GLB. Controller movement, skills, hit reaction, dan collision ditambahkan sebagai layer gameplay.
+5. **Enemy/boss pass** — gunakan GLB biologis yang tersedia untuk virus/creature dan boss; pertahankan mesh, material, skeleton, dan rig asset, lalu tambahkan skill/AI/VFX di luar asset.
+6. **Gameplay pass** — implement lane/follow, hazard, collision, dan objective setelah proposal gameplay dikonfirmasi.
+7. **Lighting/material pass** — cocokkan red/blue/yellow contrast, translucency, fog, dan fake bloom yang aman untuk Web.
+8. **Web validation** — export debug dengan bundle non-threads, serve pada `0.0.0.0`, capture screenshot via Sparticuz Chromium, lalu compare dengan reference.
+9. **Release lock** — matikan reference overlay, export release, jalankan capture smoke test dan cek performa.
 
 ## 13. Definition of done untuk klaim “100% mengikuti design”
 

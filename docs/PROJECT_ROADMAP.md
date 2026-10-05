@@ -53,13 +53,23 @@ Milestone berikut adalah checkpoint produk yang harus terlihat dan dapat diuji o
 
 **Target:** karakter dan musuh berada sebagai object 3D hidup di dalam arena menggunakan asset `.glb`, bukan foto statis, billboard, atau sprite 2D.
 
+**Keputusan visual:**
+
+- Player memakai `low_poly_animated_pokemon_cartoon_character_pack.glb`; bentuk uniknya sengaja dipertahankan karena tetap terasa organik/biologis.
+- Enemy/virus memakai GLB biologis yang sudah tersedia di repository.
+- Boss memakai tulang/skeleton/rig yang memang sudah tersedia pada GLB boss/creature.
+- Semua GLB dipakai intact. Tidak boleh dibongkar, re-mesh, retopo, merge material, mengubah skeleton, atau mengubah bentuk visual.
+- Skill, AI, hitbox, collision, VFX, hit reaction, dan status effect ditambahkan sebagai child node/script/controller di luar GLB.
+
 **Wajib selesai:**
 
-- [ ] Asset GLB yang dipilih berhasil di-import Godot dan tampil sebagai `MeshInstance3D`/scene 3D.
-- [ ] Character player memiliki idle, run, hit, dan transition animation yang sesuai dengan silhouette referensi.
-- [ ] Enemy/patogen memiliki idle motion, movement/approach, hit/defeat, dan collision.
-- [ ] Asset tanpa animation clip diberi procedural animation atau animation player tambahan.
-- [ ] Material/transparency/scale asset cocok dengan lighting arena.
+- [ ] Player Pokemon GLB berhasil di-import Godot dan tampil sebagai scene 3D tanpa perubahan bentuk.
+- [ ] Enemy/virus GLB biologis dan boss GLB berhasil di-import tanpa perubahan visual.
+- [ ] Character player memiliki idle, run, hit, dan transition animation yang tersedia dari clip asli atau layer controller tambahan.
+- [ ] Enemy/patogen memiliki idle motion, movement/approach, hit/defeat, collision, dan skill layer.
+- [ ] Boss mempertahankan skeleton/rig asli dan menerima skill layer terpisah.
+- [ ] Asset tanpa animation clip diberi procedural motion atau `AnimationPlayer` tambahan tanpa mengubah mesh.
+- [ ] Material/transparency/scale hanya diset pada integration wrapper jika perlu; mesh dan visual source tidak diedit.
 - [ ] Tidak ada object penting yang diganti dengan foto PNG/JPG.
 - [ ] Asset licensing/attribution dicatat sebelum dipakai dalam release.
 
@@ -245,16 +255,18 @@ Memasukkan character dan enemies sebagai asset 3D `.glb` yang hidup di dalam are
 
 ### Tasks
 
-- [ ] Audit asset GLB yang akan digunakan untuk player dan enemy.
-- [ ] Import scene GLB ke Godot dan cek material, scale, orientation, skeleton, dan animation library.
-- [ ] Pilih player GLB yang paling dekat dengan silhouette avatar pada foto.
-- [ ] Tambahkan idle, run, hit, defeat, dan transition animation player.
-- [ ] Tambahkan enemy/patogen GLB dengan idle, approach, attack/hazard, hit, dan defeat.
-- [ ] Untuk GLB tanpa clip, tambahkan procedural bob, pulse, rotation, atau `AnimationPlayer`.
-- [ ] Buat collision 3D untuk player, enemy, collectible, dan hazard.
-- [ ] Pastikan texture/material GLB tidak menjadi billboard atau foto statis.
-- [ ] Optimasi mesh/material/animation untuk WebGL 2.0 dan actor pooling.
-- [ ] Catat attribution/license setiap asset yang masuk release.
+- [ ] Audit asset GLB yang akan digunakan, tanpa membuka atau mengubah isi visualnya.
+- [ ] Import `low_poly_animated_pokemon_cartoon_character_pack.glb` sebagai player scene intact.
+- [ ] Import GLB biologis sebagai enemy/virus dan import GLB boss dengan skeleton/rig asli.
+- [ ] Cek material, scale, orientation, skeleton, dan animation library hanya sebagai integration validation; jangan re-export dengan bentuk berbeda.
+- [ ] Hubungkan idle, run, hit, defeat, dan transition dari animation clip asli atau wrapper `AnimationPlayer`.
+- [ ] Tambahkan enemy/patogen idle, approach, attack/hazard, hit, dan defeat sebagai behavior layer.
+- [ ] Tambahkan boss skill layer, AI, telegraph, damage window, dan VFX tanpa mengubah GLB.
+- [ ] Untuk GLB tanpa clip, tambahkan procedural bob, pulse, rotation, atau `AnimationPlayer` pada wrapper/parent node.
+- [ ] Buat collision 3D terpisah untuk player, enemy, collectible, dan hazard.
+- [ ] Pastikan texture/material GLB tetap asli dan tidak menjadi billboard atau foto statis.
+- [ ] Optimasi runtime dengan LOD/visibility/pooling hanya pada scene wrapper; jangan merusak source GLB.
+- [ ] Catat attribution/license/hash setiap asset yang masuk release.
 
 ### Exit gate
 

@@ -2,8 +2,10 @@ extends Node3D
 
 ## M1 playable biological arena.
 ## The arena is built from procedural 3D geometry so the player moves through a
-## real world-space tunnel. M2 can replace the placeholder player/enemies with
-## imported GLB scenes without changing the path/camera/streaming contract.
+## real world-space tunnel. M1 uses a procedural gameplay placeholder; M2 imports
+## the intact Pokemon player and biological enemy/boss GLBs as visual children.
+## Skills, collision, and behavior are added by wrapper/controller nodes without
+## unpacking or changing the source GLB geometry, materials, or skeletons.
 
 const BioActorScript = preload("res://scripts/bio_actor.gd")
 const SiderocyteScene = preload("res://assets/siderocyte.glb")

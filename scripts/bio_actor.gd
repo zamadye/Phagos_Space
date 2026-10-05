@@ -2,8 +2,8 @@ class_name BioActor
 extends Node3D
 
 ## Lightweight deterministic motion used by every visible biological actor.
-## M1 uses procedural meshes; M2 can replace the visual child with a GLB scene
-## without changing this motion contract.
+## M1 uses procedural meshes; M2 attaches intact GLB scenes as visual children.
+## Motion, skills, and response live in this wrapper and never edit the GLB source.
 
 var base_position: Vector3
 var base_scale: Vector3 = Vector3.ONE

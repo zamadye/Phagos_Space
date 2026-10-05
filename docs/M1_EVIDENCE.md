@@ -123,4 +123,4 @@ The current software-rendered Chromium needs an extended wait because it can run
 ## Remaining evidence before M1 can be marked DONE
 
 - Use the captured overlay to calibrate vanishing point, foreground rail width, path width, and avatar position against `Gameplay-Arena.jpg`.
-- Decide whether the procedural player is visually sufficient for M1 or should be replaced with a validated GLB in M2.
+- M1 procedural player is accepted as a temporary gameplay placeholder. The fixed M2 direction is to import `low_poly_animated_pokemon_cartoon_character_pack.glb` intact as the player; enemy/virus/boss GLBs are also integrated intact with skills and behavior added externally.
