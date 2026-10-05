@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 7,309,208 bytes |
+| `index.pck` | 7,310,248 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
