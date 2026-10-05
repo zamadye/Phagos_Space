@@ -55,7 +55,7 @@ Milestone berikut adalah checkpoint produk yang harus terlihat dan dapat diuji o
 
 **Keputusan visual:**
 
-- Player memakai `low_poly_animated_pokemon_cartoon_character_pack.glb`; bentuk uniknya sengaja dipertahankan karena tetap terasa organik/biologis.
+- Player memakai `low_poly_animated_pokemon_cartoon_character_pack.glb`; file pack boleh dipilih satu contained character/armature melalui wrapper, tetapi bentuk character yang dipilih sengaja dipertahankan karena tetap terasa organik/biologis.
 - Enemy/virus memakai GLB biologis yang sudah tersedia di repository.
 - Boss memakai tulang/skeleton/rig yang memang sudah tersedia pada GLB boss/creature.
 - Semua GLB dipakai intact. Tidak boleh dibongkar, re-mesh, retopo, merge material, mengubah skeleton, atau mengubah bentuk visual.
@@ -256,7 +256,7 @@ Memasukkan character dan enemies sebagai asset 3D `.glb` yang hidup di dalam are
 ### Tasks
 
 - [ ] Audit asset GLB yang akan digunakan, tanpa membuka atau mengubah isi visualnya.
-- [ ] Import `low_poly_animated_pokemon_cartoon_character_pack.glb` sebagai player scene intact.
+- [ ] Import `low_poly_animated_pokemon_cartoon_character_pack.glb`, pilih satu contained character/armature via wrapper, dan tampilkan character tersebut intact sebagai player scene.
 - [ ] Import GLB biologis sebagai enemy/virus dan import GLB boss dengan skeleton/rig asli.
 - [ ] Cek material, scale, orientation, skeleton, dan animation library hanya sebagai integration validation; jangan re-export dengan bentuk berbeda.
 - [ ] Hubungkan idle, run, hit, defeat, dan transition dari animation clip asli atau wrapper `AnimationPlayer`.

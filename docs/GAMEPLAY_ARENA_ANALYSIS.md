@@ -357,7 +357,7 @@ Semua setup dapat diulang dengan:
 1. **Reference lock** — set viewport 1024², buat calibration scene dan kamera, lalu cocokkan avatar/rails/vanishing point.
 2. **Greybox organik** — buat dinding tunnel dan jalur S; belum ada gameplay, hanya evaluasi screenshot.
 3. **Living pass** — masukkan shader aliran, pulse, GPUParticles, sel biru/kuning, darah, vesikel, dan virus; semua diberi phase/seed.
-4. **Player pass** — import `low_poly_animated_pokemon_cartoon_character_pack.glb` sebagai player character intact; jangan bongkar atau ubah bentuk GLB. Controller movement, skills, hit reaction, dan collision ditambahkan sebagai layer gameplay.
+4. **Player pass** — import `low_poly_animated_pokemon_cartoon_character_pack.glb`, pilih satu contained character/armature lewat wrapper, lalu pakai character itu intact; jangan bongkar atau ubah bentuk GLB. Controller movement, skills, hit reaction, dan collision ditambahkan sebagai layer gameplay.
 5. **Enemy/boss pass** — gunakan GLB biologis yang tersedia untuk virus/creature dan boss; pertahankan mesh, material, skeleton, dan rig asset, lalu tambahkan skill/AI/VFX di luar asset.
 6. **Gameplay pass** — implement lane/follow, hazard, collision, dan objective setelah proposal gameplay dikonfirmasi.
 7. **Lighting/material pass** — cocokkan red/blue/yellow contrast, translucency, fog, dan fake bloom yang aman untuk Web.

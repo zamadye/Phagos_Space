@@ -17,7 +17,7 @@ Asset tidak di-download secara acak. Untuk M1, asset yang paling tepat dari repo
 
 ## Keputusan pemakaian M2
 
-- `low_poly_animated_pokemon_cartoon_character_pack.glb` dipilih sebagai player character. Silhouette uniknya dipertahankan; tidak ada penggantian bentuk menjadi humanoid generik.
+- `low_poly_animated_pokemon_cartoon_character_pack.glb` dipilih sebagai source player character. Karena file ini adalah pack multi-character, integration wrapper akan memilih satu contained character/armature yang sesuai; character yang dipilih tetap di-instantiate utuh dan tidak dipecah, di-remesh, atau di-re-export. Silhouette uniknya dipertahankan; tidak ada penggantian bentuk menjadi humanoid generik.
 - `creaturesenemiesreo.glb` dan GLB biologis lain dipakai untuk enemy/virus/creature sesuai peran gameplay. Boss boleh memakai tulang/skeleton/rig yang memang sudah ada pada asset.
 - Semua GLB diintegrasikan sebagai scene/visual source yang utuh. Tidak ada bongkar mesh, remesh, retopo, merge material, perubahan skeleton, atau re-export yang mengubah visual.
 - Skill, hitbox, collision, AI, attack, hit reaction, VFX, dan status effect ditambahkan sebagai node/script gameplay di luar asset GLB.
