@@ -330,7 +330,7 @@ func _build_tunnel() -> void:
 	add_child(tunnel_cap)
 
 func _build_authored_wall_tiles(scene: PackedScene, curve: Curve3D, curve_length: float, route_name: String, parent: Node3D) -> void:
-	var tile_length := 16.0
+	var tile_length := 10.0
 	# Add one tile behind the route origin so the camera's rear view is also
 	# inside the vessel on the first calibration frame and at branch entry.
 	var tile_count := maxi(2, int(ceil(curve_length / tile_length)) + 1)
@@ -343,8 +343,14 @@ func _build_authored_wall_tiles(scene: PackedScene, curve: Curve3D, curve_length
 		tile.position = frame.position + frame.tangent * (route_distance - frame_distance) + frame.up * TUNNEL_CENTER_HEIGHT
 		# Blender glTF arrives in Godot with its authored Z axis converted to
 		# local Y. The wall tile's local Y is therefore the route tangent.
-		tile.basis = Basis(frame.right, frame.tangent, frame.up)
-		tile.scale = Vector3(1.0, tile_length / 12.0, 1.0)
+		# A small deterministic twist/radial variation breaks the repeated-tile
+		# look while preserving the route frame and breathing clip.
+		var tile_twist := sin(float(index) * 1.73 + float(route_name.length())) * 0.13
+		var tile_right: Vector3 = frame.right.rotated(frame.tangent, tile_twist).normalized()
+		var tile_up: Vector3 = frame.up.rotated(frame.tangent, tile_twist).normalized()
+		tile.basis = Basis(tile_right, frame.tangent, tile_up)
+		var radial_scale := 0.97 + sin(float(index) * 1.19 + 0.4) * 0.035
+		tile.scale = Vector3(radial_scale, tile_length / 12.0, radial_scale)
 		parent.add_child(tile)
 		for authored_mesh in tile.find_children("*", "MeshInstance3D", true, false):
 			var mesh_instance := authored_mesh as MeshInstance3D
@@ -948,9 +954,12 @@ render_mode cull_disabled, unshaded, specular_disabled;
 uniform float breathing_clock = 0.0;
 void fragment() {
     float pulse = sin(breathing_clock * 0.82) * 0.5 + 0.5;
-    vec3 base = vec3(0.48, 0.028, 0.055);
-    ALBEDO = base * (0.90 + pulse * 0.12);
-    EMISSION = base * (0.10 + pulse * 0.035);
+    float static_fold = sin(VERTEX.y * 0.43 + VERTEX.x * 0.19 + sin(VERTEX.z * 0.22) * 2.0) * 0.5 + 0.5;
+    vec3 deep = vec3(0.22, 0.010, 0.028);
+    vec3 warm = vec3(0.43, 0.026, 0.052);
+    vec3 base = mix(deep, warm, 0.34 + static_fold * 0.24);
+    ALBEDO = base * (0.92 + pulse * 0.08);
+    EMISSION = base * (0.055 + pulse * 0.018);
 }
 """
 	var material := ShaderMaterial.new()

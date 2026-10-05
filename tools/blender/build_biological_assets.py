@@ -108,8 +108,8 @@ def build_wall_mesh():
         action = wall.data.shape_keys.animation_data.action
         action.name = "VesselWall_Breathing"
 
-    ridge_mat = material("VesselFoldHighlight", (0.60, 0.035, 0.065, 1.0), roughness=0.64, emission=(0.16, 0.006, 0.012, 1.0))
-    fiber_mat = material("VesselFiber", (0.78, 0.075, 0.10, 1.0), roughness=0.58, emission=(0.22, 0.012, 0.018, 1.0))
+    ridge_mat = material("VesselFoldHighlight", (0.42, 0.018, 0.045, 1.0), roughness=0.68, emission=(0.06, 0.002, 0.006, 1.0))
+    fiber_mat = material("VesselFiber", (0.54, 0.032, 0.065, 1.0), roughness=0.62, emission=(0.08, 0.004, 0.008, 1.0))
 
     # Broad transverse folds provide authored silhouette detail without
     # destroying the modular tile's clean ends.
