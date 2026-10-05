@@ -1,0 +1,46 @@
+class_name BioActor
+extends Node3D
+
+## Lightweight deterministic motion used by every visible biological actor.
+## Authored GLB scenes are attached as visual children; fallback procedural mesh
+## is kept only for missing-source resilience. Motion, skills, and response live
+## in this wrapper and never edit the GLB source.
+
+var base_position: Vector3
+var base_scale: Vector3 = Vector3.ONE
+var phase: float = 0.0
+var bob_speed: float = 1.0
+var bob_height: float = 0.15
+var pulse_amount: float = 0.05
+var spin_speed: float = 0.25
+var drift_axis: Vector3 = Vector3.UP
+var surface_normal: Vector3 = Vector3.ZERO
+var surface_tangent: Vector3 = Vector3.FORWARD
+var elapsed: float = 0.0
+
+func align_to_surface(normal: Vector3, tangent: Vector3) -> void:
+	surface_normal = normal.normalized()
+	surface_tangent = tangent.normalized()
+	var side := surface_tangent.cross(surface_normal).normalized()
+	basis = Basis(side, surface_normal, -surface_tangent)
+
+func configure(start_position: Vector3, actor_scale: Vector3, seed_value: float, speed: float, height: float, spin: float) -> void:
+	base_position = start_position
+	base_scale = actor_scale
+	phase = seed_value
+	bob_speed = speed
+	bob_height = height
+	spin_speed = spin
+	position = base_position
+	scale = base_scale
+
+func _process(delta: float) -> void:
+	elapsed += delta
+	var wave := sin(elapsed * bob_speed + phase)
+	var pulse := 1.0 + sin(elapsed * bob_speed * 1.37 + phase * 0.7) * pulse_amount
+	position = base_position + drift_axis * wave * bob_height
+	scale = base_scale * pulse
+	if surface_normal.length_squared() > 0.001:
+		rotate_object_local(Vector3.UP, delta * spin_speed)
+	else:
+		rotate_y(delta * spin_speed)

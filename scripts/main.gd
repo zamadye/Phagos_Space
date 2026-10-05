@@ -1,0 +1,1358 @@
+extends Node3D
+
+## M1 playable biological arena.
+## The arena uses authored GLB visual sources plus lightweight procedural
+## placement/controllers. Curves, collision, timing, and behavior remain in the
+## wrapper layer; source GLBs are not unpacked, re-meshed, or re-exported.
+
+const BioActorScript = preload("res://scripts/bio_actor.gd")
+const SiderocyteScene = preload("res://assets/siderocyte.glb")
+const PokemonPackScene = preload("res://low_poly_animated_pokemon_cartoon_character_pack.glb")
+const RepositoryEnemyScene = preload("res://creaturesenemiesreo.glb")
+
+const TRACK_WIDTH := 5.8
+const RAIL_RADIUS := 0.34
+const TUNNEL_RADIUS := 15.0
+const TUNNEL_CENTER_HEIGHT := 5.8
+const START_DISTANCE := 2.0
+const RUN_SPEED := 7.0
+const MAX_LANE_OFFSET := 1.85
+
+var path_curve: Curve3D
+var path_length: float = 0.0
+var route_graph: Dictionary = {}
+var branch_curves: Dictionary = {}
+var branch_junction_distance: float = 0.0
+var route_state: Dictionary = {}
+var player_distance: float = START_DISTANCE
+var lane_offset: float = 0.0
+var run_speed: float = RUN_SPEED
+var session_finished: bool = false
+var elapsed_run_time: float = 0.0
+var arena_motion_clock: float = 0.0
+var blood_flow_cells: Array[Dictionary] = []
+var hazard_cooldown: float = 0.0
+var hazard_message_time: float = 0.0
+var slowdown_time: float = 0.0
+var hit_count: int = 0
+var hazards: Array[Dictionary] = []
+
+var actors_root: Node3D
+var player: Node3D
+var camera: Camera3D
+var tunnel_material: ShaderMaterial
+var authored_wall_material: ShaderMaterial
+var track_material: ShaderMaterial
+var rail_material: StandardMaterial3D
+var player_parts: Dictionary = {}
+var pokemon_visual: Node3D
+
+var hud_layer: CanvasLayer
+var hud_label: Label
+var finish_panel: ColorRect
+var finish_label: Label
+var reference_overlay: TextureRect
+var reference_overlay_enabled: bool = false
+var debug_calibration_lock: bool = false
+
+func _ready() -> void:
+	_build_environment()
+	_build_path()
+	_build_route_graph()
+	_build_tunnel()
+	_build_track()
+	_build_biological_field()
+	_build_hazards()
+	_build_player()
+	_build_camera()
+	_build_hud()
+	_update_world(0.0)
+	print("M1 arena ready: path_length=", snappedf(path_length, 0.1), "m; hazards=", hazards.size())
+
+func _process(delta: float) -> void:
+	# Wall breathing is time-based, not travel-based: it continues while the
+	# player is stopped and also remains visible in the calibration frame.
+	arena_motion_clock += delta
+	if debug_calibration_lock:
+		_update_world(0.0)
+		return
+	if not session_finished:
+		elapsed_run_time += delta
+		hazard_cooldown = maxf(0.0, hazard_cooldown - delta)
+		hazard_message_time = maxf(0.0, hazard_message_time - delta)
+		slowdown_time = maxf(0.0, slowdown_time - delta)
+		run_speed = RUN_SPEED if slowdown_time <= 0.0 else RUN_SPEED * 0.42
+		var steer := Input.get_axis("move_left", "move_right")
+		if Input.is_key_pressed(KEY_LEFT) or Input.is_key_pressed(KEY_A):
+			steer -= 1.0
+		if Input.is_key_pressed(KEY_RIGHT) or Input.is_key_pressed(KEY_D):
+			steer += 1.0
+		steer = clampf(steer, -1.0, 1.0)
+		lane_offset = clampf(lane_offset + steer * delta * 4.8, -MAX_LANE_OFFSET, MAX_LANE_OFFSET)
+		player_distance += run_speed * delta
+		_update_route_state()
+		_check_hazards()
+		if player_distance >= path_length - 3.0:
+			player_distance = path_length - 3.0
+			session_finished = true
+			_finish_session()
+	else:
+		if Input.is_action_just_pressed("restart_run") or Input.is_key_pressed(KEY_R):
+			_restart_session()
+	# The blood cells below the glass remain a separate continuous bloodstream
+	# layer; only the wall breathing uses this independent clock.
+	_update_world(delta)
+
+func _build_environment() -> void:
+	var environment := Environment.new()
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color("3e0c18")
+	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	environment.ambient_light_color = Color("bd4f62")
+	environment.ambient_light_energy = 0.80
+	environment.reflected_light_source = Environment.REFLECTION_SOURCE_DISABLED
+	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	environment.fog_enabled = true
+	environment.fog_light_color = Color("78263c")
+	environment.fog_light_energy = 0.58
+	environment.fog_density = 0.010
+	environment.fog_sky_affect = 0.0
+
+	var world := WorldEnvironment.new()
+	world.name = "BiologicalWorldEnvironment"
+	world.environment = environment
+	add_child(world)
+
+	var key_light := DirectionalLight3D.new()
+	key_light.name = "WarmVesselLight"
+	key_light.light_color = Color("ff8390")
+	key_light.light_energy = 0.72
+	key_light.shadow_enabled = false
+	key_light.rotation_degrees = Vector3(-42.0, -25.0, 0.0)
+	add_child(key_light)
+
+	var blue_light := OmniLight3D.new()
+	blue_light.name = "CoolCellLight"
+	blue_light.light_color = Color("4e9fd0")
+	blue_light.light_energy = 2.4
+	blue_light.omni_range = 28.0
+	blue_light.position = Vector3(-5.0, 5.0, -28.0)
+	add_child(blue_light)
+
+	var gold_light := OmniLight3D.new()
+	gold_light.name = "GoldParticleLight"
+	gold_light.light_color = Color("ffd86a")
+	gold_light.light_energy = 2.0
+	gold_light.omni_range = 24.0
+	gold_light.position = Vector3(4.0, 4.0, -62.0)
+	add_child(gold_light)
+
+func _build_path() -> void:
+	path_curve = Curve3D.new()
+	path_curve.bake_interval = 0.45
+	var points := [
+		Vector3(0.0, 0.0, 7.0),
+		Vector3(-0.8, 0.0, -18.0),
+		Vector3(2.8, 0.1, -49.0),
+		Vector3(4.4, 0.0, -76.0),
+		Vector3(-3.4, 0.2, -106.0),
+		Vector3(-4.3, 0.0, -139.0),
+		Vector3(2.4, 0.0, -170.0),
+		Vector3(3.2, 0.2, -202.0),
+		Vector3(-1.0, 0.0, -234.0),
+		Vector3(-3.8, 0.0, -265.0)
+	]
+	for index in points.size():
+		var incoming := Vector3.ZERO
+		var outgoing := Vector3.ZERO
+		if index > 0:
+			incoming = (points[index - 1] - points[index]) * 0.22
+		if index < points.size() - 1:
+			outgoing = (points[index + 1] - points[index]) * 0.22
+		path_curve.add_point(points[index], incoming, outgoing)
+	path_length = path_curve.get_baked_length()
+
+	var path_node := Path3D.new()
+	path_node.name = "BloodstreamPath"
+	path_node.curve = path_curve
+	add_child(path_node)
+
+func _build_route_graph() -> void:
+	branch_junction_distance = path_length * 0.64
+	route_graph = {
+		"main": {
+			"kind": "main_route",
+			"segments": [
+				{"id": "main_straight_intro", "kind": "straight", "start": 0.0, "end": path_length * 0.12},
+				{"id": "main_left_turn", "kind": "left", "start": path_length * 0.12, "end": path_length * 0.28},
+				{"id": "main_s_curve", "kind": "s_curve", "start": path_length * 0.28, "end": path_length * 0.56},
+				{"id": "main_right_turn", "kind": "right", "start": path_length * 0.56, "end": branch_junction_distance},
+				{"id": "main_exit_straight", "kind": "straight", "start": branch_junction_distance, "end": path_length}
+			]
+		},
+		"junction": {
+			"id": "junction_01",
+			"distance": branch_junction_distance,
+			"outgoing": ["main_exit_straight", "branch_left", "branch_right"]
+		}
+	}
+	branch_curves["left"] = _make_branch_curve(-1.0)
+	branch_curves["right"] = _make_branch_curve(1.0)
+	route_state = {
+		"seed": 20261005,
+		"current_route": "main",
+		"selected_branch": "unselected",
+		"junction_entered": false,
+		"branch_collision": false
+	}
+	_build_route_collision()
+
+func _make_branch_curve(side: float) -> Curve3D:
+	var curve := Curve3D.new()
+	curve.bake_interval = 0.45
+	var points: Array[Vector3] = []
+	var distances := [0.0, 18.0, 40.0, 66.0, 96.0]
+	var offsets := [0.0, side * 1.8, side * 4.8, side * 5.4, 0.0]
+	for index in distances.size():
+		var frame := _path_frame(branch_junction_distance + distances[index])
+		points.append(frame.position + frame.right * offsets[index])
+	for index in points.size():
+		var incoming := Vector3.ZERO
+		var outgoing := Vector3.ZERO
+		if index > 0:
+			incoming = (points[index - 1] - points[index]) * 0.22
+		if index < points.size() - 1:
+			outgoing = (points[index + 1] - points[index]) * 0.22
+		curve.add_point(points[index], incoming, outgoing)
+	return curve
+
+func _build_route_collision() -> void:
+	var route_root := Node3D.new()
+	route_root.name = "RouteGraphCollision"
+	add_child(route_root)
+	var junction_frame := _path_frame(branch_junction_distance)
+	var junction := Area3D.new()
+	junction.name = "Junction01Collision"
+	junction.position = junction_frame.position + junction_frame.up * 0.7
+	junction.collision_layer = 4
+	junction.collision_mask = 1
+	var junction_shape := CollisionShape3D.new()
+	var junction_sphere := SphereShape3D.new()
+	junction_sphere.radius = 4.8
+	junction_shape.shape = junction_sphere
+	junction.add_child(junction_shape)
+	junction.set_meta("route_id", "junction_01")
+	route_root.add_child(junction)
+	for side_name in ["left", "right"]:
+		var gate := Area3D.new()
+		gate.name = "BranchGate_" + side_name
+		gate.position = junction_frame.position + junction_frame.right * (-3.2 if side_name == "left" else 3.2) + junction_frame.up * 0.7
+		gate.collision_layer = 8
+		gate.collision_mask = 1
+		var gate_shape := CollisionShape3D.new()
+		var gate_box := BoxShape3D.new()
+		gate_box.size = Vector3(2.8, 1.8, 3.2)
+		gate_shape.shape = gate_box
+		gate.add_child(gate_shape)
+		gate.set_meta("route_id", "branch_" + side_name)
+		route_root.add_child(gate)
+
+func _build_route_branch_geometry() -> void:
+	var branch_root := Node3D.new()
+	branch_root.name = "RouteBranchGeometry"
+	add_child(branch_root)
+	for side_name in ["left", "right"]:
+		var curve: Curve3D = branch_curves[side_name]
+		var curve_length := curve.get_baked_length()
+		var branch_track := MeshInstance3D.new()
+		branch_track.name = "BranchPath_" + side_name
+		branch_track.mesh = _make_ribbon_mesh_for_curve(curve, curve_length, TRACK_WIDTH * 0.72, 0.12)
+		branch_track.material_override = track_material
+		branch_root.add_child(branch_track)
+		var authored_wall_scene := load("res://assets/vessel_wall_breathing.glb") as PackedScene
+		if authored_wall_scene != null:
+			_build_authored_wall_tiles(authored_wall_scene, curve, curve_length, "branch_" + side_name, branch_root)
+		else:
+			var branch_tunnel := MeshInstance3D.new()
+			branch_tunnel.name = "BranchVesselShell_" + side_name
+			branch_tunnel.mesh = _make_tunnel_mesh_for_curve(curve, curve_length, 20, 24)
+			branch_tunnel.material_override = tunnel_material
+			branch_root.add_child(branch_tunnel)
+		for rail_side in [-1, 1]:
+			var branch_rail := MeshInstance3D.new()
+			branch_rail.name = "BranchRail_%s_%d" % [side_name, rail_side]
+			branch_rail.mesh = _make_rail_mesh_for_curve(curve, curve_length, rail_side, RAIL_RADIUS * 0.9, TRACK_WIDTH * 0.72)
+			branch_rail.material_override = rail_material
+			branch_root.add_child(branch_rail)
+
+func _path_frame(distance: float) -> Dictionary:
+	var safe_distance := clampf(distance, 0.0, path_length)
+	var position := path_curve.sample_baked(safe_distance)
+	var look_distance := minf(safe_distance + 0.6, path_length)
+	var tangent := (path_curve.sample_baked(look_distance) - position).normalized()
+	if tangent.length_squared() < 0.001:
+		tangent = Vector3(0.0, 0.0, -1.0)
+	var right := tangent.cross(Vector3.UP).normalized()
+	if right.length_squared() < 0.001:
+		right = Vector3.RIGHT
+	var up := right.cross(tangent).normalized()
+	return {"position": position, "tangent": tangent, "right": right, "up": up}
+
+func _active_route_frame(distance: float) -> Dictionary:
+	if not route_state.is_empty() and bool(route_state.get("junction_entered", false)) and distance >= branch_junction_distance:
+		var branch_name: String = route_state.get("selected_branch", "")
+		var branch_value: Variant = branch_curves.get(branch_name)
+		if branch_value is Curve3D:
+			var branch_curve := branch_value as Curve3D
+			var branch_length := branch_curve.get_baked_length()
+			return _curve_frame(branch_curve, branch_length, distance - branch_junction_distance)
+	return _path_frame(distance)
+
+func _build_tunnel() -> void:
+	tunnel_material = _make_tunnel_material()
+	var tunnel := MeshInstance3D.new()
+	tunnel.name = "ProceduralVesselShellFallback"
+	tunnel.mesh = _make_tunnel_mesh(64, 24)
+	tunnel.material_override = tunnel_material
+	add_child(tunnel)
+	var authored_wall_scene := load("res://assets/vessel_wall_breathing.glb") as PackedScene
+	if authored_wall_scene != null:
+		tunnel.visible = false
+		_build_authored_wall_tiles(authored_wall_scene, path_curve, path_length, "main", self)
+
+	var tunnel_cap := MeshInstance3D.new()
+	tunnel_cap.name = "VesselFarEndCap"
+	tunnel_cap.mesh = _make_tunnel_cap_mesh(24)
+	var cap_material := _material(Color("6b1d36"), Color("b63758"), 0.82)
+	cap_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	tunnel_cap.material_override = cap_material
+	add_child(tunnel_cap)
+
+func _build_authored_wall_tiles(scene: PackedScene, curve: Curve3D, curve_length: float, route_name: String, parent: Node3D) -> void:
+	var tile_length := 10.0
+	# Add one tile behind the route origin so the camera's rear view is also
+	# inside the vessel on the first calibration frame and at branch entry.
+	var tile_count := maxi(2, int(ceil(curve_length / tile_length)) + 1)
+	for index in tile_count:
+		var route_distance := float(index - 1) * tile_length
+		var frame_distance := clampf(route_distance, 0.0, maxf(curve_length - 0.25, 0.0))
+		var frame := _curve_frame(curve, curve_length, frame_distance)
+		var tile := scene.instantiate()
+		tile.name = "AuthoredVesselWall_%s_%02d" % [route_name, index]
+		tile.position = frame.position + frame.tangent * (route_distance - frame_distance) + frame.up * TUNNEL_CENTER_HEIGHT
+		# Blender glTF arrives in Godot with its authored Z axis converted to
+		# local Y. The wall tile's local Y is therefore the route tangent.
+		# A small deterministic twist/radial variation breaks the repeated-tile
+		# look while preserving the route frame and breathing clip.
+		var tile_twist := sin(float(index) * 1.73 + float(route_name.length())) * 0.13
+		var tile_right: Vector3 = frame.right.rotated(frame.tangent, tile_twist).normalized()
+		var tile_up: Vector3 = frame.up.rotated(frame.tangent, tile_twist).normalized()
+		tile.basis = Basis(tile_right, frame.tangent, tile_up)
+		var radial_scale := 0.97 + sin(float(index) * 1.19 + 0.4) * 0.035
+		# Keep a 2m overlap between authored modules so bend transitions never
+		# reveal the dark background through a seam.
+		tile.scale = Vector3(radial_scale, (tile_length + 2.0) / 12.0, radial_scale)
+		parent.add_child(tile)
+		for authored_mesh in tile.find_children("*", "MeshInstance3D", true, false):
+			var mesh_instance := authored_mesh as MeshInstance3D
+			for surface_index in mesh_instance.mesh.get_surface_count():
+				var authored_material := mesh_instance.get_active_material(surface_index) as BaseMaterial3D
+				if authored_material != null:
+					authored_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+			if mesh_instance.name == "VesselWallBreathing":
+				if authored_wall_material == null:
+					authored_wall_material = _make_authored_wall_material()
+				mesh_instance.material_override = authored_wall_material
+		var animation_player := tile.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if animation_player != null and animation_player.has_animation("VesselWall_Breathing"):
+			var breathing_clip := animation_player.get_animation("VesselWall_Breathing")
+			breathing_clip.loop_mode = Animation.LOOP_LINEAR
+			animation_player.play("VesselWall_Breathing")
+			animation_player.seek(fmod(float(index) * 0.42, 6.0), true)
+		print("BLENDER wall tile: route=", route_name, " index=", index, " distance=", snappedf(route_distance, 0.1))
+
+func _make_tunnel_mesh_for_curve(curve: Curve3D, curve_length: float, rings: int, ring_vertices: int) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	for ring in rings + 1:
+		var ratio := float(ring) / float(rings)
+		var frame := _curve_frame(curve, curve_length, curve_length * ratio)
+		var center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+		for slice in ring_vertices:
+			var around := TAU * float(slice) / float(ring_vertices)
+			var normal: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+			vertices.append(center + normal * TUNNEL_RADIUS)
+			normals.append(normal)
+			uvs.append(Vector2(float(slice) / float(ring_vertices), ratio))
+	for ring in rings:
+		for slice in ring_vertices:
+			var current := ring * ring_vertices + slice
+			var next_slice := ring * ring_vertices + ((slice + 1) % ring_vertices)
+			var next_ring := (ring + 1) * ring_vertices + slice
+			var next_both := (ring + 1) * ring_vertices + ((slice + 1) % ring_vertices)
+			indices.append(current)
+			indices.append(next_ring)
+			indices.append(next_slice)
+			indices.append(next_slice)
+			indices.append(next_ring)
+			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _make_tunnel_mesh(rings: int, ring_vertices: int) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	for ring in rings + 1:
+		var ratio := float(ring) / float(rings)
+		var frame := _path_frame(path_length * ratio)
+		var center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+		var right: Vector3 = frame.right
+		var up: Vector3 = frame.up
+		for slice in ring_vertices:
+			var around := TAU * float(slice) / float(ring_vertices)
+			var normal := (right * cos(around) + up * sin(around)).normalized()
+			vertices.append(center + normal * TUNNEL_RADIUS)
+			normals.append(normal)
+			uvs.append(Vector2(float(slice) / float(ring_vertices), ratio))
+	for ring in rings:
+		for slice in ring_vertices:
+			var current := ring * ring_vertices + slice
+			var next_slice := ring * ring_vertices + ((slice + 1) % ring_vertices)
+			var next_ring := (ring + 1) * ring_vertices + slice
+			var next_both := (ring + 1) * ring_vertices + ((slice + 1) % ring_vertices)
+			indices.append(current)
+			indices.append(next_ring)
+			indices.append(next_slice)
+			indices.append(next_slice)
+			indices.append(next_ring)
+			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _make_tunnel_cap_mesh(ring_vertices: int) -> ArrayMesh:
+	var frame := _path_frame(path_length)
+	var center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+	var vertices := PackedVector3Array([center])
+	var normals := PackedVector3Array([-frame.tangent])
+	var uvs := PackedVector2Array([Vector2(0.5, 0.5)])
+	var indices := PackedInt32Array()
+	for slice in ring_vertices:
+		var around := TAU * float(slice) / float(ring_vertices)
+		var radial: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+		vertices.append(center + radial * TUNNEL_RADIUS)
+		normals.append(-frame.tangent)
+		uvs.append(Vector2(0.5 + cos(around) * 0.5, 0.5 + sin(around) * 0.5))
+	for slice in ring_vertices:
+		indices.append(0)
+		indices.append(1 + slice)
+		indices.append(1 + ((slice + 1) % ring_vertices))
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _build_track() -> void:
+	track_material = _make_track_material()
+	rail_material = StandardMaterial3D.new()
+	rail_material.albedo_color = Color("a983bd")
+	rail_material.roughness = 0.38
+	rail_material.metallic = 0.02
+	rail_material.emission_enabled = true
+	rail_material.emission = Color("704b91")
+	rail_material.emission_energy_multiplier = 0.52
+
+	var track := MeshInstance3D.new()
+	track.name = "SalmonPathSurface"
+	track.mesh = _make_ribbon_mesh(TRACK_WIDTH, 0.12)
+	track.material_override = track_material
+	add_child(track)
+	_build_blood_flow_cells()
+
+	for side in [-1, 1]:
+		var rail := MeshInstance3D.new()
+		rail.name = "LavenderRail" + str(side)
+		rail.mesh = _make_rail_mesh(side, RAIL_RADIUS)
+		rail.material_override = rail_material
+		add_child(rail)
+	_build_route_branch_geometry()
+
+func _build_blood_flow_cells() -> void:
+	var flow_root := Node3D.new()
+	flow_root.name = "BloodCellsUnderGlass"
+	add_child(flow_root)
+	var cell_material := _material(Color("b93645"), Color("e84958"), 0.22)
+	var purple_cell_material := _material(Color("a95a92"), Color("d77abd"), 0.18)
+	for material in [cell_material, purple_cell_material]:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		material.albedo_color.a = 0.92
+	for index in 82:
+		var cell := MeshInstance3D.new()
+		cell.name = "FlowingRedCell_%02d" % index
+		cell.mesh = _sphere_mesh()
+		var selected_material: StandardMaterial3D = purple_cell_material if index % 5 == 0 else cell_material
+		cell.material_override = selected_material
+		var size := 0.22 + fmod(float(index), 4.0) * 0.045
+		cell.scale = Vector3(size * 1.45, size * 0.22, size)
+		flow_root.add_child(cell)
+		var distance := fmod(5.0 + float(index) * 8.1, maxf(path_length, 1.0))
+		var lateral := sin(float(index) * 1.91) * (TRACK_WIDTH * 0.38)
+		blood_flow_cells.append({
+			"node": cell,
+			"distance": distance,
+			"lateral": lateral,
+			"speed": 2.1 + fmod(float(index), 5.0) * 0.32,
+			"phase": float(index) * 0.73
+		})
+
+func _update_blood_flow_cells(delta: float) -> void:
+	for cell_data in blood_flow_cells:
+		var cell: Node3D = cell_data.node
+		var distance: float = fmod(float(cell_data.distance) + float(cell_data.speed) * delta, maxf(path_length, 1.0))
+		cell_data.distance = distance
+		var frame := _path_frame(distance)
+		var lateral_wave := sin(elapsed_run_time * 0.8 + float(cell_data.phase)) * 0.06
+		cell.position = frame.position + frame.right * (float(cell_data.lateral) + lateral_wave) + frame.up * 0.105
+		cell.rotation.y += delta * (0.35 + float(cell_data.speed) * 0.1)
+
+func _make_ribbon_mesh(width: float, height: float) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	var steps := maxi(2, int(path_length / 1.25))
+	for step in steps + 1:
+		var ratio := float(step) / float(steps)
+		var frame := _path_frame(path_length * ratio)
+		var center: Vector3 = frame.position + frame.up * height
+		vertices.append(center - frame.right * width * 0.5)
+		vertices.append(center + frame.right * width * 0.5)
+		normals.append(frame.up)
+		normals.append(frame.up)
+		uvs.append(Vector2(ratio * 6.0, 0.0))
+		uvs.append(Vector2(ratio * 6.0, 1.0))
+	for step in steps:
+		var a := step * 2
+		var b := a + 1
+		var c := a + 2
+		var d := a + 3
+		indices.append(a)
+		indices.append(c)
+		indices.append(b)
+		indices.append(b)
+		indices.append(c)
+		indices.append(d)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _make_rail_mesh(side: int, radius: float) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	var steps := maxi(2, int(path_length / 1.25))
+	var ring_vertices := 8
+	for step in steps + 1:
+		var ratio := float(step) / float(steps)
+		var frame := _path_frame(path_length * ratio)
+		var center: Vector3 = frame.position + frame.right * (side * (TRACK_WIDTH * 0.5 + radius * 0.55)) + frame.up * 0.45
+		for slice in ring_vertices:
+			var around := TAU * float(slice) / float(ring_vertices)
+			var normal: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+			vertices.append(center + normal * radius)
+			normals.append(normal)
+			uvs.append(Vector2(ratio * 6.0, float(slice) / float(ring_vertices)))
+	for step in steps:
+		for slice in ring_vertices:
+			var current := step * ring_vertices + slice
+			var next_slice := step * ring_vertices + ((slice + 1) % ring_vertices)
+			var next_ring := (step + 1) * ring_vertices + slice
+			var next_both := (step + 1) * ring_vertices + ((slice + 1) % ring_vertices)
+			indices.append(current)
+			indices.append(next_ring)
+			indices.append(next_slice)
+			indices.append(next_slice)
+			indices.append(next_ring)
+			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _curve_frame(curve: Curve3D, curve_length: float, distance: float) -> Dictionary:
+	var safe_distance := clampf(distance, 0.0, curve_length)
+	var position := curve.sample_baked(safe_distance)
+	var look_distance := minf(safe_distance + 0.6, curve_length)
+	var tangent := (curve.sample_baked(look_distance) - position).normalized()
+	if tangent.length_squared() < 0.001:
+		tangent = Vector3(0.0, 0.0, -1.0)
+	var right := tangent.cross(Vector3.UP).normalized()
+	if right.length_squared() < 0.001:
+		right = Vector3.RIGHT
+	var up := right.cross(tangent).normalized()
+	return {"position": position, "tangent": tangent, "right": right, "up": up}
+
+func _make_ribbon_mesh_for_curve(curve: Curve3D, curve_length: float, width: float, height: float) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	var steps := maxi(2, int(curve_length / 1.25))
+	for step in steps + 1:
+		var ratio := float(step) / float(steps)
+		var frame := _curve_frame(curve, curve_length, curve_length * ratio)
+		var center: Vector3 = frame.position + frame.up * height
+		vertices.append(center - frame.right * width * 0.5)
+		vertices.append(center + frame.right * width * 0.5)
+		normals.append(frame.up)
+		normals.append(frame.up)
+		uvs.append(Vector2(ratio * 6.0, 0.0))
+		uvs.append(Vector2(ratio * 6.0, 1.0))
+	for step in steps:
+		var a := step * 2
+		var b := a + 1
+		var c := a + 2
+		var d := a + 3
+		indices.append(a)
+		indices.append(c)
+		indices.append(b)
+		indices.append(b)
+		indices.append(c)
+		indices.append(d)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _make_rail_mesh_for_curve(curve: Curve3D, curve_length: float, side: int, radius: float, width: float) -> ArrayMesh:
+	var vertices := PackedVector3Array()
+	var normals := PackedVector3Array()
+	var uvs := PackedVector2Array()
+	var indices := PackedInt32Array()
+	var steps := maxi(2, int(curve_length / 1.25))
+	var ring_vertices := 8
+	for step in steps + 1:
+		var ratio := float(step) / float(steps)
+		var frame := _curve_frame(curve, curve_length, curve_length * ratio)
+		var center: Vector3 = frame.position + frame.right * (side * (width * 0.5 + radius * 0.55)) + frame.up * 0.45
+		for slice in ring_vertices:
+			var around := TAU * float(slice) / float(ring_vertices)
+			var normal: Vector3 = (frame.right * cos(around) + frame.up * sin(around)).normalized()
+			vertices.append(center + normal * radius)
+			normals.append(normal)
+			uvs.append(Vector2(ratio * 6.0, float(slice) / float(ring_vertices)))
+	for step in steps:
+		for slice in ring_vertices:
+			var current := step * ring_vertices + slice
+			var next_slice := step * ring_vertices + ((slice + 1) % ring_vertices)
+			var next_ring := (step + 1) * ring_vertices + slice
+			var next_both := (step + 1) * ring_vertices + ((slice + 1) % ring_vertices)
+			indices.append(current)
+			indices.append(next_ring)
+			indices.append(next_slice)
+			indices.append(next_slice)
+			indices.append(next_ring)
+			indices.append(next_both)
+	return _array_mesh(vertices, normals, uvs, indices)
+
+func _array_mesh(vertices: PackedVector3Array, normals: PackedVector3Array, uvs: PackedVector2Array, indices: PackedInt32Array) -> ArrayMesh:
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	arrays[Mesh.ARRAY_TEX_UV] = uvs
+	arrays[Mesh.ARRAY_INDEX] = indices
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	return mesh
+
+func _build_biological_field() -> void:
+	actors_root = Node3D.new()
+	actors_root.name = "LivingBiologicalActors"
+	add_child(actors_root)
+
+	var blue_material := _material(Color("2c78ad"), Color("1e73aa"), 0.95)
+	var yellow_material := _material(Color("f3c64c"), Color("f8ba3c"), 0.88)
+	var red_material := _material(Color("d85e64"), Color("4c101d"), 0.18)
+	var virus_material := _material(Color("9d2939"), Color("3d0711"), 0.24)
+	var vesicle_material := _material(Color("d26b91"), Color("7d1d4d"), 0.3)
+	vesicle_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	vesicle_material.albedo_color.a = 0.58
+	var dark_material := _material(Color("36101d"), Color("120208"), 0.05)
+
+	for index in 26:
+		var distance := 9.0 + float(index) * 10.3
+		var frame := _path_frame(minf(distance, path_length - 5.0))
+		var angle := fmod(float(index) * 1.77 + 0.9, TAU)
+		var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+		var normal: Vector3 = (frame.right * cos(angle) + frame.up * sin(angle)).normalized()
+		var actor := _make_blue_cluster("BlueMembraneCell_%02d" % index, blue_material)
+		var cluster_scale := 0.72 + fmod(float(index), 5.0) * 0.15
+		actor.configure(shell_center + normal * (TUNNEL_RADIUS - 1.1), Vector3(1.42, 0.56, 1.0) * cluster_scale, float(index) * 1.31, 0.75, 0.12, 0.08)
+		actor.drift_axis = frame.tangent
+		actor.align_to_surface(normal, frame.tangent)
+		actors_root.add_child(actor)
+
+	for index in 68:
+		var distance := 6.0 + float(index) * 4.35
+		var frame := _path_frame(minf(distance, path_length - 4.0))
+		var side := -1.0 if index % 2 == 0 else 1.0
+		var offset := sin(float(index) * 2.14) * 1.8
+		var actor := _actor_with_mesh("GoldenParticle_%02d" % index, _sphere_mesh(), yellow_material)
+		var particle_position: Vector3
+		if index < 48:
+			var shell_center: Vector3 = frame.position + frame.up * TUNNEL_CENTER_HEIGHT
+			var wall_angle := fmod(float(index) * 2.31 + 0.4, TAU)
+			var wall_normal: Vector3 = (frame.right * cos(wall_angle) + frame.up * sin(wall_angle)).normalized()
+			particle_position = shell_center + wall_normal * (TUNNEL_RADIUS - 0.72)
+			actor.drift_axis = frame.tangent
+		else:
+			particle_position = frame.position + frame.right * (offset + side * 2.0) + frame.up * (1.3 + fmod(float(index) * 0.81, 4.5))
+			actor.drift_axis = Vector3.UP
+		actor.configure(particle_position, Vector3.ONE * (0.12 + fmod(float(index), 3.0) * 0.035), float(index) * 0.73, 0.6 + fmod(float(index), 4.0) * 0.17, 0.3, 0.15)
+		actors_root.add_child(actor)
+
+	for index in 34:
+		var distance := 14.0 + float(index) * 7.75
+		var frame := _path_frame(minf(distance, path_length - 5.0))
+		var offset := sin(float(index) * 1.8) * 1.8
+		var actor: BioActor = BioActorScript.new()
+		actor.name = "RedBloodCell_%02d" % index
+		var visual_scale := Vector3(0.48 + fmod(float(index), 3.0) * 0.12, 0.16, 0.42)
+		var cell_scene: PackedScene
+		var cell_source_scale := 1.0
+		match index % 4:
+			0:
+				cell_scene = SiderocyteScene
+				cell_source_scale = 0.55
+			1:
+				cell_scene = load("res://assets/lynphocyte.glb") as PackedScene
+				cell_source_scale = 6.0
+			2:
+				cell_scene = load("res://assets/metamyelocyte.glb") as PackedScene
+				cell_source_scale = 0.012
+			3:
+				cell_scene = load("res://assets/myelocyte.glb") as PackedScene
+				cell_source_scale = 0.012
+		if cell_scene != null:
+			var authored_cell := cell_scene.instantiate()
+			authored_cell.name = "RepositoryBloodCellGLB"
+			authored_cell.scale = Vector3.ONE * cell_source_scale
+			actor.add_child(authored_cell)
+			visual_scale = Vector3.ONE
+		else:
+			var visual := MeshInstance3D.new()
+			visual.name = "ProceduralRedCellFallback"
+			visual.mesh = _sphere_mesh()
+			visual.material_override = red_material
+			actor.add_child(visual)
+		actor.configure(frame.position + frame.right * offset + frame.up * 0.7, visual_scale, float(index) * 0.9, 0.9, 0.22, 0.25)
+		actor.drift_axis = frame.tangent
+		actors_root.add_child(actor)
+
+	for index in 13:
+		var distance := 26.0 + float(index) * 18.5
+		var frame := _path_frame(minf(distance, path_length - 5.0))
+		var offset := sin(float(index) * 2.7) * 1.6
+		var virus := _make_virus("Pathogen_%02d" % index, virus_material, dark_material)
+		var landmark_scale := 1.05 if index % 4 == 0 else 0.68 + fmod(float(index), 3.0) * 0.08
+		virus.configure(frame.position + frame.right * offset + frame.up * 0.9, Vector3.ONE * landmark_scale, float(index) * 1.22, 1.2, 0.16, 0.34)
+		actors_root.add_child(virus)
+
+	for index in 8:
+		var distance := 38.0 + float(index) * 25.5
+		var frame := _path_frame(minf(distance, path_length - 6.0))
+		var side := -1.0 if index % 2 == 0 else 1.0
+		var amoeba := _make_vesicle("LivingVesicle_%02d" % index, vesicle_material, yellow_material)
+		amoeba.configure(frame.position + frame.right * (side * 4.7) + frame.up * (2.8 + fmod(float(index), 2.0)), Vector3.ONE * 0.82, float(index) * 2.2, 0.55, 0.28, 0.12)
+		amoeba.drift_axis = frame.tangent
+		actors_root.add_child(amoeba)
+
+func _build_hazards() -> void:
+	var hazard_root := Node3D.new()
+	hazard_root.name = "TrackHazards"
+	add_child(hazard_root)
+	var hazard_material := _material(Color("ef465b"), Color("ff193f"), 0.9)
+	var core_material := _material(Color("ffd36b"), Color("ff9e38"), 1.25)
+	var socket_material := _material(Color("d73568"), Color("ff5a84"), 1.15)
+	var pathogen_scene := load("res://assets/pathogen_emergence.glb") as PackedScene
+	var hazard_data := [
+		{"distance": 34.0, "lane": -1.25, "phase": 0.3, "spawn_mode": "road"},
+		{"distance": 72.0, "lane": 0.0, "phase": 1.7, "spawn_mode": "wall_left"},
+		{"distance": 111.0, "lane": 1.3, "phase": 2.9, "spawn_mode": "road"},
+		{"distance": 154.0, "lane": -0.8, "phase": 4.2, "spawn_mode": "wall_right"},
+		{"distance": 201.0, "lane": 1.15, "phase": 5.4, "spawn_mode": "wall_left"},
+		{"distance": 244.0, "lane": -1.4, "phase": 6.5, "spawn_mode": "road"}
+	]
+	for index in hazard_data.size():
+		var data: Dictionary = hazard_data[index]
+		var frame := _path_frame(float(data.distance))
+		var wall_socket: MeshInstance3D = null
+		if str(data.spawn_mode) != "road":
+			wall_socket = MeshInstance3D.new()
+			wall_socket.name = "WallEmergenceSocket_%02d" % index
+			var socket_mesh := TorusMesh.new()
+			socket_mesh.inner_radius = 0.62
+			socket_mesh.outer_radius = 0.10
+			socket_mesh.rings = 18
+			socket_mesh.ring_segments = 8
+			wall_socket.mesh = socket_mesh
+			wall_socket.material_override = socket_material
+			add_child(wall_socket)
+		var area := Area3D.new()
+		area.name = "HazardCollision_%02d" % index
+		area.position = frame.position + frame.right * float(data.lane) + frame.up * 0.78
+		area.collision_layer = 2
+		area.collision_mask = 1
+		var collision := CollisionShape3D.new()
+		var shape := SphereShape3D.new()
+		shape.radius = 0.78
+		collision.shape = shape
+		area.add_child(collision)
+		var visual_scene: PackedScene = pathogen_scene
+		if str(data.spawn_mode) == "road":
+			visual_scene = RepositoryEnemyScene
+		if visual_scene != null:
+			var authored_visual := visual_scene.instantiate()
+			authored_visual.name = "RepositoryEnemyGLB" if str(data.spawn_mode) == "road" else "BlenderPathogenEmergence"
+			authored_visual.scale = Vector3.ONE * (0.54 if str(data.spawn_mode) == "road" else 0.72)
+			area.add_child(authored_visual)
+			var animation_player := authored_visual.find_child("AnimationPlayer", true, false) as AnimationPlayer
+			if animation_player != null and animation_player.has_animation("Pathogen_EmergeFromWall"):
+				var emergence_clip := animation_player.get_animation("Pathogen_EmergeFromWall")
+				emergence_clip.loop_mode = Animation.LOOP_LINEAR
+				animation_player.play("Pathogen_EmergeFromWall")
+				animation_player.seek(fmod(float(data.phase) * 0.9, 4.0), true)
+		else:
+			var shell := MeshInstance3D.new()
+			shell.name = "HazardShellFallback"
+			shell.mesh = _sphere_mesh()
+			shell.scale = Vector3(0.72, 0.42, 0.72)
+			shell.material_override = hazard_material
+			area.add_child(shell)
+			var core := MeshInstance3D.new()
+			core.name = "HazardCoreFallback"
+			core.mesh = _sphere_mesh()
+			core.scale = Vector3.ONE * 0.22
+			core.material_override = core_material
+			area.add_child(core)
+			var spike_material := _material(Color("5b1021"), Color("c3304a"), 0.38)
+			var spike_mesh := BoxMesh.new()
+			spike_mesh.size = Vector3(0.12, 0.12, 0.52)
+			for spike_index in 8:
+				var spike := MeshInstance3D.new()
+				spike.name = "HazardSpike_%02d" % spike_index
+				spike.mesh = spike_mesh
+				spike.material_override = spike_material
+				var spike_angle := TAU * float(spike_index) / 8.0
+				spike.position = Vector3(cos(spike_angle) * 0.52, sin(spike_angle) * 0.52, 0.0)
+				spike.rotation_degrees = Vector3(0.0, 0.0, -rad_to_deg(spike_angle))
+				area.add_child(spike)
+		hazard_root.add_child(area)
+		hazards.append({"distance": float(data.distance), "lane": float(data.lane), "phase": float(data.phase), "spawn_mode": str(data.spawn_mode), "socket": wall_socket, "node": area})
+
+func _check_hazards() -> void:
+	if hazard_cooldown > 0.0:
+		return
+	for hazard in hazards:
+		var distance_gap := absf(player_distance - float(hazard.distance))
+		var lane_gap := absf(lane_offset - float(hazard.lane))
+		if distance_gap < 1.35 and lane_gap < 0.72:
+			hazard_cooldown = 2.0
+			slowdown_time = 1.25
+			hazard_message_time = 1.5
+			hit_count += 1
+			print("M1 hazard collision: index=", hazards.find(hazard), " hit_count=", hit_count)
+			player_distance = maxf(START_DISTANCE, player_distance - 4.5)
+			lane_offset = clampf(lane_offset - signf(float(hazard.lane)) * 0.35, -MAX_LANE_OFFSET, MAX_LANE_OFFSET)
+			break
+
+func _update_route_state() -> void:
+	if route_state.is_empty():
+		return
+	if not bool(route_state.get("junction_entered", false)):
+		if Input.is_key_pressed(KEY_Q) or Input.is_key_pressed(KEY_LEFT):
+			route_state["requested_branch"] = "left"
+		elif Input.is_key_pressed(KEY_E) or Input.is_key_pressed(KEY_RIGHT):
+			route_state["requested_branch"] = "right"
+		if player_distance >= branch_junction_distance:
+			route_state["junction_entered"] = true
+			route_state["branch_collision"] = true
+			var requested: String = route_state.get("requested_branch", "")
+			var route_seed: int = int(route_state.get("seed", 0))
+			var selected := requested if requested != "" else ("right" if route_seed % 2 == 1 else "left")
+			route_state["selected_branch"] = selected
+			route_state["current_route"] = "branch_" + selected
+			print("M1 route junction: id=junction_01; selected_branch=", selected, "; seed=", route_seed)
+
+func _make_blue_cluster(actor_name: String, material: Material) -> BioActor:
+	var actor: BioActor = BioActorScript.new()
+	actor.name = actor_name
+	var cluster_mesh := _sphere_mesh()
+	var center := MeshInstance3D.new()
+	center.name = "BlueMembraneCore"
+	center.mesh = cluster_mesh
+	center.material_override = material
+	center.scale = Vector3(1.0, 0.48, 0.82)
+	actor.add_child(center)
+	for index in 4:
+		var lobe := MeshInstance3D.new()
+		lobe.name = "BlueMembraneLobe_%02d" % index
+		lobe.mesh = cluster_mesh
+		lobe.material_override = material
+		var angle := TAU * float(index) / 4.0 + 0.35
+		lobe.position = Vector3(cos(angle) * 0.62, sin(float(index) * 1.4) * 0.12, sin(angle) * 0.48)
+		lobe.scale = Vector3(0.52, 0.26, 0.38)
+		actor.add_child(lobe)
+	return actor
+
+func _actor_with_mesh(actor_name: String, mesh: Mesh, material: Material) -> BioActor:
+	var actor: BioActor = BioActorScript.new()
+	actor.name = actor_name
+	var visual := MeshInstance3D.new()
+	visual.name = "Procedural3DVisual"
+	visual.mesh = mesh
+	visual.material_override = material
+	actor.add_child(visual)
+	return actor
+
+func _make_virus(actor_name: String, core_material: Material, spike_material: Material) -> BioActor:
+	var virus: BioActor = BioActorScript.new()
+	virus.name = actor_name
+	var core := MeshInstance3D.new()
+	core.name = "VirusCore3D"
+	core.mesh = _sphere_mesh()
+	core.material_override = core_material
+	virus.add_child(core)
+	var spike_mesh := BoxMesh.new()
+	spike_mesh.size = Vector3(0.18, 0.18, 0.75)
+	for index in 8:
+		var spike := MeshInstance3D.new()
+		spike.name = "Spike_%02d" % index
+		spike.mesh = spike_mesh
+		spike.material_override = spike_material
+		var angle := TAU * float(index) / 8.0
+		spike.position = Vector3(cos(angle) * 0.48, sin(angle) * 0.48, 0.0)
+		spike.rotation_degrees = Vector3(0.0, 0.0, -rad_to_deg(angle))
+		virus.add_child(spike)
+	return virus
+
+func _make_vesicle(actor_name: String, membrane_material: Material, dot_material: Material) -> BioActor:
+	var vesicle: BioActor = BioActorScript.new()
+	vesicle.name = actor_name
+	var body := MeshInstance3D.new()
+	body.name = "VesicleMembrane"
+	body.mesh = _sphere_mesh()
+	body.material_override = membrane_material
+	body.scale = Vector3(1.30, 0.72, 1.0)
+	vesicle.add_child(body)
+	var loop_mesh := TorusMesh.new()
+	loop_mesh.inner_radius = 0.34
+	loop_mesh.outer_radius = 0.08
+	loop_mesh.rings = 16
+	loop_mesh.ring_segments = 8
+	for index in 2:
+		var loop := MeshInstance3D.new()
+		loop.name = "VesicleMembraneLoop_%02d" % index
+		loop.mesh = loop_mesh
+		loop.material_override = membrane_material
+		loop.position = Vector3((float(index) - 0.5) * 0.72, 0.12 + float(index) * 0.12, 0.12)
+		loop.rotation_degrees = Vector3(0.0, 18.0 + float(index) * 34.0, 12.0 - float(index) * 24.0)
+		loop.scale = Vector3(1.0, 0.72, 1.0)
+		vesicle.add_child(loop)
+	for index in 5:
+		var dot := MeshInstance3D.new()
+		dot.name = "VesicleDot_%02d" % index
+		dot.mesh = _sphere_mesh()
+		dot.material_override = dot_material
+		var angle := TAU * float(index) / 5.0
+		dot.position = Vector3(cos(angle) * 0.5, sin(angle * 1.7) * 0.4, sin(angle) * 0.5)
+		dot.scale = Vector3.ONE * 0.09
+		vesicle.add_child(dot)
+	return vesicle
+
+func _sphere_mesh() -> SphereMesh:
+	var sphere := SphereMesh.new()
+	sphere.radius = 1.0
+	sphere.height = 2.0
+	sphere.radial_segments = 16
+	sphere.rings = 8
+	return sphere
+
+func _material(color: Color, emission: Color, emission_energy: float) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 0.48
+	material.metallic = 0.02
+	material.emission_enabled = true
+	material.emission = emission
+	material.emission_energy_multiplier = emission_energy
+	return material
+
+func _make_authored_wall_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode cull_disabled, unshaded, specular_disabled;
+uniform float breathing_clock = 0.0;
+void fragment() {
+    float pulse = sin(breathing_clock * 0.82) * 0.5 + 0.5;
+    float static_fold = sin(VERTEX.y * 0.43 + VERTEX.x * 0.19 + sin(VERTEX.z * 0.22) * 2.0) * 0.5 + 0.5;
+    vec3 deep = vec3(0.22, 0.010, 0.028);
+    vec3 warm = vec3(0.43, 0.026, 0.052);
+    vec3 base = mix(deep, warm, 0.34 + static_fold * 0.24);
+    ALBEDO = base * (0.92 + pulse * 0.08);
+    EMISSION = base * (0.055 + pulse * 0.018);
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+func _make_tunnel_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode cull_disabled, unshaded, specular_disabled;
+
+uniform vec3 red_deep : source_color = vec3(0.22, 0.014, 0.036);
+uniform vec3 red_mid : source_color = vec3(0.52, 0.052, 0.105);
+uniform vec3 red_hot : source_color = vec3(0.82, 0.16, 0.23);
+uniform float journey_phase = 0.0;
+uniform float motion_clock = 0.0;
+
+void vertex() {
+    // The vessel wall breathes in place. No UV or journey-time scrolling is
+    // used here, so folds never read as a wall travelling past the player.
+    float breath = sin(motion_clock * 0.82) * 0.5 + 0.5;
+    float local_ripple = sin(UV.x * 5.0 + UV.y * 3.0) * 0.5 + 0.5;
+    float breathing = 0.018 + breath * 0.042 + local_ripple * 0.012;
+    VERTEX += NORMAL * breathing;
+}
+
+void fragment() {
+    float broad_folds = sin(UV.y * 10.0 + sin(UV.x * 7.0) * 3.0) * 0.5 + 0.5;
+    float fibers = sin(UV.x * 92.0 + sin(UV.y * 18.0) * 7.0) * 0.5 + 0.5;
+    float micro_fibers = sin(UV.x * 210.0 + UV.y * 33.0) * 0.5 + 0.5;
+    float veins = sin(UV.y * 34.0 + UV.x * 9.0) * 0.5 + 0.5;
+    float zone = sin(UV.y * 11.0) * 0.5 + 0.5;
+    float breath_light = sin(motion_clock * 0.82 - 0.6) * 0.5 + 0.5;
+    vec3 zone_color = mix(red_mid, red_hot, smoothstep(0.40, 0.92, zone));
+    vec3 color = mix(red_deep, zone_color, 0.42 + broad_folds * 0.30);
+    color += red_hot * fibers * 0.16;
+    color += red_hot * micro_fibers * 0.035;
+    color += red_hot * pow(veins, 7.0) * 0.16;
+    color *= 0.94 + breath_light * 0.10;
+    ALBEDO = color;
+    ROUGHNESS = 0.66 - veins * 0.18;
+    EMISSION = color * (0.075 + veins * 0.055 + breath_light * 0.012);
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+func _make_track_material() -> ShaderMaterial:
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode blend_mix, cull_disabled, diffuse_burley, specular_disabled;
+uniform float journey_phase = 0.0;
+uniform float motion_clock = 0.0;
+
+void vertex() {
+    VERTEX.y += sin(UV.x * 16.0 + motion_clock * 1.8) * 0.035;
+}
+
+void fragment() {
+    float current = sin(UV.x * 42.0 - motion_clock * 2.4) * 0.5 + 0.5;
+    float zone = sin(UV.x * 4.2) * 0.5 + 0.5;
+    vec3 salmon_a = vec3(0.78, 0.30, 0.34);
+    vec3 salmon_b = vec3(1.00, 0.70, 0.60);
+    vec3 color = mix(salmon_a, salmon_b, zone * 0.46 + current * 0.16);
+    ALBEDO = color;
+    ROUGHNESS = 0.48;
+    EMISSION = color * (0.045 + current * 0.04);
+    ALPHA = 0.60;
+}
+"""
+	var material := ShaderMaterial.new()
+	material.shader = shader
+	return material
+
+func _attach_pokemon_player_visual() -> void:
+	# The repository GLB is a multi-character pack. Keep the imported scene
+	# intact and select the contained Pikachu armature as the M2 player visual.
+	# No mesh, material, skeleton, or source GLB data is edited here.
+	var pack: Node3D = PokemonPackScene.instantiate()
+	pack.name = "PokemonCharacterPackGLB_Intact"
+	# Integration scale only; mesh/material/skeleton data remain untouched.
+	pack.scale = Vector3.ONE * 1.8
+	player.add_child(pack)
+	var model_root := pack.get_node_or_null("Sketchfab_model/root/GLTF_SceneRootNode") as Node3D
+	if model_root == null:
+		push_warning("Pokemon pack model root was not found; keeping M1 fallback visual")
+		return
+	for child in model_root.get_children():
+		if child is Node3D:
+			(child as Node3D).visible = child.name == "Armature_34"
+	pokemon_visual = model_root.get_node_or_null("Armature_34") as Node3D
+	if pokemon_visual == null:
+		push_warning("Pokemon armature Armature_34 was not found; keeping M1 fallback visual")
+		return
+	pokemon_visual.name = "PokemonPlayerVisual_Intact"
+
+func _build_player() -> void:
+	player = Node3D.new()
+	player.name = "PlayerCharacter3D"
+	add_child(player)
+	_attach_pokemon_player_visual()
+
+	var body_material := _material(Color("6f7780"), Color("202830"), 0.08)
+	var helmet_material := _material(Color("c8cdd2"), Color("8b9aa2"), 0.18)
+	var dark_material := _material(Color("20252c"), Color("07090b"), 0.02)
+
+	var body := MeshInstance3D.new()
+	body.name = "Body"
+	var capsule := CapsuleMesh.new()
+	capsule.radius = 0.42
+	capsule.height = 1.35
+	capsule.radial_segments = 12
+	capsule.rings = 4
+	body.mesh = capsule
+	body.material_override = body_material
+	body.position = Vector3(0.0, 1.05, 0.0)
+	player.add_child(body)
+	player_parts["body"] = body
+
+	var helmet := MeshInstance3D.new()
+	helmet.name = "Helmet"
+	helmet.mesh = _sphere_mesh()
+	helmet.material_override = helmet_material
+	helmet.position = Vector3(0.0, 1.95, -0.04)
+	helmet.scale = Vector3(0.5, 0.58, 0.5)
+	player.add_child(helmet)
+	player_parts["helmet"] = helmet
+
+	var backpack := MeshInstance3D.new()
+	backpack.name = "Backpack"
+	var backpack_mesh := BoxMesh.new()
+	backpack_mesh.size = Vector3(0.8, 0.92, 0.34)
+	backpack.mesh = backpack_mesh
+	backpack.material_override = dark_material
+	backpack.position = Vector3(0.0, 1.15, 0.4)
+	player.add_child(backpack)
+
+	for side in [-1.0, 1.0]:
+		var leg := MeshInstance3D.new()
+		leg.name = "Leg" + str(side)
+		var leg_mesh := BoxMesh.new()
+		leg_mesh.size = Vector3(0.23, 0.78, 0.3)
+		leg.mesh = leg_mesh
+		leg.material_override = dark_material
+		leg.position = Vector3(side * 0.23, 0.38, 0.0)
+		player.add_child(leg)
+		player_parts["leg" + str(side)] = leg
+
+		var arm := MeshInstance3D.new()
+		arm.name = "Arm" + str(side)
+		var arm_mesh := BoxMesh.new()
+		arm_mesh.size = Vector3(0.22, 0.78, 0.25)
+		arm.mesh = arm_mesh
+		arm.material_override = body_material
+		arm.position = Vector3(side * 0.58, 1.1, 0.0)
+		arm.rotation_degrees = Vector3(0.0, 0.0, side * -12.0)
+		player.add_child(arm)
+		player_parts["arm" + str(side)] = arm
+
+	if is_instance_valid(pokemon_visual):
+		# Hide every procedural direct mesh, including the old fallback backpack.
+		# The imported GLB remains the only visible player visual.
+		for child in player.get_children():
+			if child is MeshInstance3D:
+				(child as MeshInstance3D).visible = false
+		# Preserve the GLB's authored scale; only the player wrapper positions it.
+
+func _build_camera() -> void:
+	camera = Camera3D.new()
+	camera.name = "Camera3D_ThirdPersonChase"
+	camera.current = true
+	camera.fov = 55.0
+	camera.near = 0.05
+	camera.far = 190.0
+	add_child(camera)
+
+func _build_hud() -> void:
+	hud_layer = CanvasLayer.new()
+	hud_layer.name = "MinimalHUD"
+	add_child(hud_layer)
+
+	if OS.is_debug_build():
+		var reference_texture := load("res://Gameplay-Arena.jpg") as Texture2D
+		if reference_texture != null:
+			reference_overlay = TextureRect.new()
+			reference_overlay.name = "ReferenceCalibrationOverlay"
+			reference_overlay.texture = reference_texture
+			reference_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+			reference_overlay.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			reference_overlay.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+			reference_overlay.modulate = Color(1.0, 1.0, 1.0, 0.32)
+			reference_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			reference_overlay.visible = false
+			reference_overlay.z_index = 5
+			hud_layer.add_child(reference_overlay)
+
+	hud_label = Label.new()
+	hud_label.name = "RunStatus"
+	hud_label.position = Vector2(28.0, 24.0)
+	hud_label.add_theme_font_size_override("font_size", 18)
+	hud_label.add_theme_color_override("font_color", Color("ffe7d6"))
+	hud_label.text = "PHAGOS SPACE  •  RUN 01"
+	hud_layer.add_child(hud_label)
+
+	finish_panel = ColorRect.new()
+	finish_panel.name = "SessionFinished"
+	finish_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	finish_panel.color = Color(0.06, 0.008, 0.015, 0.84)
+	finish_panel.visible = false
+	hud_layer.add_child(finish_panel)
+
+	finish_label = Label.new()
+	finish_label.name = "FinishMessage"
+	finish_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	finish_label.position = Vector2(-210.0, -70.0)
+	finish_label.size = Vector2(420.0, 140.0)
+	finish_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	finish_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	finish_label.add_theme_font_size_override("font_size", 24)
+	finish_label.add_theme_color_override("font_color", Color("ffe7d6"))
+	finish_label.text = "SESSION COMPLETE\nPress R to run again"
+	finish_panel.add_child(finish_label)
+
+func _update_world(delta: float) -> void:
+	var frame := _active_route_frame(player_distance)
+	var player_position: Vector3 = frame.position + frame.right * lane_offset + frame.up * 0.82
+	player.global_position = player_position
+	player.look_at(player_position + frame.tangent, frame.up)
+
+	var camera_position: Vector3 = player_position - frame.tangent * 10.0 + frame.up * 3.8
+	camera.global_position = camera_position
+	camera.look_at(player_position + frame.tangent * 12.0 + frame.up * 1.15, frame.up)
+
+	var run_phase := elapsed_run_time * 7.0
+	if player_parts.has("body"):
+		var body: Node3D = player_parts["body"]
+		body.position.y = 1.05 + sin(run_phase) * 0.035
+	if player_parts.has("helmet"):
+		var helmet: Node3D = player_parts["helmet"]
+		helmet.rotation.z = sin(run_phase * 0.5) * 0.018
+	for hazard in hazards:
+		var hazard_node: Node3D = hazard.node
+		var hazard_phase := elapsed_run_time * 4.0 + float(hazard.phase)
+		var hazard_frame := _active_route_frame(float(hazard.distance))
+		var road_position: Vector3 = hazard_frame.position + hazard_frame.right * float(hazard.lane) + hazard_frame.up * (0.78 + sin(hazard_phase) * 0.1)
+		var spawn_mode: String = hazard.get("spawn_mode", "road")
+		if spawn_mode == "road":
+			hazard_node.position = road_position
+			var road_socket_value: Variant = hazard.get("socket")
+			if road_socket_value is Node3D:
+				(road_socket_value as Node3D).visible = false
+		else:
+			var wall_side := -1.0 if spawn_mode == "wall_left" else 1.0
+			# Negative right is the left wall; keep the socket selection visually
+			# consistent with the hazard's declared wall_left/wall_right mode.
+			var wall_angle := PI - 0.58 if wall_side < 0.0 else 0.58
+			var wall_normal: Vector3 = (hazard_frame.right * cos(wall_angle) + hazard_frame.up * sin(wall_angle)).normalized()
+			var wall_position: Vector3 = hazard_frame.position + hazard_frame.up * TUNNEL_CENTER_HEIGHT + wall_normal * (TUNNEL_RADIUS - 1.35)
+			var socket_value: Variant = hazard.get("socket")
+			if socket_value is Node3D:
+				var socket_node := socket_value as Node3D
+				socket_node.visible = true
+				var socket_side: Vector3 = wall_normal.cross(hazard_frame.tangent).normalized()
+				socket_node.position = wall_position
+				socket_node.basis = Basis(hazard_frame.tangent, socket_side, wall_normal)
+				socket_node.scale = Vector3.ONE * (0.82 + sin(elapsed_run_time * 2.4 + float(hazard.phase)) * 0.10)
+			var emergence_cycle := fmod(elapsed_run_time + float(hazard.phase), 6.0)
+			var emergence := 1.0
+			if emergence_cycle < 1.2:
+				emergence = smoothstep(0.0, 1.0, emergence_cycle / 1.2)
+			elif emergence_cycle > 4.6:
+				emergence = 1.0 - smoothstep(0.0, 1.0, (emergence_cycle - 4.6) / 1.4)
+			hazard_node.position = wall_position.lerp(road_position, emergence)
+		hazard_node.rotation.y = hazard_phase * 0.6
+
+	for side in [-1.0, 1.0]:
+		var leg_key := "leg" + str(side)
+		if player_parts.has(leg_key):
+			var leg: Node3D = player_parts[leg_key]
+			leg.rotation.x = sin(run_phase + side * 1.5) * 0.16
+		var arm_key := "arm" + str(side)
+		if player_parts.has(arm_key):
+			var arm: Node3D = player_parts[arm_key]
+			arm.rotation.x = sin(run_phase + side * 1.5) * 0.14
+
+	if is_instance_valid(hud_label):
+		var progress_ratio := clampf(player_distance / maxf(path_length, 1.0), 0.0, 1.0)
+		var run_state := "ACTIVE"
+		if session_finished:
+			run_state = "FINISH"
+		elif hazard_message_time > 0.0:
+			run_state = "HAZARD HIT"
+		hud_label.text = "PHAGOS SPACE  •  RUN 01  •  %03d%%  •  %s  •  HITS %02d" % [int(progress_ratio * 100.0), run_state, hit_count]
+	_update_blood_flow_cells(delta)
+	if is_instance_valid(tunnel_material):
+		tunnel_material.set_shader_parameter("journey_phase", player_distance / 55.0)
+		tunnel_material.set_shader_parameter("motion_clock", arena_motion_clock)
+	if is_instance_valid(authored_wall_material):
+		authored_wall_material.set_shader_parameter("breathing_clock", arena_motion_clock)
+	if is_instance_valid(track_material):
+		track_material.set_shader_parameter("journey_phase", player_distance / 55.0)
+		track_material.set_shader_parameter("motion_clock", arena_motion_clock)
+
+func _finish_session() -> void:
+	run_speed = 0.0
+	finish_panel.visible = true
+	finish_label.text = "SESSION COMPLETE\nDistance: %03dm\nPress R to run again" % int(player_distance)
+	print("M1 session complete: distance=", snappedf(player_distance, 0.1), "m; hits=", hit_count)
+
+func _restart_session() -> void:
+	player_distance = START_DISTANCE
+	lane_offset = 0.0
+	run_speed = RUN_SPEED
+	elapsed_run_time = 0.0
+	arena_motion_clock = 0.0
+	hazard_cooldown = 0.0
+	hazard_message_time = 0.0
+	slowdown_time = 0.0
+	hit_count = 0
+	if not route_state.is_empty():
+		route_state["current_route"] = "main"
+		route_state["selected_branch"] = "unselected"
+		route_state["requested_branch"] = ""
+		route_state["junction_entered"] = false
+		route_state["branch_collision"] = false
+	session_finished = false
+	finish_panel.visible = false
+
+func _toggle_calibration_lock() -> void:
+	debug_calibration_lock = not debug_calibration_lock
+	if debug_calibration_lock:
+		# Always compare the canonical zone from the same distance_s and lane.
+		player_distance = START_DISTANCE
+		lane_offset = 0.0
+		elapsed_run_time = 0.0
+		arena_motion_clock = 0.0
+		hazard_cooldown = 0.0
+		hazard_message_time = 0.0
+		slowdown_time = 0.0
+		hit_count = 0
+		session_finished = false
+		if is_instance_valid(finish_panel):
+			finish_panel.visible = false
+	print("M1 calibration lock: ", "ON" if debug_calibration_lock else "OFF")
+
+func _toggle_reference_overlay() -> void:
+	if not is_instance_valid(reference_overlay):
+		return
+	reference_overlay_enabled = not reference_overlay_enabled
+	reference_overlay.visible = reference_overlay_enabled
+	print("M1 reference overlay: ", "ON" if reference_overlay_enabled else "OFF")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F3:
+		_toggle_calibration_lock()
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F2:
+		_toggle_reference_overlay()
+	if event.is_action_pressed("restart_run") and session_finished:
+		_restart_session()
