@@ -197,7 +197,7 @@ The latest wall-only QA result at this validation was:
     "evidence/wall-study-destroyed.png"
   ]
 }
-Wall breathing image difference: changed_pixels=830924; diff=evidence/wall-study-breathing-diff.png
+Wall breathing image difference: changed_pixels=836301; diff=evidence/wall-study-breathing-diff.png
 ```
 
 The timed screenshot pair is captured 1.2 seconds apart while the imported `VesselWall_Breathing` clip and Godot low-frequency deformation are running. The non-zero image difference is persisted as `evidence/wall-study-breathing-diff.png`; the pulse screenshot is captured while holding `Space`, which drives a local wall-event bulge. The WallStudy camera is intentionally close to the inner membrane instead of centered on the lumen, making the layered folds and socket silhouettes judgeable.

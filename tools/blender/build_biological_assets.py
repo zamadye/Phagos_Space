@@ -74,9 +74,9 @@ def build_wall_mesh():
             # repeating as transverse rings or a regular helix.
             phase_drift = math.sin(z * 0.23) * 0.72 + math.sin(z * 0.51 + 1.4) * 0.34
             fold = (
-                0.38 * math.sin(angle * 3.0 + z * 0.18 + phase_drift)
-                + 0.16 * math.sin(angle * 7.0 - z * 0.37 + math.sin(z * 0.27) * 0.5)
-                + 0.07 * math.sin(angle * 11.0 + z * 0.73 + math.sin(z * 0.14))
+                0.52 * math.sin(angle * 3.0 + z * 0.18 + phase_drift)
+                + 0.22 * math.sin(angle * 7.0 - z * 0.37 + math.sin(z * 0.27) * 0.5)
+                + 0.09 * math.sin(angle * 11.0 + z * 0.73 + math.sin(z * 0.14))
             )
             radial = radius + fold
             vertices.append((radial * math.cos(angle), radial * math.sin(angle), z))
@@ -171,10 +171,14 @@ def build_wall_mesh():
         material("WallVirus_Amber", (0.72, 0.22, 0.035, 1.0), roughness=0.25, emission=(0.20, 0.035, 0.004, 1.0)),
         material("WallVirus_Cyan", (0.025, 0.30, 0.42, 1.0), roughness=0.28, emission=(0.008, 0.08, 0.14, 1.0)),
     ]
+    # The wall study camera inspects the near inner membrane, so sockets are
+    # distributed across that visible arc as well as the far side of the
+    # lumen. This keeps color/scale variation readable in the actual Godot
+    # study rather than only in an orbit view.
     spot_specs = [
-        (0, 1.3, 0.25, 0.72), (1, 3.8, 2.15, 0.45), (2, 5.2, 4.5, 0.62),
-        (3, 7.6, 5.8, 0.38), (0, 8.9, 1.4, 0.54), (1, 10.4, 3.4, 0.82),
-        (2, 2.4, 5.35, 0.32), (3, 6.4, 0.8, 0.50), (0, 11.2, 4.8, 0.66),
+        (0, 1.3, 2.65, 0.72), (1, 3.8, 2.15, 0.45), (2, 5.2, 3.00, 0.62),
+        (3, 7.6, 3.55, 0.38), (0, 8.9, 4.00, 0.54), (1, 10.4, 4.40, 0.82),
+        (2, 2.4, 5.35, 0.32), (3, 6.4, 0.80, 0.50), (0, 11.2, 4.80, 0.66),
     ]
     for spot_index, (palette_index, z, angle, size) in enumerate(spot_specs):
         normal = Vector((math.cos(angle), math.sin(angle), 0.0))

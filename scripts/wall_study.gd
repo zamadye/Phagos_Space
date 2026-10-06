@@ -77,7 +77,9 @@ func _build_wall_modules() -> void:
 		placement_root.add_child(module)
 		module.configure(WallScene, wall_material, index, float(index) * 1.7)
 		wall_modules.append(module)
+	var first_mesh := wall_modules[0].wall_asset.find_child("VesselWallBreathing", true, false) as MeshInstance3D
 	print("GODOT wall animation: clip=WallStudy_Breathing; driver=GodotBreathingDriver")
+	print("GODOT wall visual: mesh=%s; visible=%s; driver_scale=%s" % [str(first_mesh != null), str(first_mesh != null and first_mesh.visible), str(placement_root.scale)])
 	print("WALL STUDY ready: modules=5; authored_spots=45; space=isolated")
 
 func _unhandled_input(event: InputEvent) -> void:

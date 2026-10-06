@@ -23,6 +23,22 @@ func configure(scene: PackedScene, authored_material: ShaderMaterial, index: int
 	wall_asset = scene.instantiate()
 	wall_asset.name = "AuthoredVesselWallAsset"
 	add_child(wall_asset)
+	_initialize_authored_asset()
+
+## Scene-authored variant used by WallStudy.tscn. The GLB is an explicit
+## PackedScene child in scenes/OrganicWallModule.tscn rather than an HTML or
+## JavaScript dependency.
+func configure_existing(authored_material: ShaderMaterial, index: int, seed_value: float) -> void:
+	module_index = index
+	module_seed = seed_value
+	wall_material = authored_material
+	wall_asset = get_node_or_null("AuthoredVesselWallAsset") as Node3D
+	if wall_asset == null:
+		push_error("OrganicWallModule requires AuthoredVesselWallAsset")
+		return
+	_initialize_authored_asset()
+
+func _initialize_authored_asset() -> void:
 	_apply_authored_material()
 	_collect_wall_spots()
 	_start_breathing_clip()

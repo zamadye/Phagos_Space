@@ -34,7 +34,7 @@ void fragment() {
     vec3 deep_maroon = vec3(0.065, 0.004, 0.008);
     vec3 flesh_maroon = vec3(0.245, 0.020, 0.028);
     vec3 warm_highlight = vec3(0.52, 0.055, 0.070);
-    vec3 tissue = mix(deep_maroon, flesh_maroon, 0.42 + broad_muscle * 0.30);
+    vec3 tissue = mix(deep_maroon, flesh_maroon, 0.30 + broad_muscle * 0.52);
     tissue += warm_highlight * pow(fine_fiber, 5.0) * 0.11;
     tissue += warm_highlight * pore_variation * 0.022;
 
