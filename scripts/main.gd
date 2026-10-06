@@ -7,6 +7,7 @@ extends Node3D
 
 const BioActorScript = preload("res://scripts/bio_actor.gd")
 const OrganicActivityManagerScript = preload("res://scripts/organic_activity_manager.gd")
+const OrganicWallModuleScript = preload("res://scripts/organic_wall_module.gd")
 const SiderocyteScene = preload("res://assets/siderocyte.glb")
 const LymphocyteScene = preload("res://assets/lynphocyte.glb")
 const PokemonPackScene = preload("res://low_poly_animated_pokemon_cartoon_character_pack.glb")
@@ -50,6 +51,7 @@ var player_parts: Dictionary = {}
 var pokemon_visual: Node3D
 var pokemon_animation_player: AnimationPlayer
 var organic_activity_manager: OrganicActivityManager
+var organic_wall_modules: Array[OrganicWallModule] = []
 var blue_cell_multimesh: MultiMeshInstance3D
 var blue_cell_instances: Array[Dictionary] = []
 
@@ -336,46 +338,30 @@ func _build_tunnel() -> void:
 
 func _build_authored_wall_tiles(scene: PackedScene, curve: Curve3D, curve_length: float, route_name: String, parent: Node3D) -> void:
 	var tile_length := 10.0
-	# Add one tile behind the route origin so the camera's rear view is also
-	# inside the vessel on the first calibration frame and at branch entry.
+	# One overlap tile behind the origin keeps the calibration camera inside the
+	# modular vessel. Every module is an OrganicWallModule wrapper around the
+	# untouched Blender GLB scene.
 	var tile_count := maxi(2, int(ceil(curve_length / tile_length)) + 1)
+	if authored_wall_material == null:
+		authored_wall_material = _make_authored_wall_material()
 	for index in tile_count:
 		var route_distance := float(index - 1) * tile_length
 		var frame_distance := clampf(route_distance, 0.0, maxf(curve_length - 0.25, 0.0))
 		var frame := _curve_frame(curve, curve_length, frame_distance)
-		var tile := scene.instantiate()
-		tile.name = "AuthoredVesselWall_%s_%02d" % [route_name, index]
-		tile.position = frame.position + frame.tangent * (route_distance - frame_distance) + frame.up * TUNNEL_CENTER_HEIGHT
-		# Blender glTF arrives in Godot with its authored Z axis converted to
-		# local Y. The wall tile's local Y is therefore the route tangent.
-		# A small deterministic twist/radial variation breaks the repeated-tile
-		# look while preserving the route frame and breathing clip.
+		var wall_module: OrganicWallModule = OrganicWallModuleScript.new()
+		wall_module.name = "OrganicWallModule_%s_%02d" % [route_name, index]
 		var tile_twist := sin(float(index) * 1.73 + float(route_name.length())) * 0.13
 		var tile_right: Vector3 = frame.right.rotated(frame.tangent, tile_twist).normalized()
 		var tile_up: Vector3 = frame.up.rotated(frame.tangent, tile_twist).normalized()
-		tile.basis = Basis(tile_right, frame.tangent, tile_up)
+		wall_module.position = frame.position + frame.tangent * (route_distance - frame_distance) + frame.up * TUNNEL_CENTER_HEIGHT
+		wall_module.basis = Basis(tile_right, frame.tangent, tile_up)
 		var radial_scale := 0.97 + sin(float(index) * 1.19 + 0.4) * 0.035
-		# Keep a 2m overlap between authored modules so bend transitions never
-		# reveal the dark background through a seam.
-		tile.scale = Vector3(radial_scale, (tile_length + 2.0) / 12.0, radial_scale)
-		parent.add_child(tile)
-		for authored_mesh in tile.find_children("*", "MeshInstance3D", true, false):
-			var mesh_instance := authored_mesh as MeshInstance3D
-			for surface_index in mesh_instance.mesh.get_surface_count():
-				var authored_material := mesh_instance.get_active_material(surface_index) as BaseMaterial3D
-				if authored_material != null:
-					authored_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-			if mesh_instance.name == "VesselWallBreathing":
-				if authored_wall_material == null:
-					authored_wall_material = _make_authored_wall_material()
-				mesh_instance.material_override = authored_wall_material
-		var animation_player := tile.find_child("AnimationPlayer", true, false) as AnimationPlayer
-		if animation_player != null and animation_player.has_animation("VesselWall_Breathing"):
-			var breathing_clip := animation_player.get_animation("VesselWall_Breathing")
-			breathing_clip.loop_mode = Animation.LOOP_LINEAR
-			animation_player.play("VesselWall_Breathing")
-			animation_player.seek(fmod(float(index) * 0.42, 6.0), true)
-		print("BLENDER wall tile: route=", route_name, " index=", index, " distance=", snappedf(route_distance, 0.1))
+		# The 2m overlap is kept in the wrapper, not baked into the Blender GLB.
+		wall_module.scale = Vector3(radial_scale, (tile_length + 2.0) / 12.0, radial_scale)
+		parent.add_child(wall_module)
+		wall_module.configure(scene, authored_wall_material, index, float(index) * 0.42 + float(route_name.length()))
+		organic_wall_modules.append(wall_module)
+	print("M1 modular wall route: route=%s; modules=%d; spots_per_module=9" % [route_name, tile_count])
 
 func _make_tunnel_mesh_for_curve(curve: Curve3D, curve_length: float, rings: int, ring_vertices: int) -> ArrayMesh:
 	var vertices := PackedVector3Array()
@@ -1059,44 +1045,8 @@ func _material(color: Color, emission: Color, emission_energy: float) -> Standar
 	return material
 
 func _make_authored_wall_material() -> ShaderMaterial:
-	var shader := Shader.new()
-	shader.code = """
-shader_type spatial;
-render_mode cull_disabled, unshaded, specular_disabled;
-uniform float breathing_clock = 0.0;
-uniform vec3 event_world_position = vec3(0.0);
-uniform float event_strength = 0.0;
-uniform float event_radius = 2.8;
-
-void vertex() {
-    vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-    float breath = sin(breathing_clock * 0.82) * 0.5 + 0.5;
-    // Low-frequency travelling wave: the authored folds remain fixed, while
-    // a slow muscular wave moves through the vessel surface.
-    float travelling_wave = sin(world_position.z * 0.075 + world_position.x * 0.035 + breathing_clock * 0.52) * 0.5 + 0.5;
-    float event_distance = distance(world_position, event_world_position);
-    float event_influence = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001));
-    float local_bulge = event_influence * event_strength;
-    float breathing = 0.012 + breath * 0.024 + travelling_wave * 0.016 + local_bulge * 0.34;
-    VERTEX += NORMAL * breathing;
-}
-
-void fragment() {
-    float pulse = sin(breathing_clock * 0.82) * 0.5 + 0.5;
-    float static_fold = sin(VERTEX.y * 0.43 + VERTEX.x * 0.19 + sin(VERTEX.z * 0.22) * 2.0) * 0.5 + 0.5;
-    float travelling_light = sin(VERTEX.y * 0.25 + breathing_clock * 0.42) * 0.5 + 0.5;
-    float event_distance = distance((MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz, event_world_position);
-    float event_glow = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001)) * event_strength;
-    vec3 deep = vec3(0.22, 0.010, 0.028);
-    vec3 warm = vec3(0.43, 0.026, 0.052);
-    vec3 base = mix(deep, warm, 0.30 + static_fold * 0.22 + travelling_light * 0.08);
-    base += vec3(0.18, 0.008, 0.025) * event_glow;
-    ALBEDO = base * (0.92 + pulse * 0.08);
-    EMISSION = base * (0.055 + pulse * 0.018 + event_glow * 0.04);
-}
-"""
 	var material := ShaderMaterial.new()
-	material.shader = shader
+	material.shader = preload("res://shaders/organic_wall.gdshader")
 	return material
 
 func _make_tunnel_material() -> ShaderMaterial:

@@ -81,7 +81,14 @@ def build_wall_mesh():
             next_ring = (ring + 1) * slices + slice_index
             next_both = (ring + 1) * slices + ((slice_index + 1) % slices)
             faces.extend(((current, next_ring, next_slice), (next_slice, next_ring, next_both)))
-    wall = add_mesh_object(name, vertices, faces, material("VesselMembrane", (0.36, 0.018, 0.035, 1.0), roughness=0.72))
+    wall_material = material("VesselMembraneGlossy", (0.20, 0.006, 0.018, 1.0), roughness=0.32, emission=(0.035, 0.001, 0.004, 1.0))
+    principled = wall_material.node_tree.nodes.get("Principled BSDF")
+    if principled is not None:
+        for socket_name, value in (("Specular IOR Level", 0.62), ("Coat Weight", 0.28), ("Coat Roughness", 0.20)):
+            socket = principled.inputs.get(socket_name)
+            if socket is not None:
+                socket.default_value = value
+    wall = add_mesh_object(name, vertices, faces, wall_material)
 
     basis = wall.shape_key_add(name="Basis")
     breath = wall.shape_key_add(name="Breath")
@@ -108,48 +115,80 @@ def build_wall_mesh():
         action = wall.data.shape_keys.animation_data.action
         action.name = "VesselWall_Breathing"
 
-    ridge_mat = material("VesselFoldHighlight", (0.42, 0.018, 0.045, 1.0), roughness=0.68, emission=(0.06, 0.002, 0.006, 1.0))
-    fiber_mat = material("VesselFiber", (0.54, 0.032, 0.065, 1.0), roughness=0.62, emission=(0.08, 0.004, 0.008, 1.0))
+    ridge_mat = material("VesselMuscleFold", (0.30, 0.010, 0.030, 1.0), roughness=0.40, emission=(0.035, 0.001, 0.004, 1.0))
+    fiber_mat = material("VesselFiber", (0.40, 0.018, 0.050, 1.0), roughness=0.46, emission=(0.045, 0.002, 0.006, 1.0))
 
-    # Broad transverse folds provide authored silhouette detail without
-    # destroying the modular tile's clean ends.
-    for fold_index in range(3):
-        z = 1.2 + fold_index * 4.1
-        bpy.ops.mesh.primitive_torus_add(major_radius=15.03, minor_radius=0.10 + (fold_index % 2) * 0.05, major_segments=64, minor_segments=8, location=(0.0, 0.0, z))
-        torus = bpy.context.object
-        torus.name = f"VesselFold_{fold_index:02d}"
-        torus.data.materials.append(ridge_mat)
-        for poly in torus.data.polygons:
-            poly.use_smooth = True
-
-    # Fine helical fibers are fixed to the wall; they do not scroll along the
-    # tunnel. Their only motion comes from the wall's breathing morph.
-    for fiber_index in range(5):
-        angle_offset = 2.0 * math.pi * fiber_index / 5.0
-        fiber_vertices = []
-        fiber_faces = []
-        tube_sides = 6
-        points = 12
-        tube_radius = 0.055 + (fiber_index % 3) * 0.018
+    def add_helical_ridge(object_name: str, ridge_index: int, tube_radius: float, material_slot):
+        angle_offset = 2.0 * math.pi * ridge_index / 7.0
+        ridge_vertices = []
+        ridge_faces = []
+        tube_sides = 8
+        points = 18
         for point_index in range(points):
             z = length * point_index / (points - 1)
-            angle = angle_offset + z * (0.10 + (fiber_index % 2) * 0.035)
-            center = Vector(((radius - 0.18) * math.cos(angle), (radius - 0.18) * math.sin(angle), z))
+            angle = angle_offset + z * (0.075 + (ridge_index % 3) * 0.018) + math.sin(z * 0.43 + ridge_index) * 0.08
+            local_radius = radius - 0.12 + math.sin(z * 0.62 + ridge_index * 1.7) * 0.08
+            center = Vector((local_radius * math.cos(angle), local_radius * math.sin(angle), z))
             radial = Vector((math.cos(angle), math.sin(angle), 0.0))
-            tangent = Vector((-math.sin(angle), math.cos(angle), 0.0))
             for side in range(tube_sides):
-                a = 2.0 * math.pi * side / tube_sides
-                offset = radial * math.cos(a) * tube_radius + Vector((0.0, 0.0, math.sin(a) * tube_radius))
-                fiber_vertices.append(tuple(center + offset))
+                around = 2.0 * math.pi * side / tube_sides
+                offset = radial * math.cos(around) * tube_radius + Vector((0.0, 0.0, math.sin(around) * tube_radius))
+                ridge_vertices.append(tuple(center + offset))
         for point_index in range(points - 1):
             for side in range(tube_sides):
                 current = point_index * tube_sides + side
                 next_side = point_index * tube_sides + ((side + 1) % tube_sides)
                 next_point = (point_index + 1) * tube_sides + side
                 next_both = (point_index + 1) * tube_sides + ((side + 1) % tube_sides)
-                fiber_faces.extend(((current, next_point, next_side), (next_side, next_point, next_both)))
-        fiber = add_mesh_object(f"VesselFiber_{fiber_index:02d}", fiber_vertices, fiber_faces, fiber_mat)
-        for poly in fiber.data.polygons:
+                ridge_faces.extend(((current, next_point, next_side), (next_side, next_point, next_both)))
+        ridge = add_mesh_object(object_name, ridge_vertices, ridge_faces, material_slot)
+        for poly in ridge.data.polygons:
+            poly.use_smooth = True
+
+    # Broad longitudinal muscle folds preserve a soft, fleshy silhouette.
+    # They are not transverse rings, so repeated modules read as one breathing
+    # vessel rather than a stack of mechanical hoops.
+    for fold_index in range(7):
+        add_helical_ridge(f"VesselMuscleFold_{fold_index:02d}", fold_index, 0.13 + (fold_index % 3) * 0.035, ridge_mat)
+
+    # Fine fixed fibers remain authored detail; no texture or UV time offset is
+    # used to fake motion along the wall.
+    for fiber_index in range(10):
+        add_helical_ridge(f"VesselFiber_{fiber_index:02d}", fiber_index + 7, 0.038 + (fiber_index % 3) * 0.012, fiber_mat)
+
+    spot_materials = [
+        material("WallVirus_Maroon", (0.42, 0.008, 0.030, 1.0), roughness=0.28, emission=(0.12, 0.001, 0.008, 1.0)),
+        material("WallVirus_Violet", (0.24, 0.025, 0.22, 1.0), roughness=0.30, emission=(0.08, 0.004, 0.10, 1.0)),
+        material("WallVirus_Amber", (0.72, 0.22, 0.035, 1.0), roughness=0.25, emission=(0.20, 0.035, 0.004, 1.0)),
+        material("WallVirus_Cyan", (0.025, 0.30, 0.42, 1.0), roughness=0.28, emission=(0.008, 0.08, 0.14, 1.0)),
+    ]
+    spot_specs = [
+        (0, 1.3, 0.25, 0.72), (1, 3.8, 2.15, 0.45), (2, 5.2, 4.5, 0.62),
+        (3, 7.6, 5.8, 0.38), (0, 8.9, 1.4, 0.54), (1, 10.4, 3.4, 0.82),
+        (2, 2.4, 5.35, 0.32), (3, 6.4, 0.8, 0.50), (0, 11.2, 4.8, 0.66),
+    ]
+    for spot_index, (palette_index, z, angle, size) in enumerate(spot_specs):
+        normal = Vector((math.cos(angle), math.sin(angle), 0.0))
+        center = normal * (radius - 0.58) + Vector((0.0, 0.0, z))
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.62, location=center)
+        spot = bpy.context.object
+        spot.name = f"WallVirusSpot_{spot_index:02d}"
+        spot.scale = (size * 1.18, size * (0.62 + (spot_index % 3) * 0.11), size * 0.86)
+        spot.data.materials.append(spot_materials[palette_index])
+        spot["role"] = "wall_enemy_socket"
+        spot["palette_index"] = palette_index
+        spot["base_size"] = size
+        spot["health"] = 1.0
+        for poly in spot.data.polygons:
+            poly.use_smooth = True
+        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=0.19 + (spot_index % 2) * 0.04, location=center + normal * 0.48)
+        core = bpy.context.object
+        core.name = f"WallVirusSpot_{spot_index:02d}_Core"
+        core.data.materials.append(spot_materials[palette_index])
+        core.scale = (1.0, 0.72, 0.82)
+        core.parent = spot
+        core.location = normal * 0.48
+        for poly in core.data.polygons:
             poly.use_smooth = True
 
     return wall

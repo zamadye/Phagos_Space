@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "smoke": "node smoke.mjs",
+    "qa:wall": "node wall_study_smoke.mjs && ./wall_motion_diff.sh",
     "qa:m1": "node m1_qa.mjs"
   },
   "engines": {

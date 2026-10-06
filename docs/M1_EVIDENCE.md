@@ -53,7 +53,7 @@ Canonical root files produced:
 | `index.html` | 5,298 bytes |
 | `index.js` | 279,925 bytes |
 | `index.wasm` | 35,749,181 bytes |
-| `index.pck` | 8,800,372 bytes |
+| `index.pck` | 8,900,796 bytes |
 
 Additional Web runtime files (`index.png`, audio worklets) are kept because the generated HTML references them.
 
@@ -162,6 +162,54 @@ road, wall_left, road, wall_right, wall_left, road
 ```
 
 Wall-origin hazards interpolate from a tunnel-wall socket to the lane while retaining their collision wrapper and Blender-authored emergence visual. Three explicit `WallEmergenceSocket` nodes are created for the two left-wall and one right-wall spawn events; their side selection is validated against the route frame.
+
+## Focused wall-module evidence
+
+The wall is validated separately before unrelated arena polish. `scenes/WallStudy.tscn` contains only the modular authored wall, camera, lighting, and review overlay; it deliberately omits the Pokemon player, route, blood track, and hazards.
+
+The reproducible isolated Web export is:
+
+```bash
+./tools/export_wall_study.sh
+```
+
+The helper temporarily selects `WallStudy.tscn` for Godot's Web exporter and restores `project.godot` with a shell trap, so the normal project entry scene is never left changed. Browser validation must be served from the repository root:
+
+```bash
+python3 -m http.server 8000 --bind 0.0.0.0
+cd tools/browser
+npm ci --ignore-scripts
+npm run qa:wall
+```
+
+The wall-only QA result at this validation was:
+
+```json
+{
+  "title": "Phagos Space (DEBUG)",
+  "canvas": true,
+  "errors": [],
+  "evidence": [
+    "evidence/wall-study-smoke.png",
+    "evidence/wall-study-pulse.png"
+  ]
+}
+Wall breathing image difference: changed_pixels=689170; diff=evidence/wall-study-breathing-diff.png
+```
+
+The timed screenshot pair is captured 1.2 seconds apart while the imported `VesselWall_Breathing` clip and shader deformation are running. The non-zero image difference is persisted as `evidence/wall-study-breathing-diff.png`; the pulse screenshot is captured while holding `Space`, which drives the local wall-event bulge. The review captures show dark maroon/red-brown glossy membrane shading, authored irregular folds, and differently sized orange, red, purple, and blue wall spots. Godot pulses the 9 imported spot meshes per module and exposes `damage_spot()`, `reset_spots()`, and `alive_spot_count()` for the later shootable wall-enemy pass.
+
+Runtime checks for the integrated routes remain:
+
+```text
+M1 wall module: index=00; spots=9; breathing_clip=true
+M1 modular wall route: route=main; modules=29; spots_per_module=9
+M1 modular wall route: route=branch_left; modules=11; spots_per_module=9
+M1 modular wall route: route=branch_right; modules=11; spots_per_module=9
+WALL STUDY ready: modules=5; authored_spots=45; space=isolated
+```
+
+The wall material is `shaders/organic_wall.gdshader`: it provides only low-frequency vertex breathing, local event bulge, lit maroon albedo, gloss/rim response, and roughness/emission variation. It does not scroll UVs or offset textures. Blender remains the source of truth for the intact `assets/vessel_wall_breathing.glb` mesh, authored material/spot geometry, and `VesselWall_Breathing` animation; Godot owns modular placement, clip playback, spot pulse timing, and the future damage API.
 
 ## Full M1 debug QA sequence
 
