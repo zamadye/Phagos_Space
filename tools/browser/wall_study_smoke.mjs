@@ -27,7 +27,10 @@ await page.keyboard.down("Space");
 await new Promise((resolve) => setTimeout(resolve, 900));
 await page.screenshot({ path: path.join(evidenceDir, "wall-study-pulse.png") });
 await page.keyboard.up("Space");
-console.log(JSON.stringify({ title: await page.title(), canvas: Boolean(await page.$("canvas")), errors, evidence: ["evidence/wall-study-smoke.png", "evidence/wall-study-pulse.png"] }, null, 2));
+await page.keyboard.press("d");
+await new Promise((resolve) => setTimeout(resolve, 350));
+await page.screenshot({ path: path.join(evidenceDir, "wall-study-destroyed.png") });
+console.log(JSON.stringify({ title: await page.title(), canvas: Boolean(await page.$("canvas")), errors, evidence: ["evidence/wall-study-smoke.png", "evidence/wall-study-pulse.png", "evidence/wall-study-destroyed.png"] }, null, 2));
 const browserProcess = typeof browser.process === "function" ? browser.process() : null;
 browser.disconnect();
 if (browserProcess?.pid) { try { process.kill(browserProcess.pid, "SIGKILL"); } catch {} }

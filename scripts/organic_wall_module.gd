@@ -49,11 +49,63 @@ func damage_spot(spot_index: int, damage: float = 1.0) -> bool:
 	spot_data.health = maxf(0.0, float(spot_data.health) - maxf(damage, 0.0))
 	var spot: MeshInstance3D = spot_data.node
 	if spot_data.health <= 0.0:
+		var destroyed_position := spot.global_position
 		spot.visible = false
+		_spawn_spot_destroy_burst(destroyed_position, spot)
 		spot_destroyed.emit(self, spot_index)
+		print("M1 wall spot destroyed: module=%02d; spot=%02d; alive=%d" % [module_index, spot_index, alive_spot_count()])
 	else:
 		spot.scale = spot_data.base_scale * 0.72
 	return true
+
+func _spawn_spot_destroy_burst(world_position: Vector3, spot: MeshInstance3D) -> void:
+	var burst := GPUParticles3D.new()
+	burst.name = "WallVirusDestroyBurst_%02d" % spot_entries.size()
+	burst.amount = 28
+	burst.lifetime = 0.85
+	burst.one_shot = true
+	burst.explosiveness = 0.92
+	burst.randomness = 0.32
+	burst.visibility_aabb = AABB(Vector3(-3.0, -3.0, -3.0), Vector3(6.0, 6.0, 6.0))
+	var shard_mesh := SphereMesh.new()
+	shard_mesh.radius = 0.075
+	shard_mesh.height = 0.15
+	shard_mesh.radial_segments = 8
+	shard_mesh.rings = 4
+	burst.draw_pass_1 = shard_mesh
+	burst.draw_passes = 1
+	var burst_visual := StandardMaterial3D.new()
+	burst_visual.albedo_color = Color("ff5364")
+	burst_visual.emission_enabled = true
+	burst_visual.emission = Color("ff2038")
+	burst_visual.emission_energy_multiplier = 1.6
+	burst_visual.roughness = 0.28
+	var source_material := spot.get_active_material(0) as BaseMaterial3D
+	if source_material != null:
+		burst_visual.albedo_color = source_material.albedo_color.lightened(0.16)
+	burst.material_override = burst_visual
+	var particle_material := ParticleProcessMaterial.new()
+	particle_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	particle_material.emission_sphere_radius = 0.16
+	particle_material.direction = Vector3.UP
+	particle_material.spread = 180.0
+	particle_material.initial_velocity_min = 0.55
+	particle_material.initial_velocity_max = 2.2
+	particle_material.gravity = Vector3(0.0, -1.5, 0.0)
+	particle_material.scale_min = 0.55
+	particle_material.scale_max = 1.35
+	particle_material.angular_velocity_min = -5.0
+	particle_material.angular_velocity_max = 5.0
+	burst.process_material = particle_material
+	var owner := get_parent()
+	if owner != null:
+		owner.add_child(burst)
+	else:
+		add_child(burst)
+	burst.global_position = world_position
+	await get_tree().create_timer(1.15).timeout
+	if is_instance_valid(burst):
+		burst.queue_free()
 
 func reset_spots() -> void:
 	for spot_data in spot_entries:

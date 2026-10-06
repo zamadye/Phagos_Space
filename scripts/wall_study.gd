@@ -10,6 +10,7 @@ const WallScene = preload("res://assets/vessel_wall_breathing.glb")
 const WallShader = preload("res://shaders/organic_wall.gdshader")
 
 var wall_material: ShaderMaterial
+var wall_modules: Array[OrganicWallModule] = []
 var elapsed: float = 0.0
 var pulse_strength: float = 0.0
 var pulse_position := Vector3(0.0, 20.6, -16.0)
@@ -70,7 +71,21 @@ func _build_wall_modules() -> void:
 		module.scale = Vector3.ONE
 		add_child(module)
 		module.configure(WallScene, wall_material, index, float(index) * 1.7)
+		wall_modules.append(module)
 	print("WALL STUDY ready: modules=5; authored_spots=45; space=isolated")
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo:
+		return
+	if event.keycode == KEY_D:
+		_damage_next_spot()
+
+func _damage_next_spot() -> void:
+	for module in wall_modules:
+		if module.alive_spot_count() > 0:
+			for spot_index in module.spot_entries.size():
+				if module.damage_spot(spot_index):
+					return
 
 func _build_camera() -> void:
 	var camera := Camera3D.new()
@@ -91,5 +106,5 @@ func _build_overlay() -> void:
 	label.position = Vector2(28.0, 24.0)
 	label.add_theme_font_size_override("font_size", 22)
 	label.add_theme_color_override("font_color", Color("ffe2d8"))
-	label.text = "WALL STUDY  //  MODULAR AUTHORED MEMBRANE\nSPACE: local wall pulse"
+	label.text = "WALL STUDY  //  MODULAR AUTHORED MEMBRANE\nSPACE: local wall pulse   D: destroy next wall spot"
 	layer.add_child(label)

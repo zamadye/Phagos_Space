@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_disabled, diffuse_burley;
+render_mode cull_disabled, unshaded, specular_disabled;
 
 uniform float breathing_clock = 0.0;
 uniform vec3 event_world_position = vec3(0.0);
@@ -9,29 +9,42 @@ uniform float event_radius = 2.8;
 void vertex() {
     vec3 world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
     float breath = sin(breathing_clock * 0.82) * 0.5 + 0.5;
-    // World-space low-frequency deformation: the authored membrane remains
-    // fixed in place while the tissue expands and contracts.
-    float travelling_wave = sin(world_position.z * 0.075 + world_position.x * 0.035 + breathing_clock * 0.52) * 0.5 + 0.5;
+    // Slow muscular deformation: the membrane expands in place; no texture
+    // scrolling or journey-time UV offset is used.
+    float muscle_wave = sin(world_position.z * 0.19 + world_position.x * 0.11 + sin(world_position.y * 0.16) * 1.8) * 0.5 + 0.5;
+    float local_ripple = sin(world_position.z * 0.43 + world_position.y * 0.24) * 0.5 + 0.5;
     float event_distance = distance(world_position, event_world_position);
     float event_influence = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001));
     float local_bulge = event_influence * event_strength;
-    float breathing = 0.012 + breath * 0.024 + travelling_wave * 0.016 + local_bulge * 0.52;
+    float breathing = 0.028 + breath * 0.055 + muscle_wave * 0.040 + local_ripple * 0.018 + local_bulge * 0.52;
     VERTEX += NORMAL * breathing;
 }
 
 void fragment() {
-    float pulse = sin(breathing_clock * 0.82) * 0.5 + 0.5;
-    float static_fold = sin(VERTEX.y * 0.43 + VERTEX.x * 0.19 + sin(VERTEX.z * 0.22) * 2.0) * 0.5 + 0.5;
-    float travelling_light = sin(VERTEX.y * 0.25 + breathing_clock * 0.42) * 0.5 + 0.5;
+    float breath = sin(breathing_clock * 0.82) * 0.5 + 0.5;
+    float broad_muscle = sin(VERTEX.z * 0.34 + sin(VERTEX.x * 0.22) * 2.0 + VERTEX.y * 0.13) * 0.5 + 0.5;
+    float fine_fiber = sin(VERTEX.z * 1.35 + VERTEX.x * 0.52 + sin(VERTEX.y * 0.40) * 2.2) * 0.5 + 0.5;
+    float pore_variation = sin(VERTEX.x * 2.2 + VERTEX.y * 1.3 + VERTEX.z * 0.7) * 0.5 + 0.5;
     float event_distance = distance((MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz, event_world_position);
     float event_glow = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001)) * event_strength;
-    vec3 deep = vec3(0.12, 0.014, 0.012);
-    vec3 warm = vec3(0.32, 0.045, 0.035);
-    vec3 base = mix(deep, warm, 0.30 + static_fold * 0.30 + travelling_light * 0.10);
-    base += vec3(0.18, 0.020, 0.024) * event_glow;
-    float glossy_rim = pow(1.0 - max(dot(normalize(NORMAL), normalize(VIEW)), 0.0), 2.6);
-    ALBEDO = base * (0.90 + pulse * 0.10) + glossy_rim * vec3(0.14, 0.018, 0.020);
-    ROUGHNESS = 0.29 + static_fold * 0.10;
-    METALLIC = 0.0;
-    EMISSION = base * (0.018 + pulse * 0.012 + event_glow * 0.060);
+
+    // Deep maroon tissue with a wet red-burgundy response.
+    vec3 deep_maroon = vec3(0.065, 0.004, 0.008);
+    vec3 flesh_maroon = vec3(0.245, 0.020, 0.028);
+    vec3 warm_highlight = vec3(0.52, 0.055, 0.070);
+    vec3 tissue = mix(deep_maroon, flesh_maroon, 0.42 + broad_muscle * 0.30);
+    tissue += warm_highlight * pow(fine_fiber, 5.0) * 0.11;
+    tissue += warm_highlight * pore_variation * 0.022;
+
+    // Fake a broad wet highlight in the unshaded Web-safe material. This is
+    // view-dependent gloss, not a moving texture.
+    float view_rim = pow(1.0 - max(dot(normalize(NORMAL), normalize(VIEW)), 0.0), 2.5);
+    float wet_band = pow(max(sin(VERTEX.z * 0.22 + VERTEX.x * 0.18 + breathing_clock * 0.05), 0.0), 12.0);
+    vec3 glossy = vec3(0.80, 0.12, 0.16) * (view_rim * 0.12 + wet_band * 0.035);
+    vec3 pulse_tint = vec3(0.08, 0.004, 0.008) * breath;
+    vec3 event_tint = vec3(0.42, 0.025, 0.040) * event_glow;
+
+    ALBEDO = tissue * (0.78 + breath * 0.08) + glossy + pulse_tint + event_tint;
+    ROUGHNESS = 0.22 + broad_muscle * 0.12;
+    EMISSION = tissue * (0.045 + breath * 0.018) + glossy * 0.40 + event_tint * 0.24;
 }
