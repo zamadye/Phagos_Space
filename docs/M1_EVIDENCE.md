@@ -149,8 +149,10 @@ The default branch is derived from seed `20261005`; `Q`/left can request the lef
 Blender Python API `5.0.1` was installed in the sandbox and executed in background mode. The following exports were created and then re-imported in Blender and Godot:
 
 ```text
+tools/blender/source/vessel_wall_breathing.blend
+  Native Blender source: Breath shape key + authored socket hierarchy
 assets/vessel_wall_breathing.glb
-  AnimationPlayer: VesselWall_Breathing
+  Godot delivery export; AnimationPlayer: VesselWall_Breathing
 assets/pathogen_emergence.glb
   AnimationPlayer: Pathogen_EmergeFromWall
 ```
@@ -195,14 +197,16 @@ The latest wall-only QA result at this validation was:
     "evidence/wall-study-destroyed.png"
   ]
 }
-Wall breathing image difference: changed_pixels=712880; diff=evidence/wall-study-breathing-diff.png
+Wall breathing image difference: changed_pixels=830924; diff=evidence/wall-study-breathing-diff.png
 ```
 
 The timed screenshot pair is captured 1.2 seconds apart while the imported `VesselWall_Breathing` clip and Godot low-frequency deformation are running. The non-zero image difference is persisted as `evidence/wall-study-breathing-diff.png`; the pulse screenshot is captured while holding `Space`, which drives a local wall-event bulge. The WallStudy camera is intentionally close to the inner membrane instead of centered on the lumen, making the layered folds and socket silhouettes judgeable.
 
 Blender now authors every socket as a parent mesh with an irregular raised core, membrane halo, and 5–7 short biological spikes. Godot collects only the 9 exact parent sockets per module, pulses their scale independently, and exposes `damage_spot()`, `reset_spots()`, and `alive_spot_count()` for the later shootable wall-enemy pass. Pressing `D` selects the nearest socket in the camera frustum and runs a visible flash → local wall deformation → scale squash → pink shard/bio burst → disappearance sequence; this is captured in `evidence/wall-study-destroyed.png`.
 
-The review captures show deep maroon wet membrane shading with a lit specular response, subdued layered muscle/fiber folds, broad wandering membrane folds whose phase drifts along the vessel instead of repeating as rings, authored non-flat surface variation, and differently sized orange, red, purple, and cyan sockets. The shader contains no texture lookup, scrolling UV, or time-offset texture animation; time is used only for low-frequency vertex breathing and the authored event deformation. Blender remains the source of truth for the intact `assets/vessel_wall_breathing.glb` mesh, authored spot hierarchy/material palette, UVs, and `VesselWall_Breathing` animation; Godot owns modular placement, clip playback, lightweight deformation, spot pulse timing, destruction VFX, and the damage API.
+The review captures show deep maroon wet membrane shading with a lit specular response, subdued layered muscle/fiber folds, broad wandering membrane folds whose phase drifts along the vessel instead of repeating as rings, authored non-flat surface variation, and differently sized orange, red, purple, and cyan sockets. The shader contains no texture lookup, scrolling UV, or time-offset texture animation; time is used only for low-frequency vertex breathing and the authored event deformation. Blender remains the source of truth for `tools/blender/source/vessel_wall_breathing.blend`; the exported `assets/vessel_wall_breathing.glb` carries its authored mesh, spot hierarchy/material palette, UVs, and `VesselWall_Breathing` animation into Godot. Godot owns modular placement, clip playback, lightweight deformation, spot pulse timing, destruction VFX, and the damage API.
+
+`scenes/WallStudy.tscn` now also contains a native Godot `AnimationPlayer` clip named `WallStudy_Breathing`. It animates the `GodotBreathingDriver` scale loop while each imported GLB instance independently plays Blender's `VesselWall_Breathing` clip; the isolated runtime log confirms `GODOT wall animation: clip=WallStudy_Breathing; driver=GodotBreathingDriver`.
 
 Runtime checks for the integrated routes remain:
 
@@ -214,7 +218,7 @@ M1 modular wall route: route=branch_right; modules=11; spots_per_module=9
 WALL STUDY ready: modules=5; authored_spots=45; space=isolated
 ```
 
-The wall material is `shaders/organic_wall.gdshader`: it provides only low-frequency vertex breathing, local event bulge, deep maroon glossy albedo, view-dependent wet highlights, and roughness/emission variation. It does not scroll UVs or offset textures. Blender remains the source of truth for the intact `assets/vessel_wall_breathing.glb` mesh, authored material/spot geometry, and `VesselWall_Breathing` animation; Godot owns modular placement, clip playback, spot pulse timing, and the future damage API.
+The wall material is `shaders/organic_wall.gdshader`: it provides only low-frequency vertex breathing, local event bulge, deep maroon glossy albedo, view-dependent wet highlights, and roughness/emission variation. It does not scroll UVs or offset textures. Blender remains the source of truth for `tools/blender/source/vessel_wall_breathing.blend`; Godot imports its intact `assets/vessel_wall_breathing.glb` delivery export and owns modular placement, clip playback, spot pulse timing, and the future damage API.
 
 ## Full M1 debug QA sequence
 

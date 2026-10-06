@@ -27,7 +27,8 @@ Script membuat asset additive, tanpa membuka atau mengubah GLB player/enemy repo
 
 | Output | Isi | Animation clip |
 |---|---|---|
-| `assets/vessel_wall_breathing.glb` | Modular inner vessel wall, organic folds, helical fibers, membrane shape key | `VesselWall_Breathing` |
+| `tools/blender/source/vessel_wall_breathing.blend` | Native Blender source: membrane mesh, wandering folds, material palette, socket hierarchy, and shape-key action | `VesselWall_Breathing` |
+| `assets/vessel_wall_breathing.glb` | Godot delivery export from the `.blend`, with the same mesh/material/animation data | `VesselWall_Breathing` |
 | `assets/pathogen_emergence.glb` | Pathogen core, glow core, 12 biological spikes | `Pathogen_EmergeFromWall` |
 
 Hasil export dan import dua arah sudah diverifikasi melalui Blender. Godot juga berhasil mengimpor kedua GLB dan menemukan `AnimationPlayer` serta clip masing-masing.

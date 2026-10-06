@@ -16,6 +16,9 @@ from mathutils import Vector
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "assets"
 ASSETS.mkdir(parents=True, exist_ok=True)
+BLENDER_SOURCE_DIR = ROOT / "tools" / "blender" / "source"
+BLENDER_SOURCE_DIR.mkdir(parents=True, exist_ok=True)
+BLEND_SOURCE = BLENDER_SOURCE_DIR / "vessel_wall_breathing.blend"
 
 
 def clear_scene() -> None:
@@ -342,6 +345,11 @@ def main():
     wall = build_wall_mesh()
     bpy.context.view_layer.objects.active = wall
     wall.select_set(True)
+    # Keep a real Blender source file beside the interchange GLB. The .blend
+    # contains the membrane mesh, materials, socket hierarchy, and authored
+    # shape-key action; GLB is only the Godot delivery export.
+    bpy.ops.wm.save_as_mainfile(filepath=str(BLEND_SOURCE))
+    print(f"BLENDER_SOURCE {BLEND_SOURCE} {BLEND_SOURCE.stat().st_size} bytes")
     export_selected(ASSETS / "vessel_wall_breathing.glb")
 
     clear_scene()

@@ -62,6 +62,11 @@ func _build_environment() -> void:
 func _build_wall_modules() -> void:
 	wall_material = ShaderMaterial.new()
 	wall_material.shader = WallShader
+	var placement_root := get_node_or_null("GodotBreathingDriver") as Node3D
+	if placement_root == null:
+		placement_root = Node3D.new()
+		placement_root.name = "GodotBreathingDriver"
+		add_child(placement_root)
 	var module_basis := Basis(Vector3.RIGHT, Vector3(0.0, 0.0, -1.0), Vector3.UP)
 	for index in 5:
 		var module: OrganicWallModule = WallModuleScript.new()
@@ -69,9 +74,10 @@ func _build_wall_modules() -> void:
 		module.position = Vector3(0.0, 5.8, -float(index) * 10.0)
 		module.basis = module_basis
 		module.scale = Vector3.ONE
-		add_child(module)
+		placement_root.add_child(module)
 		module.configure(WallScene, wall_material, index, float(index) * 1.7)
 		wall_modules.append(module)
+	print("GODOT wall animation: clip=WallStudy_Breathing; driver=GodotBreathingDriver")
 	print("WALL STUDY ready: modules=5; authored_spots=45; space=isolated")
 
 func _unhandled_input(event: InputEvent) -> void:
