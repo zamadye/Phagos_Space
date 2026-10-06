@@ -66,10 +66,14 @@ def build_wall_mesh():
         z = length * ring / rings
         for slice_index in range(slices):
             angle = 2.0 * math.pi * slice_index / slices
+            # Broad wandering membrane folds provide volume under the
+            # authored ridges. Their phase drifts along the vessel instead of
+            # repeating as transverse rings or a regular helix.
+            phase_drift = math.sin(z * 0.23) * 0.72 + math.sin(z * 0.51 + 1.4) * 0.34
             fold = (
-                0.30 * math.sin(angle * 5.0 + z * 0.25)
-                + 0.12 * math.sin(angle * 13.0 - z * 0.55)
-                + 0.06 * math.sin(angle * 23.0 + z * 1.10)
+                0.38 * math.sin(angle * 3.0 + z * 0.18 + phase_drift)
+                + 0.16 * math.sin(angle * 7.0 - z * 0.37 + math.sin(z * 0.27) * 0.5)
+                + 0.07 * math.sin(angle * 11.0 + z * 0.73 + math.sin(z * 0.14))
             )
             radial = radius + fold
             vertices.append((radial * math.cos(angle), radial * math.sin(angle), z))

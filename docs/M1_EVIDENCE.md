@@ -195,14 +195,14 @@ The latest wall-only QA result at this validation was:
     "evidence/wall-study-destroyed.png"
   ]
 }
-Wall breathing image difference: changed_pixels=709599; diff=evidence/wall-study-breathing-diff.png
+Wall breathing image difference: changed_pixels=708019; diff=evidence/wall-study-breathing-diff.png
 ```
 
 The timed screenshot pair is captured 1.2 seconds apart while the imported `VesselWall_Breathing` clip and Godot low-frequency deformation are running. The non-zero image difference is persisted as `evidence/wall-study-breathing-diff.png`; the pulse screenshot is captured while holding `Space`, which drives a local wall-event bulge. The WallStudy camera is intentionally close to the inner membrane instead of centered on the lumen, making the layered folds and socket silhouettes judgeable.
 
 Blender now authors every socket as a parent mesh with an irregular raised core, membrane halo, and 5–7 short biological spikes. Godot collects only the 9 exact parent sockets per module, pulses their scale independently, and exposes `damage_spot()`, `reset_spots()`, and `alive_spot_count()` for the later shootable wall-enemy pass. Pressing `D` selects the nearest socket in the camera frustum and runs a visible flash → local wall deformation → scale squash → pink shard/bio burst → disappearance sequence; this is captured in `evidence/wall-study-destroyed.png`.
 
-The review captures show deep maroon wet membrane shading with a lit specular response, subdued layered muscle/fiber folds, authored non-flat surface variation, and differently sized orange, red, purple, and cyan sockets. The shader contains no texture lookup, scrolling UV, or time-offset texture animation; time is used only for low-frequency vertex breathing and the authored event deformation. Blender remains the source of truth for the intact `assets/vessel_wall_breathing.glb` mesh, authored spot hierarchy/material palette, UVs, and `VesselWall_Breathing` animation; Godot owns modular placement, clip playback, lightweight deformation, spot pulse timing, destruction VFX, and the damage API.
+The review captures show deep maroon wet membrane shading with a lit specular response, subdued layered muscle/fiber folds, broad wandering membrane folds whose phase drifts along the vessel instead of repeating as rings, authored non-flat surface variation, and differently sized orange, red, purple, and cyan sockets. The shader contains no texture lookup, scrolling UV, or time-offset texture animation; time is used only for low-frequency vertex breathing and the authored event deformation. Blender remains the source of truth for the intact `assets/vessel_wall_breathing.glb` mesh, authored spot hierarchy/material palette, UVs, and `VesselWall_Breathing` animation; Godot owns modular placement, clip playback, lightweight deformation, spot pulse timing, destruction VFX, and the damage API.
 
 Runtime checks for the integrated routes remain:
 
