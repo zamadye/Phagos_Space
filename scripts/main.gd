@@ -48,6 +48,7 @@ var track_material: ShaderMaterial
 var rail_material: StandardMaterial3D
 var player_parts: Dictionary = {}
 var pokemon_visual: Node3D
+var pokemon_animation_player: AnimationPlayer
 var organic_activity_manager: OrganicActivityManager
 var blue_cell_multimesh: MultiMeshInstance3D
 var blue_cell_instances: Array[Dictionary] = []
@@ -1189,7 +1190,29 @@ func _attach_pokemon_player_visual() -> void:
 	if pokemon_visual == null:
 		push_warning("Pokemon armature Armature_34 was not found; keeping M1 fallback visual")
 		return
-	pokemon_visual.name = "PokemonPlayerVisual_Intact"
+	# Preserve Armature_34 exactly: the authored Animation clip targets this
+	# node name and its Skeleton3D path. The wrapper role is metadata only.
+	pokemon_visual.set_meta("asset_role", "PokemonPlayerVisual_Intact")
+	var authored_animation_player := pack.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if authored_animation_player != null:
+		pokemon_animation_player = authored_animation_player
+		_configure_pokemon_animation(pack)
+	else:
+		push_warning("Pokemon pack AnimationPlayer was not found; player visual will remain static")
+
+func _configure_pokemon_animation(_pack: Node3D) -> void:
+	if not is_instance_valid(pokemon_animation_player) or not pokemon_animation_player.has_animation("Animation"):
+		push_warning("Pokemon authored Animation clip was not found")
+		return
+	var authored_clip := pokemon_animation_player.get_animation("Animation")
+	authored_clip.loop_mode = Animation.LOOP_LINEAR
+	var animation_library := pokemon_animation_player.get_animation_library("")
+	if not pokemon_animation_player.has_animation("Pokemon_Idle"):
+		animation_library.add_animation("Pokemon_Idle", authored_clip.duplicate() as Animation)
+	if not pokemon_animation_player.has_animation("Pokemon_Run"):
+		animation_library.add_animation("Pokemon_Run", authored_clip.duplicate() as Animation)
+	pokemon_animation_player.play("Pokemon_Run", 0.35, 1.18)
+	print("M1 Pokemon animation: clip=Animation; blend=Pokemon_Idle/Pokemon_Run; player=active")
 
 func _build_player() -> void:
 	player = Node3D.new()
@@ -1390,6 +1413,14 @@ func _update_world(delta: float) -> void:
 			var arm: Node3D = player_parts[arm_key]
 			arm.rotation.x = sin(run_phase + side * 1.5) * 0.14
 
+	if is_instance_valid(pokemon_animation_player):
+		var locomotion_blend := 0.0 if session_finished else clampf(run_speed / maxf(RUN_SPEED, 0.01), 0.0, 1.0)
+		var target_animation := "Pokemon_Run" if locomotion_blend > 0.45 else "Pokemon_Idle"
+		var animation_rate := lerpf(0.55, 1.18, locomotion_blend)
+		if pokemon_animation_player.current_animation != target_animation:
+			pokemon_animation_player.play(target_animation, 0.35, animation_rate)
+		else:
+			pokemon_animation_player.speed_scale = animation_rate
 	if is_instance_valid(hud_label):
 		var progress_ratio := clampf(player_distance / maxf(path_length, 1.0), 0.0, 1.0)
 		var run_state := "ACTIVE"

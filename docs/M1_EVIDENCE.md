@@ -108,6 +108,7 @@ AUTHORED_BLOOD_CELL_ACTORS=34
 TOTAL_BIO_ACTORS=149
 M1 blood multimesh: red_instances=66; purple_instances=16; actors=82
 M1 blue cell multimesh: instances=26; mesh_source=lynphocyte.glb
+M1 Pokemon animation: clip=Animation; blend=Pokemon_Idle/Pokemon_Run; player=active
 ```
 
 Screenshot evidence: `evidence/m1-assets-active.png` and `evidence/m1-web-smoke.png`. The runtime bloodstream now uses two `MultiMeshInstance3D` nodes with the authored `siderocyte.glb` mesh as the primary source; procedural `SphereMesh` is only the missing-asset fallback. Wall-bound blue membrane cells now use a third `MultiMeshInstance3D` with `lynphocyte.glb`; route frame placement, surface orientation, bob, pulse, lateral wave, and per-instance rotation remain runtime-controlled.
@@ -119,6 +120,8 @@ M1 organic activity: blood_emitters=5; organism_emitters=5; mote_emitters=5; gpu
 ```
 
 `OrganicActivityManager` owns five route-aligned blood-flow emitters, five authored pathogen-organism emitters, five golden-mote emitters, and one emergence burst. Each emitter is a `GPUParticles3D`; the blood and organism draw passes use imported authored meshes. Wall emergence calls the manager with the strongest socket event so the burst follows the same scripted event as the wall bulge.
+
+The Pokemon GLB now plays its imported `Animation` clip through the intact `AnimationPlayer`. Runtime duplicates of that authored clip provide `Pokemon_Idle` and `Pokemon_Run` states; transitions use `AnimationPlayer.play()` custom blend time and speed scaling. The original `Armature_34` name is preserved so every imported skeleton track resolves correctly.
 
 ## Route graph and branch evidence
 
