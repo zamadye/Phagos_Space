@@ -115,8 +115,10 @@ def build_wall_mesh():
         action = wall.data.shape_keys.animation_data.action
         action.name = "VesselWall_Breathing"
 
-    ridge_mat = material("VesselMuscleFold", (0.30, 0.010, 0.030, 1.0), roughness=0.40, emission=(0.035, 0.001, 0.004, 1.0))
-    fiber_mat = material("VesselFiber", (0.40, 0.018, 0.050, 1.0), roughness=0.46, emission=(0.045, 0.002, 0.006, 1.0))
+    # Folds support the membrane; they stay one shade family darker so the
+    # authored silhouette does not turn into a stack of glowing red wires.
+    ridge_mat = material("VesselMuscleFold", (0.19, 0.006, 0.018, 1.0), roughness=0.46, emission=(0.014, 0.001, 0.002, 1.0))
+    fiber_mat = material("VesselFiber", (0.27, 0.010, 0.030, 1.0), roughness=0.52, emission=(0.018, 0.001, 0.003, 1.0))
 
     def add_helical_ridge(object_name: str, ridge_index: int, tube_radius: float, material_slot):
         angle_offset = 2.0 * math.pi * ridge_index / 7.0
@@ -173,6 +175,11 @@ def build_wall_mesh():
         bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=0.62, location=center)
         spot = bpy.context.object
         spot.name = f"WallVirusSpot_{spot_index:02d}"
+        # Local Z is the authored outward normal. Keeping the socket oriented
+        # to the cylindrical membrane makes child cores, halos, and spikes
+        # read as raised growths instead of flat decals.
+        spot.rotation_mode = "QUATERNION"
+        spot.rotation_quaternion = Vector((0.0, 0.0, 1.0)).rotation_difference(normal)
         spot.scale = (size * 1.18, size * (0.62 + (spot_index % 3) * 0.11), size * 0.86)
         spot.data.materials.append(spot_materials[palette_index])
         spot["role"] = "wall_enemy_socket"
@@ -187,8 +194,63 @@ def build_wall_mesh():
         core.data.materials.append(spot_materials[palette_index])
         core.scale = (1.0, 0.72, 0.82)
         core.parent = spot
-        core.location = normal * 0.48
+        core.location = (0.0, 0.0, 0.48)
         for poly in core.data.polygons:
+            poly.use_smooth = True
+
+        # Authored irregular enemy silhouette: short biological spikes and a
+        # membrane halo travel with the spot and disappear with its parent in
+        # the Godot damage wrapper. These are real Blender mesh children, not
+        # runtime primitives.
+        spike_color = tuple(max(channel * 0.42, 0.008) for channel in spot_materials[palette_index].diffuse_color[:3]) + (1.0,)
+        spike_material = material(
+            f"WallVirus_{spot_index:02d}_Spike",
+            spike_color,
+            metallic=0.0,
+            roughness=0.24,
+            emission=(spike_color[0] * 0.50, spike_color[1] * 0.50, spike_color[2] * 0.50, 1.0),
+        )
+        for spike_index in range(5 + (spot_index % 3)):
+            spike_angle = 2.0 * math.pi * spike_index / float(5 + (spot_index % 3)) + spot_index * 0.37
+            direction = Vector((math.cos(spike_angle) * 0.24, math.sin(spike_angle) * 0.24, 0.62)).normalized()
+            bpy.ops.mesh.primitive_cone_add(
+                vertices=7,
+                radius1=0.085 + (spike_index % 2) * 0.018,
+                radius2=0.012,
+                depth=0.42 + (spot_index % 3) * 0.07,
+                location=(0.0, 0.0, 0.0),
+            )
+            spike = bpy.context.object
+            spike.name = f"WallVirusSpot_{spot_index:02d}_Spike_{spike_index:02d}"
+            spike.data.materials.append(spike_material)
+            spike.parent = spot
+            spike.location = Vector((math.cos(spike_angle) * 0.27, math.sin(spike_angle) * 0.27, 0.22))
+            spike.rotation_mode = "QUATERNION"
+            spike.rotation_quaternion = Vector((0.0, 0.0, 1.0)).rotation_difference(direction)
+            for poly in spike.data.polygons:
+                poly.use_smooth = True
+
+        halo_material = material(
+            f"WallVirus_{spot_index:02d}_Halo",
+            (spike_color[0], spike_color[1], spike_color[2], 1.0),
+            metallic=0.0,
+            roughness=0.18,
+            emission=(spike_color[0] * 0.75, spike_color[1] * 0.75, spike_color[2] * 0.75, 1.0),
+        )
+        bpy.ops.mesh.primitive_torus_add(
+            major_radius=0.56,
+            minor_radius=0.035,
+            major_segments=24,
+            minor_segments=6,
+            location=(0.0, 0.0, 0.0),
+        )
+        halo = bpy.context.object
+        halo.name = f"WallVirusSpot_{spot_index:02d}_Halo"
+        halo.data.materials.append(halo_material)
+        halo.parent = spot
+        halo.location = (0.0, 0.0, 0.20)
+        halo.rotation_euler = (0.0, 0.0, 0.0)
+        for poly in halo.data.polygons:
             poly.use_smooth = True
 
     return wall

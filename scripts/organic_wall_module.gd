@@ -49,61 +49,92 @@ func damage_spot(spot_index: int, damage: float = 1.0) -> bool:
 	spot_data.health = maxf(0.0, float(spot_data.health) - maxf(damage, 0.0))
 	var spot: MeshInstance3D = spot_data.node
 	if spot_data.health <= 0.0:
-		var destroyed_position := spot.global_position
-		spot.visible = false
-		_spawn_spot_destroy_burst(destroyed_position, spot)
-		spot_destroyed.emit(self, spot_index)
-		print("M1 wall spot destroyed: module=%02d; spot=%02d; alive=%d" % [module_index, spot_index, alive_spot_count()])
+		# Keep the socket alive for a short authored-feeling flash and squash;
+		# disappearance follows the deformation instead of happening instantly.
+		var flash_material := StandardMaterial3D.new()
+		flash_material.albedo_color = Color("ff7380")
+		flash_material.emission_enabled = true
+		flash_material.emission = Color("ff1636")
+		flash_material.emission_energy_multiplier = 3.2
+		flash_material.roughness = 0.18
+		spot.material_override = flash_material
+		spot.scale = spot_data.base_scale
+		var destruction_tween := create_tween()
+		destruction_tween.tween_property(spot, "scale", spot_data.base_scale * 1.22, 0.10).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		destruction_tween.tween_callback(func():
+			_spawn_spot_destroy_burst(spot.global_position, spot)
+		)
+		destruction_tween.tween_property(spot, "scale", spot_data.base_scale * 0.035, 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+		destruction_tween.tween_callback(func():
+			spot.visible = false
+			spot.material_override = null
+			spot_destroyed.emit(self, spot_index)
+			print("M1 wall spot destroyed: module=%02d; spot=%02d; alive=%d" % [module_index, spot_index, alive_spot_count()])
+		)
 	else:
 		spot.scale = spot_data.base_scale * 0.72
 	return true
 
 func _spawn_spot_destroy_burst(world_position: Vector3, spot: MeshInstance3D) -> void:
+	var flash := OmniLight3D.new()
+	flash.name = "WallVirusDestroyFlash"
+	flash.light_color = Color("ff8290")
+	flash.light_energy = 15.0
+	flash.omni_range = 6.0
+	var owner := get_parent()
+	if owner != null:
+		owner.add_child(flash)
+	else:
+		add_child(flash)
+	flash.global_position = world_position
+	var flash_tween := create_tween()
+	flash_tween.tween_property(flash, "light_energy", 0.0, 0.34).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	flash_tween.tween_callback(func():
+		if is_instance_valid(flash):
+			flash.queue_free()
+	)
+
 	var burst := GPUParticles3D.new()
 	burst.name = "WallVirusDestroyBurst_%02d" % spot_entries.size()
-	burst.amount = 28
-	burst.lifetime = 0.85
+	burst.amount = 42
+	burst.lifetime = 0.95
 	burst.one_shot = true
-	burst.explosiveness = 0.92
-	burst.randomness = 0.32
-	burst.visibility_aabb = AABB(Vector3(-3.0, -3.0, -3.0), Vector3(6.0, 6.0, 6.0))
-	var shard_mesh := SphereMesh.new()
-	shard_mesh.radius = 0.075
-	shard_mesh.height = 0.15
-	shard_mesh.radial_segments = 8
-	shard_mesh.rings = 4
+	burst.explosiveness = 0.96
+	burst.randomness = 0.38
+	burst.visibility_aabb = AABB(Vector3(-4.0, -4.0, -4.0), Vector3(8.0, 8.0, 8.0))
+	var shard_mesh := BoxMesh.new()
+	shard_mesh.size = Vector3(0.16, 0.07, 0.24)
 	burst.draw_pass_1 = shard_mesh
 	burst.draw_passes = 1
 	var burst_visual := StandardMaterial3D.new()
-	burst_visual.albedo_color = Color("ff5364")
+	burst_visual.albedo_color = Color("ff7180")
 	burst_visual.emission_enabled = true
-	burst_visual.emission = Color("ff2038")
-	burst_visual.emission_energy_multiplier = 1.6
-	burst_visual.roughness = 0.28
+	burst_visual.emission = Color("ff1638")
+	burst_visual.emission_energy_multiplier = 2.2
+	burst_visual.roughness = 0.22
 	var source_material := spot.get_active_material(0) as BaseMaterial3D
 	if source_material != null:
 		burst_visual.albedo_color = source_material.albedo_color.lightened(0.16)
 	burst.material_override = burst_visual
 	var particle_material := ParticleProcessMaterial.new()
 	particle_material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
-	particle_material.emission_sphere_radius = 0.16
+	particle_material.emission_sphere_radius = 0.18
 	particle_material.direction = Vector3.UP
 	particle_material.spread = 180.0
-	particle_material.initial_velocity_min = 0.55
-	particle_material.initial_velocity_max = 2.2
+	particle_material.initial_velocity_min = 0.80
+	particle_material.initial_velocity_max = 2.8
 	particle_material.gravity = Vector3(0.0, -1.5, 0.0)
-	particle_material.scale_min = 0.55
-	particle_material.scale_max = 1.35
-	particle_material.angular_velocity_min = -5.0
-	particle_material.angular_velocity_max = 5.0
+	particle_material.scale_min = 0.70
+	particle_material.scale_max = 1.55
+	particle_material.angular_velocity_min = -7.0
+	particle_material.angular_velocity_max = 7.0
 	burst.process_material = particle_material
-	var owner := get_parent()
 	if owner != null:
 		owner.add_child(burst)
 	else:
 		add_child(burst)
 	burst.global_position = world_position
-	await get_tree().create_timer(1.15).timeout
+	await get_tree().create_timer(1.25).timeout
 	if is_instance_valid(burst):
 		burst.queue_free()
 
@@ -112,6 +143,7 @@ func reset_spots() -> void:
 		spot_data.health = 1.0
 		var spot: MeshInstance3D = spot_data.node
 		spot.visible = true
+		spot.material_override = null
 		spot.scale = spot_data.base_scale
 
 func alive_spot_count() -> int:
@@ -122,16 +154,28 @@ func alive_spot_count() -> int:
 	return count
 
 func _apply_authored_material() -> void:
-	if not is_instance_valid(wall_asset):
+	if not is_instance_valid(wall_asset) or wall_material == null:
 		return
+	var muscle_material: ShaderMaterial = wall_material.duplicate() as ShaderMaterial
+	muscle_material.set_shader_parameter("layer_tint", Vector3(1.0, 0.62, 0.68))
+	muscle_material.set_shader_parameter("layer_emission", 0.48)
+	var fiber_material: ShaderMaterial = wall_material.duplicate() as ShaderMaterial
+	fiber_material.set_shader_parameter("layer_tint", Vector3(0.76, 0.42, 0.50))
+	fiber_material.set_shader_parameter("layer_emission", 0.30)
 	for mesh_node in wall_asset.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := mesh_node as MeshInstance3D
 		for surface_index in mesh_instance.mesh.get_surface_count():
 			var source_material := mesh_instance.get_active_material(surface_index) as BaseMaterial3D
 			if source_material != null:
 				source_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		if mesh_instance.name == "VesselWallBreathing" and wall_material != null:
+		if wall_material == null:
+			continue
+		if mesh_instance.name == "VesselWallBreathing":
 			mesh_instance.material_override = wall_material
+		elif mesh_instance.name.begins_with("VesselMuscleFold_"):
+			mesh_instance.material_override = muscle_material
+		elif mesh_instance.name.begins_with("VesselFiber_"):
+			mesh_instance.material_override = fiber_material
 
 func _collect_wall_spots() -> void:
 	spot_entries.clear()
@@ -139,7 +183,12 @@ func _collect_wall_spots() -> void:
 		return
 	for mesh_node in wall_asset.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := mesh_node as MeshInstance3D
-		if not mesh_instance.name.begins_with("WallVirusSpot_") or mesh_instance.name.ends_with("_Core"):
+		# A socket owns authored Core, Halo, and Spike children. Only the
+		# exact WallVirusSpot_00 parent is a damage target; child meshes must
+		# never inflate the modular spot count or receive a second damage call.
+		var mesh_name := str(mesh_instance.name)
+		var index_text := mesh_name.trim_prefix("WallVirusSpot_")
+		if not mesh_name.begins_with("WallVirusSpot_") or not index_text.is_valid_int():
 			continue
 		spot_entries.append({
 			"node": mesh_instance,
