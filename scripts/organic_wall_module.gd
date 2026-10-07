@@ -172,9 +172,9 @@ func alive_spot_count() -> int:
 func _apply_authored_material() -> void:
 	if not is_instance_valid(wall_asset) or wall_material == null:
 		return
-	var muscle_material: ShaderMaterial = wall_material.duplicate() as ShaderMaterial
-	muscle_material.set_shader_parameter("layer_tint", Vector3(1.0, 0.62, 0.68))
-	muscle_material.set_shader_parameter("layer_emission", 0.48)
+	var fascicle_material: ShaderMaterial = wall_material.duplicate() as ShaderMaterial
+	fascicle_material.set_shader_parameter("layer_tint", Vector3(1.04, 0.68, 0.74))
+	fascicle_material.set_shader_parameter("layer_emission", 0.54)
 	var fiber_material: ShaderMaterial = wall_material.duplicate() as ShaderMaterial
 	fiber_material.set_shader_parameter("layer_tint", Vector3(0.76, 0.42, 0.50))
 	fiber_material.set_shader_parameter("layer_emission", 0.30)
@@ -188,8 +188,10 @@ func _apply_authored_material() -> void:
 			continue
 		if mesh_instance.name == "VesselWallBreathing":
 			mesh_instance.material_override = wall_material
+		elif mesh_instance.name.begins_with("VesselFascicle_"):
+			mesh_instance.material_override = fascicle_material
 		elif mesh_instance.name.begins_with("VesselMuscleFold_"):
-			mesh_instance.material_override = muscle_material
+			mesh_instance.material_override = fascicle_material
 		elif mesh_instance.name.begins_with("VesselFiber_"):
 			mesh_instance.material_override = fiber_material
 

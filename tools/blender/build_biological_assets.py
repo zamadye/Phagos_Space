@@ -135,8 +135,10 @@ def build_wall_mesh():
         points = 18
         for point_index in range(points):
             z = length * point_index / (points - 1)
-            angle = angle_offset + z * (0.075 + (ridge_index % 3) * 0.018) + math.sin(z * 0.43 + ridge_index) * 0.08
-            local_radius = radius - 0.12 + math.sin(z * 0.62 + ridge_index * 1.7) * 0.08
+            # Fascicles run mostly along the vessel, but drift and braid
+            # slowly. This is closer to bundled muscle than a regular helix.
+            angle = angle_offset + math.sin(z * 0.21 + ridge_index * 1.4) * 0.24 + math.sin(z * 0.53 + ridge_index) * 0.075
+            local_radius = radius - 0.12 + math.sin(z * 0.31 + ridge_index * 1.7) * 0.11
             center = Vector((local_radius * math.cos(angle), local_radius * math.sin(angle), z))
             radial = Vector((math.cos(angle), math.sin(angle), 0.0))
             for side in range(tube_sides):
@@ -154,11 +156,10 @@ def build_wall_mesh():
         for poly in ridge.data.polygons:
             poly.use_smooth = True
 
-    # Broad longitudinal muscle folds preserve a soft, fleshy silhouette.
-    # They are not transverse rings, so repeated modules read as one breathing
-    # vessel rather than a stack of mechanical hoops.
+    # Broad fascicles preserve a soft, fleshy silhouette. Each is a bundled
+    # longitudinal sheath with a drifting phase, not a mechanical helix.
     for fold_index in range(7):
-        add_helical_ridge(f"VesselMuscleFold_{fold_index:02d}", fold_index, 0.13 + (fold_index % 3) * 0.035, ridge_mat)
+        add_helical_ridge(f"VesselFascicle_{fold_index:02d}", fold_index, 0.10 + (fold_index % 3) * 0.022, ridge_mat)
 
     # Fine fixed fibers remain authored detail; no texture or UV time offset is
     # used to fake motion along the wall.

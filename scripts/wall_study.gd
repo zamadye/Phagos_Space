@@ -46,10 +46,10 @@ func _build_environment() -> void:
 	add_child(world)
 	var red_light := OmniLight3D.new()
 	red_light.name = "WallGlossLight"
-	red_light.light_color = Color("ff526c")
-	red_light.light_energy = 11.0
+	red_light.light_color = Color("ff969c")
+	red_light.light_energy = 13.5
 	red_light.omni_range = 28.0
-	red_light.position = Vector3(-5.0, 10.0, 1.0)
+	red_light.position = Vector3(-11.0, 10.0, 1.0)
 	add_child(red_light)
 	var rim_light := OmniLight3D.new()
 	rim_light.name = "WallRimLight"
@@ -125,7 +125,8 @@ func _build_camera() -> void:
 	camera.near = 0.05
 	camera.far = 90.0
 	# Wall-first framing: stay inside the lumen but close to the membrane so
-	# gloss, authored folds, breathing deformation, and virus spots are legible.
+	# fascicles, matrix depth, wet sheen, breathing, and raised sockets remain
+	# judgeable while preserving their depth against the lumen.
 	camera.position = Vector3(-10.8, 7.6, 3.8)
 	add_child(camera)
 	camera.look_at(Vector3(-13.8, 7.0, -21.0), Vector3.UP)
