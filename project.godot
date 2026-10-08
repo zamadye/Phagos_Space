@@ -5,7 +5,7 @@ config_version=5
 [application]
 config/name="Phagos Space"
 config/description="A living 3D biological arena with world-space forward motion."
-run/main_scene="res://scenes/Main.tscn"
+run/main_scene="res://scenes/OrganicVesselFoundation.tscn"
 
 [display]
 window/size/viewport_width=1024
