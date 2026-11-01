@@ -24,36 +24,63 @@ void fragment() {
     // centerline after the Blender Z-up to Godot Y-up conversion.
     vec3 tissue_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
     float breath = sin(breathing_clock * 0.72 + tissue_position.z * 0.055) * 0.5 + 0.5;
-    float fascicle = sin(tissue_position.z * 0.31 + sin(tissue_position.x * 0.21 + tissue_position.y * 0.13) * 2.1 + sin(tissue_position.z * 0.17) * 1.3) * 0.5 + 0.5;
+    // Broad fascicles run along the vessel direction with slow, irregular
+    // drift. The low-frequency layers avoid the looped/logo-like pattern of
+    // the retired tunnel material.
+    float fascicle_phase = tissue_position.z * 0.38 + tissue_position.x * 0.18 + tissue_position.y * 0.10 + sin(tissue_position.z * 0.14 + tissue_position.y * 0.22) * 1.2;
+    float fascicle = sin(fascicle_phase) * 0.5 + 0.5;
     float collagen = sin(tissue_position.z * 1.7 + tissue_position.x * 0.46 + sin(tissue_position.y * 0.31) * 1.8) * 0.5 + 0.5;
-    float seam = pow(abs(sin(tissue_position.z * 0.31 + sin(tissue_position.x * 0.21 + tissue_position.y * 0.13) * 2.1 + sin(tissue_position.z * 0.17))), 10.0);
+    float seam = pow(abs(sin(fascicle_phase)), 12.0);
     float pore = sin(tissue_position.x * 3.7 + tissue_position.y * 2.4 + tissue_position.z * 0.9) * 0.5 + 0.5;
-    float longitudinal_bundle = 0.5 + 0.5 * sin(tissue_position.z * 0.82 + sin(tissue_position.x * 0.28) * 3.4 + sin(tissue_position.y * 0.37) * 2.0);
-    float connective_seam = pow(abs(sin(tissue_position.z * 0.82 + sin(tissue_position.x * 0.28) * 3.4 + sin(tissue_position.y * 0.37) * 2.0)), 18.0);
+    float longitudinal_phase = tissue_position.z * 0.90 + tissue_position.x * 0.24 + tissue_position.y * 0.20 + sin(tissue_position.z * 0.21) * 1.1;
+    float longitudinal_bundle = 0.5 + 0.5 * sin(longitudinal_phase);
+    float connective_seam = pow(abs(sin(longitudinal_phase)), 16.0);
+    float section_angle = UV.x * 6.2831853;
+    float section_belly = 0.5 + 0.5 * sin(section_angle - 0.55);
+    float section_vertical = sin(section_angle);
+    float floor_factor = smoothstep(0.12, 0.88, section_vertical);
+    float ceiling_factor = smoothstep(0.12, 0.88, -section_vertical);
+    float section_recess = pow(1.0 - section_belly, 3.0);
+    float floor_plane = 1.0 - smoothstep(-5.8, -1.8, tissue_position.y);
+    float ceiling_plane = smoothstep(1.8, 5.8, tissue_position.y);
 
     // Burgundy connective tissue with broad fascicle bands, restrained enough
     // to remain wet material rather than a flat red or neon surface.
-    vec3 deep_tissue = vec3(0.105, 0.006, 0.015);
-    vec3 burgundy_tissue = vec3(0.46, 0.030, 0.065);
-    vec3 warm_subsurface = vec3(0.66, 0.055, 0.095);
-    vec3 tissue = mix(deep_tissue, burgundy_tissue, 0.16 + fascicle * 0.70);
-    tissue += warm_subsurface * (1.0 - fascicle) * 0.20;
-    tissue += vec3(0.34, 0.040, 0.065) * pow(collagen, 5.0) * 0.22;
-    tissue += vec3(0.16, 0.012, 0.028) * pore * 0.08;
-    tissue += vec3(0.24, 0.028, 0.050) * longitudinal_bundle * 0.16;
-    tissue += vec3(0.58, 0.075, 0.105) * connective_seam * 0.12;
-    tissue -= deep_tissue * seam * 0.32;
+    vec3 deep_tissue = vec3(0.025, 0.006, 0.028);
+    vec3 burgundy_tissue = vec3(0.43, 0.055, 0.15);
+    vec3 warm_subsurface = vec3(0.64, 0.13, 0.26);
+    vec3 tissue = mix(deep_tissue, burgundy_tissue, 0.08 + fascicle * 0.84);
+    tissue += warm_subsurface * (1.0 - fascicle) * 0.18;
+    tissue += vec3(0.40, 0.09, 0.19) * pow(collagen, 5.0) * 0.26;
+    tissue += vec3(0.15, 0.024, 0.075) * pore * 0.10;
+    tissue += vec3(0.31, 0.060, 0.15) * longitudinal_bundle * 0.19;
+    tissue += vec3(0.62, 0.16, 0.30) * connective_seam * 0.11;
+    tissue -= deep_tissue * seam * 0.30;
+    tissue *= 0.78 + section_belly * 0.34;
+    tissue += vec3(0.10, 0.028, 0.070) * floor_factor;
+    tissue -= vec3(0.014, 0.004, 0.022) * ceiling_factor;
+    tissue += vec3(0.12, 0.035, 0.085) * floor_plane;
+    tissue += vec3(0.018, 0.006, 0.035) * ceiling_plane;
+    tissue -= vec3(0.018, 0.004, 0.014) * section_recess;
+
+    // A restrained orientation lift keeps the near floor, sidewalls, and
+    // ceiling separated in the enclosed volume even on the Web/Mobile path.
+    vec3 surface_normal = normalize(NORMAL);
+    float orientation_lift = 0.78 + 0.22 * abs(surface_normal.y);
+    float upward_surface = clamp(surface_normal.y * 0.5 + 0.5, 0.0, 1.0);
+    tissue *= orientation_lift * (0.84 + upward_surface * 0.24);
+    tissue += vec3(0.10, 0.035, 0.10) * upward_surface;
 
     vec3 view_direction = normalize(VIEW);
     float fresnel = pow(1.0 - max(dot(normalize(NORMAL), view_direction), 0.0), 2.0);
     float wet_facing = pow(abs(dot(normalize(NORMAL), view_direction)), 20.0);
-    vec3 wet_specular = vec3(0.82, 0.19, 0.23) * (fresnel * 0.13 + wet_facing * 0.25);
+    vec3 wet_specular = vec3(0.78, 0.32, 0.52) * (fresnel * 0.16 + wet_facing * 0.28);
 
     float event_distance = distance(tissue_position, event_world_position);
     float event_glow = exp(-(event_distance * event_distance) / max(event_radius * event_radius, 0.001)) * event_strength;
 
-    ALBEDO = tissue * (0.95 + breath * 0.12) + wet_specular * 0.62 + vec3(0.30, 0.012, 0.025) * event_glow;
-    ROUGHNESS = 0.18 + fascicle * 0.18;
-    SPECULAR = 0.92;
-    EMISSION = tissue * (0.14 + breath * 0.035) + wet_specular * 0.28 + vec3(0.32, 0.012, 0.020) * event_glow * 0.2;
+    ALBEDO = tissue * (1.02 + breath * 0.12) + wet_specular * 0.56 + vec3(0.24, 0.028, 0.08) * event_glow;
+    ROUGHNESS = 0.24 + fascicle * 0.17;
+    SPECULAR = 0.86;
+    EMISSION = tissue * (0.20 + breath * 0.035) + wet_specular * 0.18 + vec3(0.25, 0.025, 0.07) * event_glow * 0.2;
 }

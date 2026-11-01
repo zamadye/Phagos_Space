@@ -60,11 +60,11 @@ def make_material() -> bpy.types.Material:
 
 
 def centerline(z: float) -> Vector:
-    # A controlled authored curve: broad bends with a slow secondary drift,
-    # not a procedural circular pipe.
+    # A controlled authored S-curve: broad bends with a slow secondary drift,
+    # not a procedural circular pipe or a repeated arcade tunnel.
     return Vector((
-        math.sin(z * 0.145) * 2.4 + math.sin(z * 0.31 + 0.8) * 0.65,
-        math.sin(z * 0.105 + 1.1) * 0.65 + math.sin(z * 0.22) * 0.22,
+        math.sin(z * 0.11) * 2.7 + math.sin(z * 0.23 + 0.5) * 0.35,
+        math.sin(z * 0.10 + 0.5) * 0.45 + math.sin(z * 0.19) * 0.15,
         z,
     ))
 
@@ -95,8 +95,8 @@ def build_vessel() -> bpy.types.Object:
             # Broad, longitudinal fascicle folds are authored into the volume,
             # so the wall silhouette is biological even before the material is
             # applied. Small phase drift prevents a repeated pipe profile.
-            fascicle_fold = math.sin(theta * 6.0 + z * 0.11) * 0.055 + math.sin(theta * 11.0 - z * 0.23) * 0.018
-            fold_scale = 1.0 + fascicle_fold + drift * 0.032 + irregular * 0.018
+            fascicle_fold = math.sin(theta * 6.0 + z * 0.11) * 0.105 + math.sin(theta * 11.0 - z * 0.23) * 0.035
+            fold_scale = 1.0 + fascicle_fold + drift * 0.045 + irregular * 0.028
             width = HALF_WIDTH * fold_scale
             height = HALF_HEIGHT * (1.0 + fascicle_fold * 0.78 + drift * 0.028 - irregular * 0.014)
             # A softened superellipse keeps broad floor and ceiling planes
@@ -116,6 +116,48 @@ def build_vessel() -> bpy.types.Object:
             next_both = (station + 1) * CROSS_SECTION + ((section + 1) % CROSS_SECTION)
             faces.append((current, next_section, next_both, next_station))
 
+    # A distant authored throat keeps the controlled 42m slice from opening
+    # to a flat background color. It is a continuation of the same vessel
+    # surface, with several tapering rings so the far surface has real depth
+    # instead of a single flat fan.
+    final_ring = (STATIONS - 1) * CROSS_SECTION
+    final_tangent = tangent_at(LENGTH)
+    final_side = final_tangent.cross(Vector((0.0, 1.0, 0.0))).normalized()
+    final_up = final_side.cross(final_tangent).normalized()
+    throat_rings: list[int] = [final_ring]
+    throat_steps = 8
+    for throat in range(1, throat_steps + 1):
+        distance = throat * 2.4
+        scale = 1.0 - (throat / float(throat_steps + 1)) * 0.64
+        ring_start = len(vertices)
+        throat_center = centerline(LENGTH) + final_tangent * distance
+        for section in range(CROSS_SECTION):
+            theta = math.tau * section / CROSS_SECTION
+            drift = math.sin(theta * 4.0 + throat * 0.7) * 0.05
+            profile_x = math.copysign(abs(math.cos(theta)) ** 0.64, math.cos(theta))
+            profile_y = math.copysign(abs(math.sin(theta)) ** 0.64, math.sin(theta))
+            radial = final_side * (profile_x * HALF_WIDTH * scale) + final_up * (profile_y * HALF_HEIGHT * scale)
+            vertices.append(tuple(throat_center + radial * (1.0 + drift)))
+        throat_rings.append(ring_start)
+
+    for ring_index in range(len(throat_rings) - 1):
+        ring = throat_rings[ring_index]
+        next_ring = throat_rings[ring_index + 1]
+        for section in range(CROSS_SECTION):
+            current = ring + section
+            next_section = ring + ((section + 1) % CROSS_SECTION)
+            next_station = next_ring + section
+            next_both = next_ring + ((section + 1) % CROSS_SECTION)
+            faces.append((current, next_section, next_both, next_station))
+
+    throat_center_index = len(vertices)
+    vertices.append(tuple(centerline(LENGTH) + final_tangent * (throat_steps + 1) * 2.4))
+    last_ring = throat_rings[-1]
+    for section in range(CROSS_SECTION):
+        current = last_ring + section
+        next_section = last_ring + ((section + 1) % CROSS_SECTION)
+        faces.append((current, next_section, throat_center_index))
+
     mesh = bpy.data.meshes.new("OrganicVesselFoundationMesh")
     mesh.from_pydata(vertices, [], faces)
     mesh.update()
@@ -125,8 +167,11 @@ def build_vessel() -> bpy.types.Object:
     # Author longitudinal UVs for future baked tissue/blood layers.
     uv_layer = mesh.uv_layers.new(name="VesselLongitudinalUV")
     for loop in mesh.loops:
-        station = loop.vertex_index // CROSS_SECTION
         section = loop.vertex_index % CROSS_SECTION
+        if loop.vertex_index >= STATIONS * CROSS_SECTION:
+            uv_layer.data[loop.index].uv = (section / CROSS_SECTION, 1.0)
+            continue
+        station = loop.vertex_index // CROSS_SECTION
         uv_layer.data[loop.index].uv = (
             section / CROSS_SECTION,
             station / (STATIONS - 1),

@@ -69,12 +69,14 @@ func _build_traversal_path() -> void:
 	path.name = "TraversalPath"
 	var curve := Curve3D.new()
 	curve.bake_interval = 0.35
-	curve.add_point(Vector3(0.0, 0.0, 2.0))
-	curve.add_point(Vector3(0.95, 0.20, 10.0))
-	curve.add_point(Vector3(2.05, 0.42, 19.0))
-	curve.add_point(Vector3(1.65, 0.18, 28.0))
-	curve.add_point(Vector3(0.15, -0.10, 38.0))
-	curve.add_point(Vector3(-0.85, 0.05, 42.0))
+	# These controls follow the authored Blender centerline but remain an
+	# independent traversal guide; the mesh never depends on this Path3D.
+	curve.add_point(Vector3(0.87, 0.35, 2.0))
+	curve.add_point(Vector3(2.52, 0.59, 10.0))
+	curve.add_point(Vector3(2.00, 0.24, 19.0))
+	curve.add_point(Vector3(0.38, -0.19, 28.0))
+	curve.add_point(Vector3(-2.26, -0.29, 38.0))
+	curve.add_point(Vector3(-2.93, -0.30, 42.0))
 	path.curve = curve
 	add_child(path)
 	print("TRAVERSAL PATH: points=6; length=42m; geometry_separate=true")
@@ -82,10 +84,10 @@ func _build_traversal_path() -> void:
 func _build_environment() -> void:
 	var environment := Environment.new()
 	environment.background_mode = Environment.BG_COLOR
-	environment.background_color = Color("3b1222")
+	environment.background_color = Color("190d25")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("762238")
-	environment.ambient_light_energy = 1.45
+	environment.ambient_light_color = Color("6b294e")
+	environment.ambient_light_energy = 1.30
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world := WorldEnvironment.new()
 	world.name = "OrganicVesselEnvironment"
@@ -94,18 +96,34 @@ func _build_environment() -> void:
 
 	var tissue_key := OmniLight3D.new()
 	tissue_key.name = "TissueKeyLight"
-	tissue_key.light_color = Color("a52b42")
-	tissue_key.light_energy = 8.0
-	tissue_key.omni_range = 28.0
-	tissue_key.position = Vector3(-4.0, 4.0, 5.0)
+	tissue_key.light_color = Color("c45768")
+	tissue_key.light_energy = 7.8
+	tissue_key.omni_range = 32.0
+	tissue_key.position = Vector3(-6.0, -2.0, 6.0)
 	add_child(tissue_key)
 	var depth_rim := OmniLight3D.new()
 	depth_rim.name = "TissueDepthRim"
-	depth_rim.light_color = Color("52204e")
-	depth_rim.light_energy = 4.5
-	depth_rim.omni_range = 34.0
-	depth_rim.position = Vector3(4.0, -1.0, 28.0)
+	depth_rim.light_color = Color("7d527f")
+	depth_rim.light_energy = 4.4
+	depth_rim.omni_range = 40.0
+	depth_rim.position = Vector3(4.5, 2.5, 30.0)
 	add_child(depth_rim)
+
+	var inner_fill := OmniLight3D.new()
+	inner_fill.name = "TissueInnerFill"
+	inner_fill.light_color = Color("7e304f")
+	inner_fill.light_energy = 3.8
+	inner_fill.omni_range = 24.0
+	inner_fill.position = Vector3(1.8, 1.2, 14.0)
+	add_child(inner_fill)
+
+	var far_surface_fill := OmniLight3D.new()
+	far_surface_fill.name = "DistantVesselSurfaceFill"
+	far_surface_fill.light_color = Color("b56b91")
+	far_surface_fill.light_energy = 6.5
+	far_surface_fill.omni_range = 28.0
+	far_surface_fill.position = Vector3(-2.8, -0.3, 43.0)
+	add_child(far_surface_fill)
 
 func _build_camera_rig() -> void:
 	var rig := Node3D.new()
@@ -118,12 +136,14 @@ func _build_camera_rig() -> void:
 	var camera := Camera3D.new()
 	camera.name = "FoundationCamera"
 	camera.current = true
-	camera.fov = 64.0
+	camera.fov = 68.0
 	camera.near = 0.05
 	camera.far = 70.0
-	camera.position = Vector3(-1.15, -1.70, 3.2)
+	# Low off-axis perspective: floor, sidewall, ceiling, and the distant
+	# vessel bend must all remain visible around the future hero.
+	camera.position = Vector3(0.70, -2.35, 2.6)
 	rig.add_child(camera)
-	camera.look_at(Vector3(2.0, 0.45, 24.0), Vector3.UP)
+	camera.look_at(Vector3(0.38, -0.19, 28.0), Vector3.UP)
 
 func _build_overlay() -> void:
 	var layer := CanvasLayer.new()

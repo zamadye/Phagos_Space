@@ -1,8 +1,8 @@
 # Organic vessel foundation — visual QA scorecard
 
-Date: 2026-10-08  
-Checkpoint: `checkpoint-organic-vessel-foundation`  
-Evidence: `evidence/organic-vessel-foundation-web.png`
+Date: 2026-11-01
+Checkpoint: `checkpoint-organic-vessel-foundation`
+Evidence: `evidence/m1-web-smoke.png` (latest Web inspection; functional smoke only)
 
 This scorecard is deliberately split from functional QA. The Web capture is a visual preview only; it is not authoritative proof of the Mobile renderer.
 
@@ -22,19 +22,19 @@ Scale: 0 = absent/fail, 5 = ready for the next checkpoint. This is the static ve
 
 | Category | Score | Finding |
 |---|---:|---|
-| Organic geometry | 4/5 | One Blender-authored closed volume with curved centerline, irregular longitudinal folds, softened floor/ceiling profile, and no rails or track. |
-| Volumetric depth | 3/5 | Near tissue, layered wall folds, and a distant lumen opening read in the perspective capture; depth lighting can be refined later. |
-| Material quality | 3/5 | Lit procedural wet-tissue shader with fascicle bands, connective seams, roughness, specular response, and restrained emission. More biological surface breakup belongs in the materials checkpoint. |
-| Camera composition | 3/5 | Perspective camera is offset from the center and aims through the authored bend; a hero-facing composition is intentionally deferred. |
-| Lighting | 3/5 | Warm ambient/key/rim setup gives readable wall volume without letterboxing; lighting polish is deferred to the cinematic-camera checkpoint. |
-| Wall animation | 2/5 | Imported `OrganicVessel_Breathing` clip is playing and runtime shader breathing is active; motion proof is deferred until the static gate is accepted. |
-| Blood flow | N/E | Deferred by scope. No blood or cells before this static foundation gate. |
-| Environmental depth | 3/5 | 42 m vessel and independent six-point path are represented; blood/cell scale layers are deferred. |
+| Organic geometry | 4/5 structural, 2/5 visual | Blender-authored closed volume now includes a curved S-centerline, continuous floor/ceiling/sidewalls, stronger fascicle relief, and an extended tapering throat. The capture still does not make those surfaces legible enough. |
+| Volumetric depth | 2/5 | The far closure is real geometry, but the current view is dominated by near burgundy surfaces and does not yet communicate long-distance tunnel perspective. |
+| Material quality | 2/5 | Wet-tissue shader, fascicle layers, seams, roughness, specular, and breathing are present; the Web capture remains too dark/flat and too red to pass biological-material inspection. |
+| Camera composition | 2/5 | Perspective camera and separate path exist, but the current composition still reads as a red chamber/tunnel rather than a clear vessel traversal view. |
+| Lighting | 2/5 | Controlled key/rim/fill/far-surface lights exist, but floor, walls, ceiling, and distant surface remain weakly separated in the evidence image. |
+| Wall animation | 2/5 | Imported `OrganicVessel_Breathing` clip is playing and runtime shader breathing is active; visual deformation proof remains deferred until the static gate is accepted. |
+| Blood flow | N/E | Deferred by scope. No blood or cells before this static vessel gate. |
+| Environmental depth | 2/5 | The 42 m authored vessel and independent six-point path are represented, but the screenshot does not yet prove readable depth. |
 | Hero integration | N/E | Deferred by scope. No player is added before the foundation gate. |
-| Cinematic quality | 3/5 | The capture reads as a biological interior rather than a red track or primitive tunnel; final cinematic grading waits for camera/material checkpoints. |
+| Cinematic quality | 2/5 | Functional Web smoke passes, but visual acceptance is explicitly withheld because the image still reads closer to a dark red tunnel/chamber than a living vessel. |
 
 ## Gate decision
 
-**PASS — static organic vessel foundation.** The image does not read as a character running on a red track: there is no track, side rail, decorative line system, or black letterbox. The connected floor/wall/ceiling volume and distant lumen establish the controlled vessel slice.
+**HOLD / FAIL — static organic vessel foundation.** The asset and scene architecture are rebuilt and functional, but `evidence/m1-web-smoke.png` does not pass the visual gate. It still reads too much like a dark red chamber/tunnel: floor, walls, ceiling, curvature, tissue depth, and distant surface are not visually legible enough.
 
-This does **not** claim the final vertical-slice gate. Blood flow, hero integration, biological emergence, and full cinematic proof remain explicitly deferred to their later checkpoints.
+Do not add blood, cells, hero integration, enemies, progression, events, or gameplay polish until a new static capture clearly communicates a 3D living vessel. Functional boot, Web canvas, and `errors: []` are not visual acceptance.
